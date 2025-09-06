@@ -1,4 +1,4 @@
-name: Deploy Backend to Koyeb (Reliable Method)
+name: Deploy Backend to Koyeb (Corrected)
 
 on:
   push
@@ -13,41 +13,30 @@ jobs:
       packages: write
 
     steps:
-      # 1. ソースコードをチェックアウト (これは公式の必須アクションです)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. GHCRにログイン (docker/login-actionを使わず、手動でログイン)
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      # 3. Dockerイメージのタグを定義
-      #    イメージ名を小文字にする必要があるため、`tr '[:upper:]' '[:lower:]'` を追加
       - name: Set up Docker image tag
         id: docker-meta
         run: |
           IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}:${{ github.sha }}" | tr '[:upper:]' '[:lower:]')
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
-      # 4. Dockerイメージをビルド＆プッシュ (docker/build-push-actionを使わず、手動で実行)
       - name: Build and push Docker image
         run: |
           docker build -t ${{ steps.docker-meta.outputs.image_name }} ./backend
           docker push ${{ steps.docker-meta.outputs.image_name }}
           
-      # 5. Koyeb CLIを公式スクリプトから手動でインストール
       - name: Install Koyeb CLI
         run: curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | sh
 
-      # 6. Koyeb CLIを使ってデプロイを実行
-      #    `service update`コマンドで、使用するイメージを先ほどプッシュしたものに更新します
       - name: Deploy to Koyeb
         run: |
-          # インストールしたCLIにパスを通す
           export PATH=$HOME/.koyeb/bin:$PATH
           
-          # サービスを更新
-          koyeb service update eg-hackathon-team4/backend-api --image ${{ steps.docker-meta.outputs.image_name }}
+          koyeb service update eg-hackathon-team4/backend-api --docker ${{ steps.docker-meta.outputs.image_name }}
         env:
-          # KoyebのAPIトークンは事前にSecretに登録しておく
           KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
