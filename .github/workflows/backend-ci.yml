@@ -1,0 +1,49 @@
+name: Django Backend CI (Docker Compose)
+
+on:
+  push:
+    paths:
+      - backend/**
+  pull_request:
+    paths:
+      - backend/**
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:24.0.2-dind
+        options: >-
+          --dns 8.8.8.8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      - name: Build and start containers
+        run: |
+          cd backend
+          docker compose up -d --build
+      - name: Wait for DB to be healthy
+        run: |
+          cd backend
+          for i in {1..10}; do
+            status=$(docker compose ps db | grep healthy)
+            if [ -n "$status" ]; then
+              echo "DB is healthy!"
+              break
+            fi
+            echo "Waiting for DB..."
+            sleep 3
+          done
+      - name: Run Django tests in container
+        run: |
+          cd backend
+          docker compose exec api python manage.py test
+      - name: Stop containers
+        if: always()
+        run: |
+          cd backend
+          docker compose down
