@@ -1,49 +1,50 @@
-name: Django Backend CI (Docker Compose)
+name: CI for Backend 
 
 on:
-  push:
-    paths:
-      - backend/**
-  pull_request:
-    paths:
-      - backend/**
+    push:
+        branches: [ main ]
+        paths:
+            - 'backend/**'
+    pull_request:
+        paths:
+            - 'backend/**'
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:24.0.2-dind
-        options: >-
-          --dns 8.8.8.8
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-      - name: Build and start containers
-        run: |
-          cd backend
-          docker compose up -d --build
-      - name: Wait for DB to be healthy
-        run: |
-          cd backend
-          for i in {1..10}; do
-            status=$(docker compose ps db | grep healthy)
-            if [ -n "$status" ]; then
-              echo "DB is healthy!"
-              break
-            fi
-            echo "Waiting for DB..."
-            sleep 3
-          done
-      - name: Run Django tests in container
-        run: |
-          cd backend
-          docker compose exec api python manage.py test
-      - name: Stop containers
-        if: always()
-        run: |
-          cd backend
-          docker compose down
+    test:
+        name: Run Django Tests
+        runs-on: ubuntu-latest
+
+        env:
+            POSTGRES_USER: ${{ vars.POSTGRES_USER_CI }}
+            POSTGRES_DB: ${{ vars.POSTGRES_DB_CI }}
+            POSTGRES_HOST: 'db'
+            POSTGRES_PORT: 5432
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_CI }}
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Build and start containers
+          run: docker compose -f backend/docker-compose.yml up -d --build
+
+        - name: Wait for DB to be healthy
+          run: |
+            echo "⏳ Waiting for database to be ready..."
+            for i in {1..15}; do
+                if docker container inspect -f '{{.State.Health.Status}}' backend-db-1 | grep -q 'healthy'; then
+                    echo "✅ Database is healthy!"
+                    exit 0
+                fi
+                sleep 3
+            done
+            echo "❌ Database did not become healthy in time."
+            docker compose -f backend/docker-compose.yml logs db
+            exit 1
+
+        - name: Run Django tests
+          run: docker compose -f backend/docker-compose.yml exec -T api python manage.py test
+
+        - name: Stop and remove containers
+          if: always()
+          run: docker compose -f backend/docker-compose.yml down
