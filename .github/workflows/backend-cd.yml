@@ -1,32 +1,33 @@
-name: Deploy Backend to Koyeb
+name: Deploy Backend to Koyeb (via Docker Hub)
 
 on:
-  push
-    # branches:
-    #   - '**'
-    # paths:
-    #   - 'backend/**'
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'backend/**'
 
 jobs:
   deploy:
     name: Build, Push, and Deploy
     runs-on: ubuntu-latest
     
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # ★★★ イメージ名をDocker Hub用に変更 ★★★
       - name: Set up Docker image tag
         id: docker-meta
         run: |
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}:${{ github.sha }}" | tr '[:upper:]' '[:lower:]')
+          # イメージ名を docker.io/あなたのユーザー名/アプリ名:コミットハッシュ の形式にする
+          IMAGE_NAME=$(echo "${{ secrets.DOCKERHUB_USERNAME }}/team-4-app:${{ github.sha }}" | tr '[:upper:]' '[:lower:]')
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
@@ -37,9 +38,10 @@ jobs:
       - name: Install Koyeb CLI
         run: curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | sh
 
-      - name: Deploy to Koyeb by updating the service
+      - name: Deploy to Koyeb
         run: |
           export PATH=$HOME/.koyeb/bin:$PATH
+          # 更新するイメージ名をDocker Hubのパスに修正
           koyeb service update eg-hackathon-team4/backend-api --docker ${{ steps.docker-meta.outputs.image_name }} --token $KOYEB_API_TOKEN
         env:
           KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
