@@ -1,8 +1,7 @@
 name: Deploy Backend to Koyeb (Reliable Method)
 
 on:
-  push:
-    paths: [ 'backend/**' ]
+  push
 
 jobs:
   deploy:
