@@ -1,11 +1,11 @@
 name: Deploy Backend to Koyeb
 
 on:
-  push:
-    branches:
-      - '**'
-    paths:
-      - 'backend/**'
+  push
+    # branches:
+    #   - '**'
+    # paths:
+    #   - 'backend/**'
 
 jobs:
   deploy:
