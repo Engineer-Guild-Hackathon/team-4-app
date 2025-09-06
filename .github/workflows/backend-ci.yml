@@ -26,7 +26,7 @@ jobs:
           uses: actions/checkout@v4
 
         - name: Build and start containers
-          run: docker compose -f backend/docker-compose.yml up -d --build
+          run: docker compose -f backend/compose.yml up -d --build
 
         - name: Wait for DB to be healthy
           run: |
@@ -39,12 +39,12 @@ jobs:
                 sleep 3
             done
             echo "❌ Database did not become healthy in time."
-            docker compose -f backend/docker-compose.yml logs db
+            docker compose -f backend/compose.yml logs db
             exit 1
 
         - name: Run Django tests
-          run: docker compose -f backend/docker-compose.yml exec -T api python manage.py test
+          run: docker compose -f backend/compose.yml exec -T api python manage.py test
 
         - name: Stop and remove containers
           if: always()
-          run: docker compose -f backend/docker-compose.yml down
+          run: docker compose -f backend/compose.yml down
