@@ -18,10 +18,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from ninja import NinjaAPI
+from ninja_jwt.routers.obtain import obtain_pair_router
+from ninja_jwt.authentication import JWTAuth
+from .health import health
+
 
 api = NinjaAPI()
+api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 
-from .health import health
+# 保護されたAPIサンプル
+@api.get("/protected", auth=JWTAuth())
+def protected(request):
+    return {"username": request.user.username, "message": "JWT認証OK"}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
