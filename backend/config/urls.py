@@ -26,7 +26,7 @@ from .health import health
 api = NinjaAPI()
 api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 
-# 保護されたAPIサンプル
+# 保護されたAPIサンプル（削除予定）
 @api.get("/protected", auth=JWTAuth())
 def protected(request):
     return {"username": request.user.username, "message": "JWT認証OK"}
