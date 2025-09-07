@@ -3,7 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import prettierConfig from 'eslint-config-prettier'; // Prettierとの連携用
+// import prettierConfig from 'eslint-config-prettier'; // Prettierとの連携用
 
 export default [
   // 1. グローバルな無視設定
@@ -29,6 +29,11 @@ export default [
         ...globals.node,
       },
     },
+    settings: {
+      react: {
+        version: 'detect', // インストールされているReactのバージョンを自動で検出
+      },
+    },
     rules: {
       // 各プラグインの推奨ルールを適用
       ...tseslint.configs.recommended.rules,
@@ -44,5 +49,5 @@ export default [
   },
 
   // 3. Prettierとの競合ルールを無効化（必ず最後に配置）
-  prettierConfig,
+  // prettierConfig,
 ];
