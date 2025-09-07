@@ -1,11 +1,11 @@
 name: Deploy Backend to Koyeb (via Docker Hub)
 
 on:
-  push
-    # branches:
-    #   - '**'
-    # paths:
-    #   - 'backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
 
 jobs:
   deploy:
