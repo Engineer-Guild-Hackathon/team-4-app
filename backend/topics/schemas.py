@@ -1,6 +1,7 @@
 from ninja import Schema
 from datetime import datetime
 from typing import Optional
+import uuid
 
 
 class TopicCreateSchema(Schema):
@@ -14,7 +15,7 @@ class TopicUpdateSchema(Schema):
 
 
 class TopicResponseSchema(Schema):
-    id: str  # UUIDなのでstrに修正
+    id: uuid.UUID  
     title: str
     description: str
     created_at: datetime
