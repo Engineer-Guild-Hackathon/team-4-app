@@ -22,6 +22,9 @@ from ninja import NinjaAPI
 api = NinjaAPI()
 
 from .health import health
+from topics.views import router as topics_router
+
+api.add_router("/topics", topics_router)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
