@@ -1,0 +1,32 @@
+name: CI for frontend
+
+on:
+  push:
+    branches: 
+      - "**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.5"
+          cache: 'npm' 
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Format
+        run: npm run format
+
+      - name: Typecheck
+        run: npm run typecheck
