@@ -26,6 +26,12 @@ from .health import health
 api = NinjaAPI()
 api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 
+
+from .health import health
+from topics.views import router as topics_router
+
+api.add_router("/topics", topics_router)
+
 # 保護されたAPIサンプル（削除予定）
 @api.get("/protected", auth=JWTAuth())
 def protected(request):
