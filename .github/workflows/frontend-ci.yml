@@ -17,16 +17,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.19.5"
-          cache: 'npm' 
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm install
 
       - name: Run Lint
+        working-directory: ./frontend
         run: npm run lint
 
       - name: Run Format
+        working-directory: ./frontend
         run: npm run format
 
       - name: Typecheck
+        working-directory: ./frontend
         run: npm run typecheck
