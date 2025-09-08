@@ -33,6 +33,12 @@ jobs:
           echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
           echo "POSTGRES_HOST=${{ env.POSTGRES_HOST }}" >> .env
           echo "POSTGRES_PORT=${{ env.POSTGRES_PORT }}" >> .env
+          #Django設定用の環境変数も追加
+          echo "DB_USER=${{ env.POSTGRES_USER }}" >> .env
+          echo "DB_PASSWORD=${{ env.POSTGRES_PASSWORD }}" >> .env
+          echo "DB_NAME=${{ env.POSTGRES_DB }}" >> .env
+          echo "DB_HOST=${{ env.POSTGRES_HOST }}" >> .env
+          echo "DB_PORT=${{ env.POSTGRES_PORT }}" >> .env
 
       - name: Build and start containers
         run: docker compose -f backend/compose.yml up -d --build
