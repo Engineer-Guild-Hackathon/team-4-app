@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-} from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -36,10 +28,10 @@ export function SimpleTopicView({ topics }: SimpleTopicViewProps) {
     .onStart(() => {
       'worklet';
     })
-    .onUpdate((event) => {
+    .onUpdate(event => {
       translateX.value = event.translationX;
     })
-    .onEnd((event) => {
+    .onEnd(event => {
       const threshold = screenWidth * 0.2;
       const velocity = event.velocityX;
 
@@ -61,7 +53,7 @@ export function SimpleTopicView({ topics }: SimpleTopicViewProps) {
         translateX.value = withSpring(0);
       }
     });
-    //アニメーション追加するなら必要
+  //アニメーション追加するなら必要
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],
@@ -77,16 +69,13 @@ export function SimpleTopicView({ topics }: SimpleTopicViewProps) {
         <View style={styles.topicsContainer}>
           {topics.map((topic, index) => (
             <View key={topic.id} style={styles.topicIconWrapper}>
-              <View
-                style={[
-                  styles.topicIcon,
-                  index === currentIndex && styles.topicIconActive,
-                ]}
-              >
-                <Text style={[
-                  styles.topicIconText,
-                  index === currentIndex && styles.topicIconTextActive,
-                ]}>
+              <View style={[styles.topicIcon, index === currentIndex && styles.topicIconActive]}>
+                <Text
+                  style={[
+                    styles.topicIconText,
+                    index === currentIndex && styles.topicIconTextActive,
+                  ]}
+                >
                   {topic.id}
                 </Text>
               </View>
@@ -96,12 +85,8 @@ export function SimpleTopicView({ topics }: SimpleTopicViewProps) {
 
         {/* 説明文（画面中央） */}
         <View style={styles.descriptionContainer}>
-          <Text style={styles.topicTitle}>
-            {currentTopic?.title}
-          </Text>
-          <Text style={styles.topicDescription}>
-            {currentTopic?.description}
-          </Text>
+          <Text style={styles.topicTitle}>{currentTopic?.title}</Text>
+          <Text style={styles.topicDescription}>{currentTopic?.description}</Text>
         </View>
       </View>
     </GestureDetector>
