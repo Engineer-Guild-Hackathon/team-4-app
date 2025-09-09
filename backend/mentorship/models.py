@@ -63,12 +63,7 @@ class MentorRelation(models.Model):
         related_name='mentor_relation',
         verbose_name='弟子'
     )
-    rank = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        verbose_name='ランク',
-        db_index=True
-    )
+    
     topic = models.ForeignKey(
         Topic,
         on_delete=models.CASCADE,

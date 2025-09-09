@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -21,7 +22,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='参加日時')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新日時')),
                 ('topic', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='topics.topic', verbose_name='トピック')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.user', verbose_name='ユーザー')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='ユーザー')),
             ],
             options={
                 'verbose_name': 'ユーザー-トピック関連',

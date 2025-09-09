@@ -104,20 +104,10 @@ def get_mentorship_router():
         if request.user.id != mentor_request.to_user.id:
             return 403, {"message": "You do not have permission to perform this action."}
 
-        # 師匠のランクを取得（存在しない場合はデフォルト値100）
-        try:
-            mentor_rank = MentorRelation.objects.get(mentee=mentor_request.to_user).rank
-        except MentorRelation.DoesNotExist:
-            mentor_rank = 100
-
-        # 新しい弟子のランクを計算
-        new_mentee_rank = mentor_rank - 10
-
         # 師弟関係を作成
         MentorRelation.objects.create(
             mentor=mentor_request.to_user,
             mentee=mentor_request.from_user,
-            rank=new_mentee_rank,
             topic=mentor_request.topic
         )
 
