@@ -38,3 +38,4 @@ urlpatterns = [
     path('api/', api.urls),
     path('health/', health),
 ]
+
