@@ -17,6 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from ninja import NinjaAPI
 from ninja_jwt.routers.obtain import obtain_pair_router
 from ninja_jwt.authentication import JWTAuth
@@ -31,10 +33,12 @@ api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 from .health import health
 from users.views import router as users_router
 from topics.views import router as topics_router
+from posts.views import router as posts_router
 
+
+api.add_router("/posts", posts_router)
 api.add_router("/users", users_router, tags=["Users"])
 api.add_router("/topics", topics_router, tags=["Topics"])
-
 
 
 urlpatterns = [
@@ -42,3 +46,6 @@ urlpatterns = [
     path('api/', api.urls),
     path('health/', health),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
