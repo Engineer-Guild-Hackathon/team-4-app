@@ -1,62 +1,45 @@
-name: CI for Backend
+name: CI for Backend 
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "backend/**"
+    push:
+        branches: [ main ]
+        paths:
+            - 'backend/**'
+    pull_request:
+        paths:
+            - 'backend/**'
 
 jobs:
-  test:
-    name: Run Django Tests
-    runs-on: ubuntu-latest
+    test:
+        name: Run Django Tests
+        runs-on: ubuntu-latest
 
-    env:
-      POSTGRES_USER: ${{ vars.POSTGRES_USER_CI }}
-      POSTGRES_DB: ${{ vars.POSTGRES_DB_CI }}
-      POSTGRES_HOST: "db"
-      POSTGRES_PORT: 5432
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_CI }}
+        env:
+            POSTGRES_USER: ${{ vars.POSTGRES_USER_CI }}
+            POSTGRES_DB: ${{ vars.POSTGRES_DB_CI }}
+            POSTGRES_HOST: 'db'
+            POSTGRES_PORT: 5432
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_CI }}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-      - name: Create .env for CI
-        run: |
-          cd backend
-          echo "POSTGRES_USER=${{ env.POSTGRES_USER }}" > .env
-          echo "POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_HOST=${{ env.POSTGRES_HOST }}" >> .env
-          echo "POSTGRES_PORT=${{ env.POSTGRES_PORT }}" >> .env
-          #Django設定用の環境変数も追加
-          echo "DB_USER=${{ env.POSTGRES_USER }}" >> .env
-          echo "DB_PASSWORD=${{ env.POSTGRES_PASSWORD }}" >> .env
-          echo "DB_NAME=${{ env.POSTGRES_DB }}" >> .env
-          echo "DB_HOST=${{ env.POSTGRES_HOST }}" >> .env
-          echo "DB_PORT=${{ env.POSTGRES_PORT }}" >> .env
+        - name: Create .env for CI
+          run: |
+            cd backend
+            echo "POSTGRES_USER=${{ env.POSTGRES_USER }}" > .env
+            echo "POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
+            echo "POSTGRES_HOST=${{ env.POSTGRES_HOST }}" >> .env
+            echo "POSTGRES_PORT=${{ env.POSTGRES_PORT }}" >> .env
 
-      - name: Build and start containers
-        run: docker compose -f backend/compose.yml up -d --build
+        - name: Build and start containers
+          run: docker compose -f backend/compose.yml up -d --build
 
-      - name: Wait for DB to be healthy
-        run: |
-          echo "⏳ Waiting for database to be ready..."
-          for i in {1..15}; do
-              if docker container inspect -f '{{.State.Health.Status}}' backend-db-1 | grep -q 'healthy'; then
-                  echo "✅ Database is healthy!"
-                  exit 0
-              fi
-              sleep 3
-          done
-          echo "❌ Database did not become healthy in time."
-          docker compose -f backend/compose.yml logs db
-          exit 1
+        - name: Run Django tests
+          run: docker compose -f backend/compose.yml exec -T api python manage.py test
 
-      - name: Run Django tests
-        run: docker compose -f backend/compose.yml exec -T api python manage.py test
-
-      - name: Stop and remove containers
-        if: always()
-        run: docker compose -f backend/compose.yml down
+        - name: Stop and remove containers
+          if: always()
+          run: docker compose -f backend/compose.yml down

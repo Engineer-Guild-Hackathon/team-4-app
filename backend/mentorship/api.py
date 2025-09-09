@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 from ninja import Router, Schema
 from django.shortcuts import get_object_or_404
@@ -5,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.db import transaction
 from ninja import Body 
+from topics.models import Topic
 
 User = get_user_model()
 
@@ -14,9 +16,14 @@ class Message(Schema):
     """シンプルなメッセージレスポンス用スキーマ"""
     message: str
 
+class TopicSchema(Schema):
+    id: uuid.UUID
+    title: str
+
 class MentorRequestIn(Schema):
     """弟子入りリクエストの入力スキーマ"""
     to_user_id: int
+    topic_id: str
 
 class UserSchema(Schema):
     """簡易的なユーザー情報スキーマ"""
@@ -28,6 +35,7 @@ class MentorRequestOut(Schema):
     id: int
     from_user: UserSchema
     to_user: UserSchema
+    topic: TopicSchema
     status: str
 
 # --- APIエンドポイント定義 ---
@@ -60,9 +68,11 @@ def get_mentorship_router():
             return 400, {"message": "A pending request to this user already exists."}
 
         # リクエストを作成
+        topic = get_object_or_404(Topic, id=payload.topic_id)
         mentor_request = MentorRelationRequest.objects.create(
             from_user=from_user,
-            to_user=to_user
+            to_user=to_user,
+            topic=topic
         )
         return mentor_request
 
@@ -94,7 +104,8 @@ def get_mentorship_router():
         MentorRelation.objects.create(
             mentor=mentor_request.to_user,
             mentee=mentor_request.from_user,
-            rank=new_mentee_rank
+            rank=new_mentee_rank,
+            topic=mentor_request.topic
         )
 
         # リクエストのステータスを更新

@@ -1,118 +1,128 @@
-import logging
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from mentorship.models import MentorRelationRequest, MentorRelation
+from topics.models import Topic
 
 User = get_user_model()
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 class MentorAPITestCase(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="user1", password="pass123")
         self.user2 = User.objects.create_user(username="user2", password="pass123")
+        self.topic = Topic.objects.create(title="Test Topic", description="Description for test topic")
         self.client.login(username="user1", password="pass123")
 
-    def log_test_result(self, test_name, response, passed=True):
-        status = "テスト成功 ✅" if passed else "テスト失敗 ❌"
-        logger.info(f"\n{test_name} — {status}")
-        logger.info(f"認証ユーザー: {self.client.session.get('_auth_user_id')}")
-        logger.info(f"レスポンスステータス: {response.status_code}, 内容: {response.content.decode()}\n")
-
     def test_create_mentor_request_success(self):
-        test_name = "弟子入りリクエスト作成（リクエスト承認）"
-        try:
-            response = self.client.post(
-                "/api/mentorship/request",
-                {"to_user_id": self.user2.id},
-                content_type="application/json"
-            )
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(MentorRelationRequest.objects.filter(from_user=self.user1, to_user=self.user2).exists())
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 弟子入りリクエスト作成（成功）
+        """
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(MentorRelationRequest.objects.filter(from_user=self.user1, to_user=self.user2).exists())
 
     def test_create_mentor_request_to_self_fails(self):
-        test_name = "自分自身への弟子入りリクエスト（リクエスト拒否）"
-        try:
-            response = self.client.post(
-                "/api/mentorship/request",
-                {"to_user_id": self.user1.id},
-                content_type="application/json"
-            )
-            self.assertEqual(response.status_code, 400)
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 自分自身への弟子入りリクエスト（失敗）
+        """
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user1.id, "topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"message": "You cannot send a mentor request to yourself."})
 
     def test_create_mentor_request_pending_exists_fails(self):
-        test_name = "既存保留中リクエストがある場合の重複テスト"
-        try:
-            MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2)
-            response = self.client.post(
-                "/api/mentorship/request",
-                {"to_user_id": self.user2.id},
-                content_type="application/json"
-            )
-            self.assertEqual(response.status_code, 400)
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 既存の保留中リクエストがある場合の重複リクエスト（失敗）
+        """
+        MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"message": "A pending request to this user already exists."})
 
     def test_approve_mentor_request_success(self):
-        test_name = "弟子入りリクエスト承認（認証リクエスト承認）"
-        try:
-            mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2)
-            self.client.logout()
-            self.client.login(username="user2", password="pass123")
-            response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
-            self.assertEqual(response.status_code, 200)
-            mr.refresh_from_db()
-            self.assertEqual(mr.status, "approved")
-            self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 弟子入りリクエストの承認（成功）
+        """
+        mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
+        self.client.login(username="user2", password="pass123") # Login as recipient
+        response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
+
+        self.assertEqual(response.status_code, 200)
+        mr.refresh_from_db()
+        self.assertEqual(mr.status, "approved")
+        self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
 
     def test_approve_mentor_request_unauthorized_fails(self):
-        test_name = "権限のないユーザーによる承認（認証失敗）"
-        try:
-            mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2)
-            response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
-            self.assertEqual(response.status_code, 403)
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 権限のないユーザーによる承認（失敗）
+        """
+        mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
+        # user1 is logged in, who is not the recipient
+        response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
+        self.assertEqual(response.status_code, 403)
 
     def test_reject_mentor_request_success(self):
-        test_name = "弟子入りリクエスト拒否（リクエスト承認）"
-        try:
-            mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2)
-            self.client.logout()
-            self.client.login(username="user2", password="pass123")
-            response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
-            self.assertEqual(response.status_code, 200)
-            mr.refresh_from_db()
-            self.assertEqual(mr.status, "rejected")
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 弟子入りリクエストの拒否（成功）
+        """
+        mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
+        self.client.login(username="user2", password="pass123") # Login as recipient
+        response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
+
+        self.assertEqual(response.status_code, 200)
+        mr.refresh_from_db()
+        self.assertEqual(mr.status, "rejected")
 
     def test_reject_mentor_request_unauthorized_fails(self):
-        test_name = "権限のないユーザーによる拒否（リクエスト拒否）"
-        try:
-            mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2)
-            response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
-            self.assertEqual(response.status_code, 403)
-            self.log_test_result(test_name, response, passed=True)
-        except AssertionError:
-            self.log_test_result(test_name, response, passed=False)
-            raise
+        """
+        Test: 権限のないユーザーによる拒否（失敗）
+        """
+        mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
+        # user1 is logged in, who is not the recipient
+        response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_multiple_requests_to_different_mentors_succeeds(self):
+        """
+        Test: 異なるメンターへ複数のリクエストを作成（成功）
+        """
+        mentor3 = User.objects.create_user(username="mentor3", password="pass123")
+        topic2 = Topic.objects.create(title="Test Topic 2")
+
+        # Request 1: user1 -> user2 with self.topic
+        self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+        # Request 2: user1 -> mentor3 with topic2
+        self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": mentor3.id, "topic_id": str(topic2.id)},
+            content_type="application/json"
+        )
+
+        self.assertEqual(MentorRelationRequest.objects.filter(from_user=self.user1).count(), 2)
+
+    def test_create_request_when_relation_exists_fails(self):
+        """
+        Test: 既存の師弟関係があるユーザーへのリクエスト（失敗）
+        """
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"message": "You are already in a mentorship with this user."})
