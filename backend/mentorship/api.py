@@ -4,7 +4,7 @@ from ninja import Router, Schema
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
-from django.db import transaction
+from django.db import connection, transaction
 from ninja import Body 
 from topics.models import Topic
 
@@ -42,6 +42,10 @@ class MenteeActionStatus(Schema):
     status: str
     mentee_id: int
 
+class PromoteUserIn(Schema):
+    user_id: int
+    rank_difference: int
+
 # --- APIエンドポイント定義 ---
 
 def get_mentorship_router():
@@ -57,6 +61,46 @@ def get_mentorship_router():
         ActionLog.objects.create(actor=mentor, target=mentee, action=action)
 
         return {"status": action, "mentee_id": mentee.id}
+
+    def update_subtree_ranks(user: User, rank_difference: int):
+        """
+        指定されたユーザーとその配下の弟子全員のランクを更新します。
+        再帰CTEを使用して、効率的にサブツリー全体のランクを更新します。
+        """
+        with connection.cursor() as cursor:
+            # PostgreSQLの再帰CTEを使用してサブツリー内の全ユーザーIDを取得し、ランクを更新
+            cursor.execute("""
+                WITH RECURSIVE subtree AS (
+                    -- アンカーメンバー: 初期ユーザー
+                    SELECT id
+                    FROM users_user
+                    WHERE id = %s
+
+                    UNION ALL
+
+                    -- 再帰メンバー: サブツリー内のユーザーの弟子を見つける
+                    SELECT u.id
+                    FROM users_user u
+                    JOIN mentorship_mentorrelation mr ON u.id = mr.mentee_id
+                    JOIN subtree s ON mr.mentor_id = s.id
+                )
+                UPDATE users_user
+                SET rank = rank + %s
+                WHERE id IN (SELECT id FROM subtree);
+            """, [user.id, rank_difference])
+
+    @router.post("/promote", response={200: Message, 403: Message, 404: Message}, summary="ユーザーとそのサブツリーのランクを更新する")
+    @transaction.atomic
+    def promote_user(request: HttpRequest, payload: PromoteUserIn):
+        """
+        指定されたユーザーとその配下の弟子全員のランクを更新します。
+        """
+        target_user = get_object_or_404(User, id=payload.user_id)
+        # スーパーユーザーまたはユーザー自身のみが昇格/降格を許可される
+        if not request.user.is_superuser and request.user.id != target_user.id:
+            return 403, {"message": "You do not have permission to perform this action."}
+        update_subtree_ranks(target_user, payload.rank_difference)
+        return {"message": f"Rank of {target_user.username} and their subtree updated by {payload.rank_difference}."}
 
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -105,11 +149,17 @@ def get_mentorship_router():
             return 403, {"message": "You do not have permission to perform this action."}
 
         # 師弟関係を作成
+        mentor = mentor_request.to_user
+        mentee = mentor_request.from_user
         MentorRelation.objects.create(
-            mentor=mentor_request.to_user,
-            mentee=mentor_request.from_user,
+            mentor=mentor,
+            mentee=mentee,
             topic=mentor_request.topic
         )
+
+        # 弟子追加時：mentee.rank = mentor.rank - 10
+        mentee.rank = mentor.rank - 10
+        mentee.save()
 
         # リクエストのステータスを更新
         mentor_request.status = MentorRelationRequest.Status.APPROVED
