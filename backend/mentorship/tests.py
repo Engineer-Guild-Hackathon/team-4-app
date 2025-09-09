@@ -9,6 +9,9 @@ class MentorAPITestCase(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="user1", password="pass123")
         self.user2 = User.objects.create_user(username="user2", password="pass123")
+        self.user3 = User.objects.create_user(username="user3", password="pass123")
+        self.user4 = User.objects.create_user(username="user4", password="pass123")
+        self.superuser = User.objects.create_superuser(username="superuser", password="pass123")
         self.topic = Topic.objects.create(title="Test Topic", description="Description for test topic")
         self.client.login(username="user1", password="pass123")
 
@@ -54,7 +57,7 @@ class MentorAPITestCase(TestCase):
         Test: 弟子入りリクエストの承認（成功）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        self.client.login(username="user2", password="pass123") # Login as recipient
+        self.client.login(username="user2", password="pass123") # 受信者としてログイン
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
 
         self.assertEqual(response.status_code, 200)
@@ -62,12 +65,17 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(mr.status, "approved")
         self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
 
+        # 弟子のランク更新を検証
+        self.user1.refresh_from_db()
+        self.user2.refresh_from_db()
+        self.assertEqual(self.user1.rank, self.user2.rank - 10)
+
     def test_approve_mentor_request_unauthorized_fails(self):
         """
         Test: 権限のないユーザーによる承認（失敗）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        # user1 is logged in, who is not the recipient
+        # user1がログインしていますが、受信者ではありません
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
         self.assertEqual(response.status_code, 403)
 
@@ -76,7 +84,7 @@ class MentorAPITestCase(TestCase):
         Test: 弟子入りリクエストの拒否（成功）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        self.client.login(username="user2", password="pass123") # Login as recipient
+        self.client.login(username="user2", password="pass123") # 受信者としてログイン
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
 
         self.assertEqual(response.status_code, 200)
@@ -88,7 +96,7 @@ class MentorAPITestCase(TestCase):
         Test: 権限のないユーザーによる拒否（失敗）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        # user1 is logged in, who is not the recipient
+        # user1がログインしていますが、受信者ではありません
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
         self.assertEqual(response.status_code, 403)
 
@@ -131,10 +139,10 @@ class MentorAPITestCase(TestCase):
         """
         Test: 弟子を卒業させる（成功）
         """
-        # Create a mentor-mentee relationship
+        # 師弟関係を作成
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as the mentor
+        # 師匠としてログイン
         self.client.login(username="user2", password="pass123")
         
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
@@ -148,11 +156,10 @@ class MentorAPITestCase(TestCase):
         """
         Test: 権限のないユーザーによる卒業（失敗）
         """
-        # Create a mentor-mentee relationship
+        # 師弟関係を作成
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as a different user (not the mentor)
-        user3 = User.objects.create_user(username="user3", password="pass123")
+        # 別のユーザー（師匠ではない）としてログイン
         self.client.login(username="user3", password="pass123")
         
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
@@ -163,10 +170,10 @@ class MentorAPITestCase(TestCase):
         """
         Test: 弟子を破門する（成功）
         """
-        # Create a mentor-mentee relationship
+        # 師弟関係を作成
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as the mentor
+        # 師匠としてログイン
         self.client.login(username="user2", password="pass123")
         
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
@@ -180,13 +187,91 @@ class MentorAPITestCase(TestCase):
         """
         Test: 権限のないユーザーによる破門（失敗）
         """
-        # Create a mentor-mentee relationship
+        # 師弟関係を作成
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as a different user (not the mentor)
-        user3 = User.objects.create_user(username="user3", password="pass123")
+        # 別のユーザー（師匠ではない）としてログイン
         self.client.login(username="user3", password="pass123")
         
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
         
+        self.assertEqual(response.status_code, 404)
+
+    def test_promote_user_and_subtree_success(self):
+        """
+        Test: ユーザーとそのサブツリーのランク更新（成功）
+        """
+        # 初期ランク
+        self.user1.rank = 100
+        self.user1.save()
+        self.user2.rank = 90
+        self.user2.save()
+        self.user3.rank = 80
+        self.user3.save()
+
+        # 階層を作成: user1 -> user2 -> user3
+        MentorRelation.objects.create(mentor=self.user1, mentee=self.user2, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user3, topic=self.topic)
+
+        # 昇格を実行するためにスーパーユーザーとしてログイン
+        self.client.login(username="superuser", password="pass123")
+
+        rank_diff = 5
+        response = self.client.post(
+            "/api/mentorship/promote",
+            {"user_id": self.user1.id, "rank_difference": rank_diff},
+            content_type="application/json"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.user1.refresh_from_db()
+        self.user2.refresh_from_db()
+        self.user3.refresh_from_db()
+
+        self.assertEqual(self.user1.rank, 100 + rank_diff)
+        self.assertEqual(self.user2.rank, 90 + rank_diff)
+        self.assertEqual(self.user3.rank, 80 + rank_diff)
+
+    def test_promote_user_unauthorized_fails(self):
+        """
+        Test: 権限のないユーザーによるランク更新（失敗）
+        """
+        # user1がログインしています（スーパーユーザーではない）
+        self.client.login(username="user1", password="pass123")
+
+        response = self.client.post(
+            "/api/mentorship/promote",
+            {"user_id": self.user2.id, "rank_difference": 5},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_promote_user_self_success(self):
+        """
+        Test: ユーザー自身によるランク更新（成功）
+        """
+        self.user1.rank = 50
+        self.user1.save()
+        self.client.login(username="user1", password="pass123")
+
+        rank_diff = 10
+        response = self.client.post(
+            "/api/mentorship/promote",
+            {"user_id": self.user1.id, "rank_difference": rank_diff},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.rank, 50 + rank_diff)
+
+    def test_promote_user_non_existent_fails(self):
+        """
+        Test: 存在しないユーザーのランク更新（失敗）
+        """
+        self.client.login(username="superuser", password="pass123")
+        response = self.client.post(
+            "/api/mentorship/promote",
+            {"user_id": 9999, "rank_difference": 5},
+            content_type="application/json"
+        )
         self.assertEqual(response.status_code, 404)
