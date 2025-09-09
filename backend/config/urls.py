@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from ninja import NinjaAPI
 from ninja_jwt.routers.obtain import obtain_pair_router
 from ninja_jwt.authentication import JWTAuth
+from users.views import router as users_router
 from .health import health
 
 
@@ -30,16 +31,15 @@ api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 
 
 from .health import health
+from users.views import router as users_router
 from topics.views import router as topics_router
 from posts.views import router as posts_router
 
-api.add_router("/topics", topics_router)
-api.add_router("/posts", posts_router)
 
-# 保護されたAPIサンプル（削除予定）
-@api.get("/protected", auth=JWTAuth())
-def protected(request):
-    return {"username": request.user.username, "message": "JWT認証OK"}
+api.add_router("/posts", posts_router)
+api.add_router("/users", users_router, tags=["Users"])
+api.add_router("/topics", topics_router, tags=["Topics"])
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

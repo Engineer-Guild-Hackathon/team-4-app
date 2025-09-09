@@ -2,8 +2,6 @@ from django.test import TestCase
 from ninja.testing import TestClient
 from .models import Topic
 from .views import router
-from .schemas import TopicCreateSchema, TopicUpdateSchema, TopicResponseSchema, TopicListResponseSchema
-import json
 
 
 class TopicModelTest(TestCase):
