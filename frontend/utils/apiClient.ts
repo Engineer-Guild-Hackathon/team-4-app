@@ -10,9 +10,7 @@ export interface ApiOptions {
   headers?: Record<string, string>;
 }
 
-const BASE_URL = Platform.OS === 'web'
-  ? process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-  : 'http://192.168.10.4:8000'; // Expo Goの場合はIP直指定推奨
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL; // 自分のPCのIPアドレスを指定
 
 export async function apiClient<T = any>(
   endpoint: string,
