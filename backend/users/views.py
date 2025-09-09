@@ -34,7 +34,7 @@ def update_user(request, user_id: int, data: UserIn):
     user.save()
     return user
 
-@router.delete("/{user_id}/", auth=JWTAuth(), response={204: None})
+@router.delete("/{user_id}/", auth=JWTAuth())
 def delete_user(request, user_id: int):
     user = User.objects.get(id=user_id)
     user.delete()

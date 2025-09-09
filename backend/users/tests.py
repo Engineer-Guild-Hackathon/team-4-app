@@ -78,7 +78,7 @@ class UserAPITest(TestCase):
 	def test_delete_user(self):
 		user = User.objects.create_user(username="deluser", email="del@example.com", password="pass")
 		response = self.client.delete(f"/{user.id}/", headers=self.headers)
-		self.assertEqual(response.status_code, 204)
+		self.assertEqual(response.status_code, 200)
 		response_data = response.json()
 		self.assertTrue(response_data["success"])
 		self.assertFalse(User.objects.filter(id=user.id).exists())
