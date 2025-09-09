@@ -15,7 +15,7 @@ def list_users(request):
 def get_user(request, user_id: int):
     return User.objects.get(id=user_id)
 
-@router.post("/", response={201: UserOut}, auth=JWTAuth())
+@router.post("/", response={201: UserOut})
 def create_user(request, data: UserIn):
     user = User.objects.create_user(
         username=data.username,
