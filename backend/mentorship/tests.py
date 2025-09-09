@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from mentorship.models import MentorRelationRequest, MentorRelation
+from mentorship.models import MentorRelationRequest, MentorRelation, ActionLog
 from topics.models import Topic
 
 User = get_user_model()
@@ -140,8 +140,9 @@ class MentorAPITestCase(TestCase):
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"message": "Mentee has been graduated successfully."})
+        self.assertEqual(response.json(), {"status": "graduate", "mentee_id": self.user1.id})
         self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="graduate").exists())
 
     def test_graduate_mentee_unauthorized_fails(self):
         """
@@ -171,8 +172,9 @@ class MentorAPITestCase(TestCase):
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"message": "Mentee has been expelled successfully."})
+        self.assertEqual(response.json(), {"status": "expel", "mentee_id": self.user1.id})
         self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="expel").exists())
 
     def test_expel_mentee_unauthorized_fails(self):
         """
