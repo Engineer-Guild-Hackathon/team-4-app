@@ -25,6 +25,7 @@ class TopicModelTest(TestCase):
 
 class TopicAPITest(TestCase):
     def setUp(self):
+        Topic.objects.all().delete()
         self.client = TestClient(router)
         self.topic = Topic.objects.create(
             title="テストトピック",
