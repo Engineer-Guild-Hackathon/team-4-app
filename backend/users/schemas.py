@@ -10,6 +10,11 @@ class UserOut(ModelSchema):
         model = User
         model_fields = ["id", "username", "email", "is_active", "is_staff"]
 
+class UserCreateResponse(Schema):
+    access: str
+    refresh: str
+    user: UserOut
+
 class UserWithTopicsSchema(Schema):
     id: int
     username: str

@@ -43,9 +43,9 @@ class UserAPITest(TestCase):
 		response = self.client.post("/", json=data, headers=self.headers)
 		self.assertEqual(response.status_code, 201)
 		response_data = response.json()
-		self.assertEqual(response_data["username"], "newuser")
-		self.assertEqual(response_data["email"], "new@example.com")
-		self.assertIn("id", response_data)
+		self.assertEqual(response_data["user"]["username"], "newuser")
+		self.assertEqual(response_data["user"]["email"], "new@example.com")
+		self.assertIn("id", response_data["user"])
 
 	def test_list_users(self):
 		User.objects.create_user(username="u1", email="u1@example.com", password="pass")
