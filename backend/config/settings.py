@@ -1,4 +1,5 @@
 import os
+import dotenv
 """
 Django settings for config project.
 
@@ -15,6 +16,9 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file from the `backend` directory
+dotenv.load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -83,11 +87,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'egdb'),
-        'USER': os.environ.get('DB_USER', 'eguser'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'egpass'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': os.environ.get('POSTGRES_DB', 'egdb'),
+        'USER': os.environ.get('POSTGRES_USER', 'eguser'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'egpass'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
