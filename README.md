@@ -87,7 +87,8 @@
 ## フロントエンド・バックエンドの接続について
 
 Expo/React Native（フロント）からDjango（バックエンド）APIに接続する場合、
-**自分のPCや端末が接続しているネットワークのIPアドレス**を `frontend/utils/apiClient.ts:15` の `BASE_URL` の末尾、 `backend/.env` の `DJANGO_ALLOWED_HOSTS` などに追加する必要があります。
+**自分のPCや端末が接続しているネットワークのIPアドレス**を `frontend/utils/apiClient.ts:15` の `BASE_URL` の末尾、 `backend/.env` の `DJANGO_ALLOWED_HOSTS` に追加する必要があります。
+（例: `DJANGO_ALLOWED_HOSTS=192.168.**.**,localhost`）
 
 これを設定しないと、スマホ実機や他端末からAPIにアクセスできません。
 
