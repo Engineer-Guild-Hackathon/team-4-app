@@ -38,12 +38,25 @@ class MentorRequestOut(Schema):
     topic: TopicSchema
     status: str
 
+class MenteeActionStatus(Schema):
+    status: str
+    mentee_id: int
+
 # --- APIエンドポイント定義 ---
 
 def get_mentorship_router():
-    from .models import MentorRelationRequest, MentorRelation # Moved import inside function
+    from .models import MentorRelationRequest, MentorRelation, ActionLog 
 
     router = Router(tags=["mentorship"])
+
+    def _remove_relation(mentor, mentee, action: str):
+        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee)
+        relation.delete()
+
+        # ログを記録
+        ActionLog.objects.create(actor=mentor, target=mentee, action=action)
+
+        return {"status": action, "mentee_id": mentee.id}
 
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -133,5 +146,29 @@ def get_mentorship_router():
         mentor_request.save()
 
         return {"message": "Request rejected successfully."}
+
+    @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
+    def graduate_mentee(request: HttpRequest, mentee_id: int):
+        """
+        自身の弟子を卒業させ、師弟関係を解消します。
+
+        - 認証が必要です。
+        - 指定されたIDのユーザーが、実行者の弟子である必要があります。
+        """
+
+        mentee = get_object_or_404(User, id=mentee_id)
+        return _remove_relation(request.user, mentee, "graduate")
+
+    @router.post("/mentees/{mentee_id}/expel", response={200: MenteeActionStatus, 404: Message}, summary="弟子を破門する")
+    def expel_mentee(request: HttpRequest, mentee_id: int):
+        """
+        自身の弟子を破門し、師弟関係を解消します。
+
+        - 認証が必要です。
+        - 指定されたIDのユーザーが、実行者の弟子である必要があります。
+        """
+        
+        mentee = get_object_or_404(User, id=mentee_id)
+        return _remove_relation(request.user, mentee, "expel")
 
     return router

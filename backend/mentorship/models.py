@@ -34,7 +34,8 @@ class MentorRelationRequest(models.Model):
         Topic,
         on_delete=models.CASCADE,
         related_name='mentorship_requests',
-        verbose_name='トピック'
+        verbose_name='トピック',
+        null=True, blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='作成日時')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新日時')
@@ -72,7 +73,8 @@ class MentorRelation(models.Model):
         Topic,
         on_delete=models.CASCADE,
         related_name='mentorship_relations',
-        verbose_name='トピック'
+        verbose_name='トピック',
+        null=True, blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='作成日時')
 
@@ -82,3 +84,22 @@ class MentorRelation(models.Model):
     class Meta:
         verbose_name = '師弟関係'
         verbose_name_plural = '師弟関係'
+
+class ActionLog(models.Model):
+    ACTION_CHOICES = [
+        ("graduate", "Graduate"),
+        ("expel", "Expel"),
+    ]
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="action_logs"
+    )
+    target = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="target_logs"
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.actor} {self.action} {self.target} at {self.created_at}"
+

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from mentorship.models import MentorRelationRequest, MentorRelation
+from mentorship.models import MentorRelationRequest, MentorRelation, ActionLog
 from topics.models import Topic
 
 User = get_user_model()
@@ -126,3 +126,67 @@ class MentorAPITestCase(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"message": "You are already in a mentorship with this user."})
+
+    def test_graduate_mentee_success(self):
+        """
+        Test: 弟子を卒業させる（成功）
+        """
+        # Create a mentor-mentee relationship
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
+        
+        # Login as the mentor
+        self.client.login(username="user2", password="pass123")
+        
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "graduate", "mentee_id": self.user1.id})
+        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="graduate").exists())
+
+    def test_graduate_mentee_unauthorized_fails(self):
+        """
+        Test: 権限のないユーザーによる卒業（失敗）
+        """
+        # Create a mentor-mentee relationship
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
+        
+        # Login as a different user (not the mentor)
+        user3 = User.objects.create_user(username="user3", password="pass123")
+        self.client.login(username="user3", password="pass123")
+        
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
+        
+        self.assertEqual(response.status_code, 404)
+
+    def test_expel_mentee_success(self):
+        """
+        Test: 弟子を破門する（成功）
+        """
+        # Create a mentor-mentee relationship
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
+        
+        # Login as the mentor
+        self.client.login(username="user2", password="pass123")
+        
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "expel", "mentee_id": self.user1.id})
+        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="expel").exists())
+
+    def test_expel_mentee_unauthorized_fails(self):
+        """
+        Test: 権限のないユーザーによる破門（失敗）
+        """
+        # Create a mentor-mentee relationship
+        MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
+        
+        # Login as a different user (not the mentor)
+        user3 = User.objects.create_user(username="user3", password="pass123")
+        self.client.login(username="user3", password="pass123")
+        
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        
+        self.assertEqual(response.status_code, 404)
