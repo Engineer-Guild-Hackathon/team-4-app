@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'ninja_extra',
     'ninja_jwt',
     'mentorship',
+    'posts'
 ]
 
 MIDDLEWARE = [
@@ -133,3 +134,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# media settings
+# MEDIA_ROOT: アップロードされたファイルが実際に保存される場所
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# MEDIA_URL: ブラウザからファイルにアクセスするためのURL
+MEDIA_URL = '/media/'

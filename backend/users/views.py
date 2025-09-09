@@ -2,6 +2,7 @@ from .schemas import UserIn, UserOut
 from ninja import Router
 from django.contrib.auth import get_user_model
 from ninja_jwt.authentication import JWTAuth
+from ninja_jwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -15,14 +16,27 @@ def list_users(request):
 def get_user(request, user_id: int):
     return User.objects.get(id=user_id)
 
-@router.post("/", response={201: UserOut}, auth=JWTAuth())
+@router.post("/", response={201: dict})
 def create_user(request, data: UserIn):
     user = User.objects.create_user(
         username=data.username,
         email=data.email,
         password=data.password
     )
-    return user
+    # JWTトークン生成
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+    return {
+        "access": access,
+        "refresh": str(refresh),
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "is_active": user.is_active,
+            "is_staff": user.is_staff,
+        }
+    }
 
 @router.put("/{user_id}/", response=UserOut, auth=JWTAuth())
 def update_user(request, user_id: int, data: UserIn):
