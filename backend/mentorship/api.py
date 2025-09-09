@@ -17,6 +17,7 @@ class Message(Schema):
     message: str
 
 class TopicSchema(Schema):
+    """トピック情報スキーマ"""
     id: uuid.UUID
     title: str
 
@@ -39,12 +40,21 @@ class MentorRequestOut(Schema):
     status: str
 
 class MenteeActionStatus(Schema):
+    """弟子に対するアクションのステータスレスポンススキーマ"""
     status: str
     mentee_id: int
 
 class PromoteUserIn(Schema):
+    """ユーザー昇格/降格の入力スキーマ"""
     user_id: int
     rank_difference: int
+
+class MenteeSubtreeOut(Schema):
+    """メンターの弟子ツリー情報スキーマ"""
+    id: int
+    username: str
+    email: str
+    level: int
 
 # --- APIエンドポイント定義 ---
 
@@ -54,6 +64,9 @@ def get_mentorship_router():
     router = Router(tags=["mentorship"])
 
     def _remove_relation(mentor, mentee, action: str):
+        """
+        指定されたメンターと弟子の関係を削除し、アクションログを記録します。
+        """
         relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee)
         relation.delete()
 
@@ -88,6 +101,14 @@ def get_mentorship_router():
                 SET rank = rank + %s
                 WHERE id IN (SELECT id FROM subtree);
             """, [user.id, rank_difference])
+
+    @router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
+    def get_mentor_subtree(request: HttpRequest, mentor_id: int):
+        """
+        指定されたメンターの全ての弟子（サブツリー）を取得します。
+        """
+        subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
+        return subtree
 
     @router.post("/promote", response={200: Message, 403: Message, 404: Message}, summary="ユーザーとそのサブツリーのランクを更新する")
     @transaction.atomic
