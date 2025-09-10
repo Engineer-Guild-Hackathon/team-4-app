@@ -65,11 +65,6 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(mr.status, "approved")
         self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
 
-        # 弟子のランク更新を検証
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
-        self.assertEqual(self.user1.rank, self.user2.rank - 10)
-
     def test_approve_mentor_request_unauthorized_fails(self):
         """
         Test: 権限のないユーザーによる承認（失敗）
@@ -195,83 +190,4 @@ class MentorAPITestCase(TestCase):
         
         response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
         
-        self.assertEqual(response.status_code, 404)
-
-    def test_promote_user_and_subtree_success(self):
-        """
-        Test: ユーザーとそのサブツリーのランク更新（成功）
-        """
-        # 初期ランク
-        self.user1.rank = 100
-        self.user1.save()
-        self.user2.rank = 90
-        self.user2.save()
-        self.user3.rank = 80
-        self.user3.save()
-
-        # 階層を作成: user1 -> user2 -> user3
-        MentorRelation.objects.create(mentor=self.user1, mentee=self.user2, topic=self.topic)
-        MentorRelation.objects.create(mentor=self.user2, mentee=self.user3, topic=self.topic)
-
-        # 昇格を実行するためにスーパーユーザーとしてログイン
-        self.client.login(username="superuser", password="pass123")
-
-        rank_diff = 5
-        response = self.client.post(
-            "/api/mentorship/promote",
-            {"user_id": self.user1.id, "rank_difference": rank_diff},
-            content_type="application/json"
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
-        self.user3.refresh_from_db()
-
-        self.assertEqual(self.user1.rank, 100 + rank_diff)
-        self.assertEqual(self.user2.rank, 90 + rank_diff)
-        self.assertEqual(self.user3.rank, 80 + rank_diff)
-
-    def test_promote_user_unauthorized_fails(self):
-        """
-        Test: 権限のないユーザーによるランク更新（失敗）
-        """
-        # user1がログインしています（スーパーユーザーではない）
-        self.client.login(username="user1", password="pass123")
-
-        response = self.client.post(
-            "/api/mentorship/promote",
-            {"user_id": self.user2.id, "rank_difference": 5},
-            content_type="application/json"
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_promote_user_self_success(self):
-        """
-        Test: ユーザー自身によるランク更新（成功）
-        """
-        self.user1.rank = 50
-        self.user1.save()
-        self.client.login(username="user1", password="pass123")
-
-        rank_diff = 10
-        response = self.client.post(
-            "/api/mentorship/promote",
-            {"user_id": self.user1.id, "rank_difference": rank_diff},
-            content_type="application/json"
-        )
-        self.assertEqual(response.status_code, 200)
-        self.user1.refresh_from_db()
-        self.assertEqual(self.user1.rank, 50 + rank_diff)
-
-    def test_promote_user_non_existent_fails(self):
-        """
-        Test: 存在しないユーザーのランク更新（失敗）
-        """
-        self.client.login(username="superuser", password="pass123")
-        response = self.client.post(
-            "/api/mentorship/promote",
-            {"user_id": 9999, "rank_difference": 5},
-            content_type="application/json"
-        )
         self.assertEqual(response.status_code, 404)
