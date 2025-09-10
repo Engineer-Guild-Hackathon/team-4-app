@@ -1,4 +1,5 @@
 from ninja import Router
+from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 import uuid
@@ -29,6 +30,16 @@ def list_topics(request):
     return {
         "topics": list(topics),
         # トピックの数を返す
+        "count": topics.count()
+    }
+
+@router.get("/me/", response=TopicListResponseSchema, auth=JWTAuth())
+def get_my_topics(request):
+    """自分が参加しているトピック一覧を取得する"""
+    user = request.user
+    topics = user.topics.all()
+    return {
+        "topics": list(topics),
         "count": topics.count()
     }
 

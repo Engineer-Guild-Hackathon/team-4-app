@@ -123,3 +123,26 @@ class TopicAPITest(TestCase):
         nonexistent_id = str(uuid.uuid4())
         response = self.client.delete(f"/{nonexistent_id}/")
         self.assertEqual(response.status_code, 404)
+
+    def test_get_my_topics(self):
+        """自分が参加しているトピック一覧取得APIテスト"""
+        from users.testutils import get_jwt_auth_headers
+        # ユーザーとトピックを作成
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.create_user(username="myuser", password="pass")
+        topic1 = Topic.objects.create(title="参加トピック1")
+        topic2 = Topic.objects.create(title="参加トピック2")
+        # UserTopicで紐付け
+        from topics.models import UserTopic
+        UserTopic.objects.create(user=user, topic=topic1, level=1)
+        UserTopic.objects.create(user=user, topic=topic2, level=2)
+        headers = get_jwt_auth_headers(user)
+        client = TestClient(router)
+        response = client.get("/me/", headers=headers)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 2)
+        titles = [t["title"] for t in data["topics"]]
+        self.assertIn("参加トピック1", titles)
+        self.assertIn("参加トピック2", titles)
