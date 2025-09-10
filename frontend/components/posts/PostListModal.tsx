@@ -82,7 +82,10 @@ export default function PostListModal({ visible, onClose }: PostListModalProps) 
                     <View style={styles.header}>
                         <Text style={styles.modalTitle}>投稿一覧</Text>
                         <Link href="/create-post" asChild>
-                            <Pressable style={styles.createButton}>
+                            <Pressable 
+                                style={styles.createButton}
+                                onPress={onClose} 
+                            >
                                 <Text style={styles.createButtonText}>投稿する</Text>
                             </Pressable>
                         </Link>
