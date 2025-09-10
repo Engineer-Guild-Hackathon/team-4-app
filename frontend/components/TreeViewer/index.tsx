@@ -77,13 +77,28 @@ export const TreeViewer: React.FC = () => {
 
   const NodeCountOverlay: React.FC<NodeCountOverlayProps> = ({ node, offsetX = 0, offsetY = 0, text }) => {
     if (!node) return null;
-    const position = targetNodePositionsRef.current.get(node.id);
-    const left = ((position?.x) ?? 0) + offsetX;
-    const top = ((position?.y) ?? 0) + offsetY;
+
+    // Get the animated position values from the state
+    const animatedPosition = nodesWithPositions.get(node.id);
+
+    // If the node isn't being displayed/animated, don't render the overlay
+    if (!animatedPosition) return null;
+
+    const { x, y } = animatedPosition;
+
     return (
-      <View style={{ position: "absolute", left, top }}>
-        <Text>{text}</Text>
-      </View>
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: 0, // Position is handled by transform for animation
+          top: 0,
+          // Apply the animated X and Y translations
+          transform: [{ translateX: x }, { translateY: y }],
+        }}
+      >
+        {/* Apply the static offset to a non-animated child View */}
+        <View style={{ transform: [{ translateX: offsetX }, { translateY: offsetY }] }}><Text>{text}</Text></View>
+      </Animated.View>
     );
   };
 
