@@ -110,19 +110,6 @@ def get_mentorship_router():
         subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
         return subtree
 
-    @router.post("/promote", response={200: Message, 403: Message, 404: Message}, summary="ユーザーとそのサブツリーのランクを更新する")
-    @transaction.atomic
-    def promote_user(request: HttpRequest, payload: PromoteUserIn):
-        """
-        指定されたユーザーとその配下の弟子全員のランクを更新します。
-        """
-        target_user = get_object_or_404(User, id=payload.user_id)
-        # スーパーユーザーまたはユーザー自身のみが昇格/降格を許可される
-        if not request.user.is_superuser and request.user.id != target_user.id:
-            return 403, {"message": "You do not have permission to perform this action."}
-        update_subtree_ranks(target_user, payload.rank_difference)
-        return {"message": f"Rank of {target_user.username} and their subtree updated by {payload.rank_difference}."}
-
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
         """
@@ -177,10 +164,6 @@ def get_mentorship_router():
             mentee=mentee,
             topic=mentor_request.topic
         )
-
-        # 弟子追加時：mentee.rank = mentor.rank - 10
-        mentee.rank = mentor.rank - 10
-        mentee.save()
 
         # リクエストのステータスを更新
         mentor_request.status = MentorRelationRequest.Status.APPROVED
