@@ -29,7 +29,7 @@ def get_user_with_topics(request, user_id: int):
         "topics": list(user.topics.all())
     }
 
-@router.post("/", response={201: UserCreateResponse}, auth=JWTAuth())
+@router.post("/", response={201: UserCreateResponse})
 def create_user(request, data: UserIn):
     user = User.objects.create_user(
         username=data.username,
