@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, PanResponder } from "react-native"; // Added PanResponder
+import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from "react-native"; // Added PanResponder, Animated
 import Svg, { Line } from "react-native-svg";
 import { buildTree, TreeNode, UserNode } from "./treeUtils";
 import { TreeNodeView } from "./TreeNode";
@@ -15,6 +15,10 @@ const SWIPE_THRESHOLD = 50; // Re-added this constant
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export const TreeViewer: React.FC = () => {
+  // Animated values for the overall tree offset
+  const treeTranslateX = useRef(new Animated.Value(0)).current;
+  const treeTranslateY = useRef(new Animated.Value(0)).current;
+
   const { data, loading } = useTreeData();
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
   const [nodesWithPositions, setNodesWithPositions] = useState<Map<number, { node: TreeNode, x: number, y: number }>>(new Map());
@@ -28,6 +32,7 @@ export const TreeViewer: React.FC = () => {
   const [hiddenSiblingsRightCount, setHiddenSiblingsRightCount] = useState(0);
 
   const currentNodeRef = useRef<TreeNode | null>(null);
+  const prevNodesWithPositionsRef = useRef<Map<number, { node: TreeNode, x: number, y: number }>>(new Map()); // To store previous positions for animation
 
   useEffect(() => {
     currentNodeRef.current = currentNode;
@@ -43,6 +48,9 @@ export const TreeViewer: React.FC = () => {
   // Effect to calculate positions and lines when currentNode changes
   useEffect(() => {
     if (!currentNode) return;
+
+    // Store the current nodesWithPositions before recalculating for animation
+    prevNodesWithPositionsRef.current = nodesWithPositions;
 
     const newNodesWithPositions = new Map<number, { node: TreeNode, x: number, y: number }>();
     const newLines: Array<{ x1: number, y1: number, x2: number, y2: number, stroke: string }> = [];
@@ -188,6 +196,68 @@ export const TreeViewer: React.FC = () => {
     setNodesWithPositions(newNodesWithPositions);
     setLines(newLines);
 
+    // Animation Logic
+    const oldNodesWithPositions = prevNodesWithPositionsRef.current;
+    if (oldNodesWithPositions.size > 0 && oldNodesWithPositions.has(currentNode.id)) {
+      const oldCurrentNodePos = oldNodesWithPositions.get(currentNode.id);
+      const newCurrentNodePos = newNodesWithPositions.get(currentNode.id); // This will be the center of the screen
+
+      if (oldCurrentNodePos && newCurrentNodePos) {
+        // Calculate the difference in position of the current node from its old position to its new (centered) position
+        const deltaX = newCurrentNodePos.x - oldCurrentNodePos.x;
+        const deltaY = newCurrentNodePos.y - oldCurrentNodePos.y;
+
+        // Set the initial transform values to offset the tree such that the old current node appears at the center
+        treeTranslateX.setValue(-deltaX);
+        treeTranslateY.setValue(-deltaY);
+
+        // Determine if it's primarily a vertical or horizontal swipe
+        const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
+
+        if (isVerticalSwipe) {
+          // Animate Y first, then X
+          Animated.spring(treeTranslateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 7,
+          }).start(() => {
+            // After Y animation completes, animate X
+            if (deltaX !== 0) { // Only animate X if there's a horizontal component
+              Animated.spring(treeTranslateX, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 40,
+                friction: 7,
+              }).start();
+            }
+          });
+        } else {
+          // Animate X first, then Y (for horizontal swipes)
+          Animated.spring(treeTranslateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 7,
+          }).start(() => {
+            // After X animation completes, animate Y
+            if (deltaY !== 0) { // Only animate Y if there's a vertical component
+              Animated.spring(treeTranslateY, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 40,
+                friction: 7,
+              }).start();
+            }
+          });
+        }
+      }
+    } else {
+      // For the very first render, or if the previous node wasn't found, just set to 0 without animation
+      treeTranslateX.setValue(0);
+      treeTranslateY.setValue(0);
+    }
+
   }, [currentNode]); // Recalculate when currentNode changes
 
   // PanResponderのセットアップ
@@ -266,30 +336,36 @@ export const TreeViewer: React.FC = () => {
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      <Svg height="100%" width="100%">
-        {lines.map((line, index) => (
-          <Line
-            key={String(index)} // ensure string key
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            stroke={line.stroke} // Use stroke from line object
-            strokeWidth={2} // number, not string
-          />
+      <Animated.View style={{
+        flex: 1, // Ensure it takes full space
+        width: '100%',
+        height: '100%',
+        transform: [{ translateX: treeTranslateX }, { translateY: treeTranslateY }]
+      }}>
+        <Svg height="100%" width="100%" style={StyleSheet.absoluteFillObject}>
+          {lines.map((line, index) => (
+            <Line
+              key={String(index)} // ensure string key
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
+              stroke={line.stroke} // Use stroke from line object
+              strokeWidth={2} // number, not string
+            />
+          ))}
+        </Svg>
+
+        {Array.from(nodesWithPositions.values()).map(({ node, x, y }) => (
+          <View
+            key={String(node.id)} // ensure string key
+            style={{ position: "absolute", left: x, top: y }}
+          >
+            <TreeNodeView node={node} />
+          </View>
         ))}
-      </Svg>
 
-      {Array.from(nodesWithPositions.values()).map(({ node, x, y }) => (
-        <View
-          key={String(node.id)} // ensure string key
-          style={{ position: "absolute", left: x, top: y }}
-        >
-          <TreeNodeView node={node} />
-        </View>
-      ))}
-
-      {hasMoreMentees && displayedMenteesNodes.length > 0 && (
+        {hasMoreMentees && displayedMenteesNodes.length > 0 && (
         <View style={{
           position: "absolute",
           left: Math.min((nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60), // 60 for text width + padding
@@ -299,7 +375,7 @@ export const TreeViewer: React.FC = () => {
         </View>
       )}
 
-      {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && hiddenSiblingsLeftCount > 0 && (
+        {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && hiddenSiblingsLeftCount > 0 && (
         <View style={{
           position: "absolute",
           left: Math.max((displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
@@ -309,7 +385,7 @@ export const TreeViewer: React.FC = () => {
         </View>
       )}
 
-      {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && hiddenSiblingsRightCount > 0 && (
+        {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && hiddenSiblingsRightCount > 0 && (
         <View style={{
           position: "absolute",
           left: (() => {
@@ -326,6 +402,7 @@ export const TreeViewer: React.FC = () => {
           <Text>+{hiddenSiblingsRightCount}人</Text>
         </View>
       )}
+      </Animated.View>
     </View>
   );
 };
