@@ -244,6 +244,9 @@ export const TreeViewer: React.FC = () => {
       const existingLine = currentLinesMap.get(key);
       if (existingLine) {
         // Line exists, animate it to the new position
+        // BUG FIX: Update the stroke color. The color might change even if the line itself
+        // is not new (e.g., from direct connection to indirect).
+        existingLine.stroke = targetLine.stroke;
         newAnimatedLines.push(existingLine);
         animations.push(
           Animated.spring(existingLine.x1, { toValue: targetLine.x1, useNativeDriver: false, tension: 20, friction: 10 }),
@@ -345,24 +348,24 @@ export const TreeViewer: React.FC = () => {
       {hasMoreMentees && (
         <NodeCountOverlay
           node={displayedMenteesNodes[displayedMenteesNodes.length - 1]}
-          offsetX={NODE_WIDTH + HORIZONTAL_SPACING / 2}
-          offsetY={-NODE_HEIGHT / 2 - 10}
+          offsetX={NODE_WIDTH - 10}
+          offsetY={-20}
           text={`+${currentNode.mentees.length - displayedMenteesNodes.length}人`}
         />
       )}
       {hiddenSiblingsLeftCount > 0 && (
         <NodeCountOverlay
           node={displayedSiblingsNodes[0]}
-          offsetX={-HORIZONTAL_SPACING / 2 - 50}
-          offsetY={-NODE_HEIGHT / 2 - 10}
+          offsetX={-10}
+          offsetY={-20}
           text={`+${hiddenSiblingsLeftCount}人`}
         />
       )}
       {hiddenSiblingsRightCount > 0 && (
         <NodeCountOverlay
           node={displayedSiblingsNodes[2]}
-          offsetX={NODE_WIDTH + HORIZONTAL_SPACING / 4}
-          offsetY={-NODE_HEIGHT / 2 - 10}
+          offsetX={NODE_WIDTH - 10}
+          offsetY={-20}
           text={`+${hiddenSiblingsRightCount}人`}
         />
       )}
