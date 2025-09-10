@@ -66,11 +66,11 @@ def get_mentorship_router():
 
     router = Router(tags=["mentorship"])
 
-    def _remove_relation(mentor, mentee, action: str):
+    def _remove_relation(mentor, mentee, topic_id: str, action: str):
         """
         指定されたメンターと弟子の関係を削除し、アクションログを記録します。
         """
-        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee)
+        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee, topic_id=topic_id)
         relation.delete()
 
         # ログを記録
@@ -115,6 +115,7 @@ def get_mentorship_router():
             """
             cursor.execute(sql, [mentee.id, delta, mentee.id, str(topic_id)])
 
+    # 使っていない
     @router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
     def get_mentor_subtree(request: HttpRequest, mentor_id: int):
         """
@@ -205,7 +206,7 @@ def get_mentorship_router():
         return {"message": "Request rejected successfully."}
 
     @router.post("/mentees/{mentee_id}/expel", response={200: MenteeActionStatus, 404: Message}, summary="弟子を破門する")
-    def expel_mentee(request: HttpRequest, mentee_id: int):
+    def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
         """
         自身の弟子を破門し、師弟関係を解消します。
 
@@ -213,7 +214,8 @@ def get_mentorship_router():
         - 指定されたIDのユーザーが、実行者の弟子である必要があります。
         """
         
-        mentee = get_object_or_404(User, id=mentee_id)
+        mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
+        mentee = mentership.mentee
         return _remove_relation(request.user, mentee, "expel")
     
     @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
@@ -232,7 +234,7 @@ def get_mentorship_router():
         user_topic.save()
         # menteeとその全ての子孫のUserTopicのlevelを更新
         update_subtree_levels(mentee, data.topic_id, delta)
-        return _remove_relation(request.user, mentee, "graduate")
-    
+        return _remove_relation(request.user, mentee, data.topic_id, "graduate")
+
     return router
 
