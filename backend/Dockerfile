@@ -2,6 +2,8 @@
 # ベースイメージ
 FROM python:3.12-slim
 
+RUN apt-get update && apt-get install -y curl
+
 WORKDIR /app
 
 # 依存関係ファイルのコピー
