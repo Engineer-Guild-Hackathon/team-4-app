@@ -293,8 +293,8 @@ export const TreeViewer: React.FC = () => {
       {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && hiddenSiblingsLeftCount > 0 && (
         <View style={{
           position: "absolute",
-          left: Math.max((nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
-          top: (nodesWithPositions.get(displayedSiblingsNodes[0].id)?.y || 0) + NODE_HEIGHT / 2,
+          left: Math.max((displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
+          top: (displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.y || 0) + NODE_HEIGHT / 2,
         }}>
           <Text>+{hiddenSiblingsLeftCount}人</Text>
         </View>
@@ -303,8 +303,16 @@ export const TreeViewer: React.FC = () => {
       {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && hiddenSiblingsRightCount > 0 && (
         <View style={{
           position: "absolute",
-          left: Math.min((nodesWithPositions.get(displayedSiblingsNodes[displayedSiblingsNodes.length - 1].id)?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60), // 60 for text width + padding
-          top: (nodesWithPositions.get(displayedSiblingsNodes[displayedSiblingsNodes.length - 1].id)?.y || 0) + NODE_HEIGHT / 2,
+          left: (() => {
+            const lastSibling = displayedSiblingsNodes[displayedSiblingsNodes.length - 1];
+            const position = lastSibling ? nodesWithPositions.get(lastSibling.id) : undefined;
+            return Math.min((position?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60);
+          })(), // 60 for text width + padding
+          top: (() => {
+            const lastSibling = displayedSiblingsNodes[displayedSiblingsNodes.length - 1];
+            const position = lastSibling ? nodesWithPositions.get(lastSibling.id) : undefined;
+            return (position?.y || 0) + NODE_HEIGHT / 2;
+          })(),
         }}>
           <Text>+{hiddenSiblingsRightCount}人</Text>
         </View>
