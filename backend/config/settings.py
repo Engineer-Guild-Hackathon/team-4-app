@@ -47,10 +47,12 @@ INSTALLED_APPS = [
     'ninja_extra',
     'ninja_jwt',
     'mentorship',
-    'posts'
+    'posts',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

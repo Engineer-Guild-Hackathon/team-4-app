@@ -5,9 +5,26 @@ from typing import List
 from .models import Post, PostMedia
 from .schemas import PostOut
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 # postsアプリ用のルーターを作成
 router = Router()
+
+@router.get("/", response=List[PostOut])
+def list_posts(request):
+    """
+    投稿の一覧を取得する。
+    prefetch_relatedを使って、パフォーマンスを最適化。
+    """
+    posts = Post.objects.prefetch_related('media').order_by('-created_at')
+    return posts
+
+@router.delete("/{post_id}", response={204: None})
+def delete_post(request, post_id: int):
+    """指定されたIDの投稿を削除する"""
+    post = get_object_or_404(Post, id=post_id)
+    post.delete()
+    return 204
 
 @router.post("/", response=PostOut)
 @transaction.atomic
