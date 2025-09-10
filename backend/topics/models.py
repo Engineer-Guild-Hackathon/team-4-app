@@ -25,7 +25,7 @@ class Topic(models.Model):
 
 class UserTopic(models.Model):
     """ユーザーとトピックの中間テーブル"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="ユーザー")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="ユーザー", related_name="user_topics")
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="トピック")
     level = models.IntegerField(default=1, verbose_name="レベル")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="参加日時")
