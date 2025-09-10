@@ -8,7 +8,7 @@ import { useTreeData } from "../../hooks/useTreeData";
 const NODE_RADIUS = 20;
 const NODE_WIDTH = NODE_RADIUS * 2;
 const NODE_HEIGHT = NODE_RADIUS * 2 + 20;
-const VERTICAL_SPACING = 100;
+const VERTICAL_SPACING = 200;
 const HORIZONTAL_SPACING = 80;
 const SWIPE_THRESHOLD = 50; // Re-added this constant
 
@@ -18,7 +18,7 @@ export const TreeViewer: React.FC = () => {
   const { data, loading } = useTreeData();
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
   const [nodesWithPositions, setNodesWithPositions] = useState<Map<number, { node: TreeNode, x: number, y: number }>>(new Map());
-  const [lines, setLines] = useState<Array<{ x1: number, y1: number, x2: number, y2: number }>>([]);
+  const [lines, setLines] = useState<Array<{ x1: number, y1: number, x2: number, y2: number, stroke: string }>>([]);
   const [hasMoreMentees, setHasMoreMentees] = useState(false);
   const [hasMoreSiblingsLeft, setHasMoreSiblingsLeft] = useState(false);
   const [hasMoreSiblingsRight, setHasMoreSiblingsRight] = useState(false);
@@ -45,7 +45,7 @@ export const TreeViewer: React.FC = () => {
     if (!currentNode) return;
 
     const newNodesWithPositions = new Map<number, { node: TreeNode, x: number, y: number }>();
-    const newLines: Array<{ x1: number, y1: number, x2: number, y2: number }> = [];
+    const newLines: Array<{ x1: number, y1: number, x2: number, y2: number, stroke: string }> = [];
 
     // --- Layout Calculation ---
     // This is a simplified layout for current node, mentor, and direct mentees/siblings
@@ -61,12 +61,6 @@ export const TreeViewer: React.FC = () => {
       const mentorX = screenWidth / 2 - NODE_RADIUS;
       const mentorY = currentY - VERTICAL_SPACING;
       newNodesWithPositions.set(currentNode.mentor.id, { node: currentNode.mentor, x: mentorX, y: mentorY });
-      newLines.push({
-        x1: mentorX + NODE_RADIUS,
-        y1: mentorY + NODE_RADIUS * 2,
-        x2: currentX + NODE_RADIUS,
-        y2: currentY
-      });
     }
 
     // Mentees (below current, spread horizontally)
@@ -78,12 +72,6 @@ export const TreeViewer: React.FC = () => {
         const menteeX = startX + index * (NODE_WIDTH + HORIZONTAL_SPACING);
         const menteeY = currentY + VERTICAL_SPACING;
         newNodesWithPositions.set(mentee.id, { node: mentee, x: menteeX, y: menteeY });
-        newLines.push({
-          x1: currentX + NODE_RADIUS,
-          y1: currentY + NODE_RADIUS * 2,
-          x2: menteeX + NODE_RADIUS,
-          y2: menteeY
-        });
       });
       setHasMoreMentees(currentNode.mentees.length > 3);
       setDisplayedMenteesNodes(displayedMentees);
@@ -176,6 +164,27 @@ export const TreeViewer: React.FC = () => {
       setHiddenSiblingsRightCount(0);
     }
 
+    // Now, draw lines for all displayed nodes
+    newNodesWithPositions.forEach((sourceNodeData) => {
+      const sourceNode = sourceNodeData.node;
+      if (sourceNode.mentor) {
+        const mentorNodeData = newNodesWithPositions.get(sourceNode.mentor.id);
+        if (mentorNodeData) {
+          const isDirectConnection = 
+            (sourceNode.id === currentNode.id && sourceNode.mentor.id === currentNode.mentor?.id) ||
+            (sourceNode.mentor.id === currentNode.id);
+          
+          newLines.push({
+            x1: mentorNodeData.x + NODE_RADIUS,
+            y1: mentorNodeData.y + NODE_RADIUS * 2,
+            x2: sourceNodeData.x + NODE_RADIUS,
+            y2: sourceNodeData.y,
+            stroke: isDirectConnection ? "grey" : "lightgrey",
+          });
+        }
+      }
+    });
+
     setNodesWithPositions(newNodesWithPositions);
     setLines(newLines);
 
@@ -265,7 +274,7 @@ export const TreeViewer: React.FC = () => {
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            stroke="grey"
+            stroke={line.stroke} // Use stroke from line object
             strokeWidth={2} // number, not string
           />
         ))}
@@ -284,7 +293,7 @@ export const TreeViewer: React.FC = () => {
         <View style={{
           position: "absolute",
           left: Math.min((nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60), // 60 for text width + padding
-          top: (nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.y || 0) + NODE_HEIGHT / 2,
+          top: (nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.y || 0) - NODE_HEIGHT / 2 - 10,
         }}>
           <Text>+{currentNode.mentees.length - displayedMenteesNodes.length}人</Text>
         </View>
@@ -294,7 +303,7 @@ export const TreeViewer: React.FC = () => {
         <View style={{
           position: "absolute",
           left: Math.max((displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
-          top: (displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.y || 0) + NODE_HEIGHT / 2,
+          top: (displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.y || 0) - NODE_HEIGHT / 2 - 10,
         }}>
           <Text>+{hiddenSiblingsLeftCount}人</Text>
         </View>
@@ -311,7 +320,7 @@ export const TreeViewer: React.FC = () => {
           top: (() => {
             const lastSibling = displayedSiblingsNodes[displayedSiblingsNodes.length - 1];
             const position = lastSibling ? nodesWithPositions.get(lastSibling.id) : undefined;
-            return (position?.y || 0) + NODE_HEIGHT / 2;
+            return (position?.y || 0) - NODE_HEIGHT / 2 - 10;
           })(),
         }}>
           <Text>+{hiddenSiblingsRightCount}人</Text>
