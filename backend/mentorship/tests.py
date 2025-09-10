@@ -205,7 +205,7 @@ class MentorAPITestCase(TestCase):
         # 師匠としてログイン
         self.client.login(username="user2", password="pass123")
         
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel", {"topic_id": str(self.topic.id)}, content_type="application/json")
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "expel", "mentee_id": self.user1.id})
@@ -222,6 +222,6 @@ class MentorAPITestCase(TestCase):
         # 別のユーザー（師匠ではない）としてログイン
         self.client.login(username="user3", password="pass123")
         
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel", {"topic_id": str(self.topic.id)}, content_type="application/json")
         
         self.assertEqual(response.status_code, 404)

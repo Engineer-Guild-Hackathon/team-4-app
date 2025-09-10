@@ -216,8 +216,8 @@ def get_mentorship_router():
         
         mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
         mentee = mentership.mentee
-        return _remove_relation(request.user, mentee, "expel")
-    
+        return _remove_relation(request.user, mentee, topic_id=data.topic_id, action="expel")
+
     @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
     def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
         """
