@@ -23,7 +23,7 @@ export const TreeViewer: React.FC = () => {
   const [hasMoreSiblingsLeft, setHasMoreSiblingsLeft] = useState(false);
   const [hasMoreSiblingsRight, setHasMoreSiblingsRight] = useState(false);
   const [displayedMenteesNodes, setDisplayedMenteesNodes] = useState<TreeNode[]>([]);
-  const [displayedSiblingsNodes, setDisplayedSiblingsNodes] = useState<TreeNode[]>([]);
+  const [displayedSiblingsNodes, setDisplayedSiblingsNodes] = useState<(TreeNode | null)[]>([]);
   const [hiddenSiblingsLeftCount, setHiddenSiblingsLeftCount] = useState(0);
   const [hiddenSiblingsRightCount, setHiddenSiblingsRightCount] = useState(0);
 
@@ -96,41 +96,76 @@ export const TreeViewer: React.FC = () => {
       const allSiblings = [...currentNode.mentor.mentees].sort((a, b) => a.id - b.id);
       const currentIdx = allSiblings.findIndex(s => s.id === currentNode.id);
 
-      let displayedSiblings: TreeNode[] = [];
+      let displayedSiblings: (TreeNode | null)[] = new Array(3).fill(null);
       let tempHasMoreSiblingsLeft = false;
       let tempHasMoreSiblingsRight = false;
 
-      if (allSiblings.length <= 3) {
-        displayedSiblings = allSiblings;
-        setHiddenSiblingsLeftCount(0);
-        setHiddenSiblingsRightCount(0);
-      } else {
-        let startIndex = Math.max(0, currentIdx - 1);
-        let endIndex = startIndex + 3;
-
-        // Adjust startIndex if endIndex goes out of bounds
-        if (endIndex > allSiblings.length) {
-          endIndex = allSiblings.length;
-          startIndex = Math.max(0, endIndex - 3);
+      // Determine displayed siblings to ensure current node is centered
+      // displayedSiblings will always be an array of 3, with nulls for empty slots
+      if (allSiblings.length === 1) {
+        displayedSiblings[1] = currentNode;
+      } else if (allSiblings.length === 2) {
+        if (currentIdx === 0) {
+          displayedSiblings[1] = currentNode;
+          displayedSiblings[2] = allSiblings[1];
+        } else {
+          displayedSiblings[0] = allSiblings[0];
+          displayedSiblings[1] = currentNode;
         }
-
-        displayedSiblings = allSiblings.slice(startIndex, endIndex);
-
-        tempHasMoreSiblingsLeft = startIndex > 0;
-        tempHasMoreSiblingsRight = endIndex < allSiblings.length;
-
-        setHiddenSiblingsLeftCount(startIndex);
-        setHiddenSiblingsRightCount(allSiblings.length - endIndex);
+      } else { // allSiblings.length >= 3
+        if (currentIdx === 0) { // Current is the first sibling
+          displayedSiblings[1] = currentNode;
+          displayedSiblings[2] = allSiblings[1];
+        } else if (currentIdx === allSiblings.length - 1) { // Current is the last sibling
+          displayedSiblings[0] = allSiblings[currentIdx - 1];
+          displayedSiblings[1] = currentNode;
+        } else { // Current is in the middle
+          displayedSiblings[0] = allSiblings[currentIdx - 1];
+          displayedSiblings[1] = currentNode;
+          displayedSiblings[2] = allSiblings[currentIdx + 1];
+        }
       }
 
-      const totalSiblingsWidth = displayedSiblings.length * NODE_WIDTH + (displayedSiblings.length - 1) * HORIZONTAL_SPACING;
+      // Calculate total width based on actual displayed nodes (non-null)
+      const actualDisplayedCount = displayedSiblings.filter(Boolean).length;
+      const totalSiblingsWidth = actualDisplayedCount * NODE_WIDTH + (actualDisplayedCount > 1 ? (actualDisplayedCount - 1) * HORIZONTAL_SPACING : 0);
       let startX = screenWidth / 2 - totalSiblingsWidth / 2;
 
+      // Position the displayed siblings, accounting for nulls
       displayedSiblings.forEach((sibling, index) => {
-        const siblingX = startX + index * (NODE_WIDTH + HORIZONTAL_SPACING);
-        const siblingY = currentY; // Same level as current
-        newNodesWithPositions.set(sibling.id, { node: sibling, x: siblingX, y: siblingY });
+        if (sibling) {
+          let siblingX = startX;
+          if (index === 1) { // Current node (center)
+            siblingX = screenWidth / 2 - NODE_RADIUS;
+          } else if (index === 0) { // Left sibling
+            siblingX = screenWidth / 2 - NODE_RADIUS - NODE_WIDTH - HORIZONTAL_SPACING;
+          } else if (index === 2) { // Right sibling
+            siblingX = screenWidth / 2 - NODE_RADIUS + NODE_WIDTH + HORIZONTAL_SPACING;
+          }
+          const siblingY = currentY; // Same level as current
+          newNodesWithPositions.set(sibling.id, { node: sibling, x: siblingX, y: siblingY });
+        }
       });
+
+      // Update hasMoreSiblingsLeft/Right based on the original allSiblings array
+      tempHasMoreSiblingsLeft = currentIdx > 0;
+      tempHasMoreSiblingsRight = currentIdx < allSiblings.length - 1;
+
+      // Calculate hidden counts based on the 3-node display window
+      let newHiddenSiblingsLeftCount = 0;
+      if (displayedSiblings[0] !== null) { // If there's a sibling to the left in the display
+        const leftmostDisplayedSiblingIndex = allSiblings.findIndex(s => s.id === displayedSiblings[0]?.id);
+        newHiddenSiblingsLeftCount = leftmostDisplayedSiblingIndex; // Number of siblings before the leftmost displayed
+      }
+
+      let newHiddenSiblingsRightCount = 0;
+      if (displayedSiblings[2] !== null) { // If there's a sibling to the right in the display
+        const rightmostDisplayedSiblingIndex = allSiblings.findIndex(s => s.id === displayedSiblings[2]?.id);
+        newHiddenSiblingsRightCount = allSiblings.length - 1 - rightmostDisplayedSiblingIndex; // Number of siblings after the rightmost displayed
+      }
+
+      setHiddenSiblingsLeftCount(newHiddenSiblingsLeftCount);
+      setHiddenSiblingsRightCount(newHiddenSiblingsRightCount);
       setHasMoreSiblingsLeft(tempHasMoreSiblingsLeft);
       setHasMoreSiblingsRight(tempHasMoreSiblingsRight);
       setDisplayedSiblingsNodes(displayedSiblings);
@@ -255,7 +290,7 @@ export const TreeViewer: React.FC = () => {
         </View>
       )}
 
-      {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && (
+      {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && hiddenSiblingsLeftCount > 0 && (
         <View style={{
           position: "absolute",
           left: Math.max((nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
@@ -265,7 +300,7 @@ export const TreeViewer: React.FC = () => {
         </View>
       )}
 
-      {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && (
+      {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && hiddenSiblingsRightCount > 0 && (
         <View style={{
           position: "absolute",
           left: Math.min((nodesWithPositions.get(displayedSiblingsNodes[displayedSiblingsNodes.length - 1].id)?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60), // 60 for text width + padding
