@@ -1,7 +1,13 @@
+import typing
 from ninja import Schema
 from datetime import datetime
 from typing import Optional, List
 import uuid
+
+
+def get_UserOut():
+    from users.schemas import UserOut
+    return UserOut
 
 
 class TopicCreateSchema(Schema):
@@ -48,6 +54,16 @@ class UserTopicResponseSchema(Schema):
     level: int
     created_at: datetime
     updated_at: datetime
+
+class UserForTreeScructure(Schema):
+    user: typing.Any  # 実際の型はUserOutだが循環import回避のためAny
+    level: int
+    parent_id: Optional[int] = None
+
+class TreeStructureOut(Schema):
+    users: List[UserForTreeScructure]
+    max_level: int
+    min_level: int
 
 
 class TopicUsersResponseSchema(Schema):

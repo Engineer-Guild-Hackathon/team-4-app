@@ -8,7 +8,7 @@ User = get_user_model()
 class UserOut(ModelSchema):
     class Config:
         model = User
-        model_fields = ["id", "username", "email", "is_active", "is_staff"]
+        model_fields = ["id", "username", "is_active", "is_staff"]
 
 class UserCreateResponse(Schema):
     access: str

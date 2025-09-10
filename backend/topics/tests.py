@@ -2,6 +2,11 @@ from django.test import TestCase
 from ninja.testing import TestClient
 from .models import Topic
 from .views import router
+from django.contrib.auth import get_user_model
+from mentorship.models import MentorRelation
+from topics.models import Topic, UserTopic
+
+User = get_user_model()
 
 
 class TopicModelTest(TestCase):
@@ -31,6 +36,45 @@ class TopicAPITest(TestCase):
             title="テストトピック",
             description="テスト説明"
         )
+    def test_get_topic_users_tree_structure(self):
+        """
+        get_topic_usersエンドポイントでTreeStructureOutが正しく返るかテスト
+        """
+
+        # ユーザー・トピック・師弟関係を作成
+        mentor = User.objects.create_user(username="mentor", password="pass")
+        mentee = User.objects.create_user(username="mentee", password="pass")
+        grandchild = User.objects.create_user(username="grandchild", password="pass")
+        topic = Topic.objects.create(title="Tree構造テスト", description="test")
+        # UserTopic
+        UserTopic.objects.create(user=mentor, topic=topic, level=10)
+        UserTopic.objects.create(user=mentee, topic=topic, level=5)
+        UserTopic.objects.create(user=grandchild, topic=topic, level=2)
+        # 師弟関係 mentor→mentee→grandchild
+        MentorRelation.objects.create(mentor=mentor, mentee=mentee, topic=topic)
+        MentorRelation.objects.create(mentor=mentee, mentee=grandchild, topic=topic)
+
+        client = TestClient(router)
+        response = client.get(f"/{topic.id}/users/")
+        assert response.status_code == 200
+        data = response.json()
+        # usersリストの内容検証
+        users = data["users"]
+        # mentor
+        mentor_obj = next(u for u in users if u["user"]["username"] == "mentor")
+        assert mentor_obj["level"] == 10
+        assert mentor_obj["parent_id"] is None
+        # mentee
+        mentee_obj = next(u for u in users if u["user"]["username"] == "mentee")
+        assert mentee_obj["level"] == 5
+        assert mentee_obj["parent_id"] == mentor.id
+        # grandchild
+        grandchild_obj = next(u for u in users if u["user"]["username"] == "grandchild")
+        assert grandchild_obj["level"] == 2
+        assert grandchild_obj["parent_id"] == mentee.id
+        # max/min level
+        assert data["max_level"] == 10
+        assert data["min_level"] == 2
 
     def test_create_topic(self):
         """トピック作成APIテスト"""
