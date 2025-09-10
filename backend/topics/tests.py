@@ -2,7 +2,10 @@ from django.test import TestCase
 from ninja.testing import TestClient
 from .models import Topic
 from .views import router
+from django.contrib.auth import get_user_model
+from users.testutils import get_jwt_auth_headers
 
+User = get_user_model()
 
 class TopicModelTest(TestCase):
     def test_topic_creation(self):
@@ -31,6 +34,9 @@ class TopicAPITest(TestCase):
             title="テストトピック",
             description="テスト説明"
         )
+        # テスト用ユーザーを作成
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.auth_headers = get_jwt_auth_headers(self.user)
 
     def test_create_topic(self):
         """トピック作成APIテスト"""
@@ -38,7 +44,7 @@ class TopicAPITest(TestCase):
             "title": "新しいトピック",
             "description": "新しい説明"
         }
-        response = self.client.post("/", json=data)
+        response = self.client.post("/", json=data, headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertEqual(response_data["title"], "新しいトピック")
@@ -69,7 +75,7 @@ class TopicAPITest(TestCase):
     def test_update_topic(self):
         """トピック更新APIテスト"""
         data = {"title": "更新されたタイトル"}
-        response = self.client.put(f"/{self.topic.id}/", json=data)
+        response = self.client.put(f"/{self.topic.id}/", json=data, headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertEqual(response_data["title"], "更新されたタイトル")
@@ -78,7 +84,7 @@ class TopicAPITest(TestCase):
 
     def test_delete_topic(self):
         """トピック削除APIテスト"""
-        response = self.client.delete(f"/{self.topic.id}/")
+        response = self.client.delete(f"/{self.topic.id}/", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertEqual(response_data["message"], "トピックが削除されました")
@@ -87,7 +93,7 @@ class TopicAPITest(TestCase):
     def test_create_topic_with_empty_description(self):
         """空の説明でトピック作成APIテスト"""
         data = {"title": "タイトルのみのトピック"}
-        response = self.client.post("/", json=data)
+        response = self.client.post("/", json=data, headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertEqual(response_data["title"], "タイトルのみのトピック")
@@ -96,7 +102,7 @@ class TopicAPITest(TestCase):
     def test_update_topic_partial(self):
         """部分的なトピック更新APIテスト"""
         data = {"description": "説明のみ更新"}
-        response = self.client.put(f"/{self.topic.id}/", json=data)
+        response = self.client.put(f"/{self.topic.id}/", json=data, headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertEqual(response_data["title"], "テストトピック")  # 元のまま
@@ -114,32 +120,27 @@ class TopicAPITest(TestCase):
         import uuid
         nonexistent_id = str(uuid.uuid4())
         data = {"title": "存在しないトピック"}
-        response = self.client.put(f"/{nonexistent_id}/", json=data)
+        response = self.client.put(f"/{nonexistent_id}/", json=data, headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
 
     def test_delete_nonexistent_topic(self):
         """存在しないトピック削除APIテスト"""
         import uuid
         nonexistent_id = str(uuid.uuid4())
-        response = self.client.delete(f"/{nonexistent_id}/")
+        response = self.client.delete(f"/{nonexistent_id}/", headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
 
     def test_get_my_topics(self):
         """自分が参加しているトピック一覧取得APIテスト"""
-        from users.testutils import get_jwt_auth_headers
         # ユーザーとトピックを作成
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = User.objects.create_user(username="myuser", password="pass")
         topic1 = Topic.objects.create(title="参加トピック1")
         topic2 = Topic.objects.create(title="参加トピック2")
         # UserTopicで紐付け
         from topics.models import UserTopic
-        UserTopic.objects.create(user=user, topic=topic1, level=1)
-        UserTopic.objects.create(user=user, topic=topic2, level=2)
-        headers = get_jwt_auth_headers(user)
-        client = TestClient(router)
-        response = client.get("/me/", headers=headers)
+        UserTopic.objects.create(user=self.user, topic=topic1, level=1)
+        UserTopic.objects.create(user=self.user, topic=topic2, level=2)
+        
+        response = self.client.get("/me/", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["count"], 2)

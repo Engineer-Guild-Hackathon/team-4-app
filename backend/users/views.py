@@ -12,6 +12,11 @@ router = Router(tags=["users"])
 def list_users(request):
     return User.objects.all()
 
+@router.get("/me/", response=UserOut, auth=JWTAuth())
+def get_current_user(request):
+    """現在のユーザー情報を取得する"""
+    return request.user
+    
 @router.get("/{user_id}/", response=UserOut, auth=JWTAuth())
 def get_user(request, user_id: int):
     return User.objects.get(id=user_id)

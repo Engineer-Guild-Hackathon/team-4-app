@@ -50,7 +50,7 @@ export function useAuth() {
   const refreshAccessToken = useCallback(async () => {
     if (!refreshToken) return false;
     try {
-      const res = await apiClient('/api/token/refresh/', {
+      const res = await apiClient('/api/token/refresh', {
         method: 'POST',
         body: { refresh: refreshToken },
       });
@@ -90,7 +90,10 @@ export function useAuth() {
       if (e.message?.includes('token') || e.message?.includes('expired')) {
         const refreshed = await refreshAccessToken();
         if (refreshed) {
-          return await apiClient(endpoint, { ...options, token: accessToken });
+
+          // リフレッシュ後の新しいアクセストークンを取得
+          const newAccessToken = await SecureStore.getItemAsync(ACCESS_KEY);
+          return await apiClient(endpoint, { ...options, token: newAccessToken });
         } else {
           await logout();
         }
