@@ -8,8 +8,11 @@ export const useTreeData = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get("/api/mentorship/tree/")
-      .then(res => setData(res.data))
+    apiClient("/api/mentorship/tree/", { method: 'GET' })
+      .then(res => {
+        console.log("useTreeData: data received:", res);
+        setData(res);
+      })
       .finally(() => setLoading(false));
   }, []);
 

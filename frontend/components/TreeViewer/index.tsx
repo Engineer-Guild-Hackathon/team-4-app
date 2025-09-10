@@ -9,8 +9,10 @@ export const TreeViewer: React.FC = () => {
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
 
   useEffect(() => {
+    console.log("TreeViewer useEffect: data changed", data);
     if (data && data.length > 0) {
       const root = buildTree(data as UserNode[]);
+      console.log("TreeViewer useEffect: built root", root);
       // TODO: Set initial node to the logged-in user
       setCurrentNode(root);
     }
@@ -19,15 +21,23 @@ export const TreeViewer: React.FC = () => {
   if (loading || !currentNode) return <Text>Loading...</Text>;
 
   // 移動関数
-  const goUp = () => currentNode.mentor && setCurrentNode(currentNode.mentor);
-  const goDown = () => currentNode.mentees.length > 0 && setCurrentNode(currentNode.mentees[0]);
+  const goUp = () => {
+    console.log("goUp: currentNode", currentNode);
+    currentNode.mentor && setCurrentNode(currentNode.mentor);
+  };
+  const goDown = () => {
+    console.log("goDown: currentNode", currentNode);
+    currentNode.mentees.length > 0 && setCurrentNode(currentNode.mentees[0]);
+  };
   const goLeft = () => {
+    console.log("goLeft: currentNode", currentNode);
     if (!currentNode.mentor) return;
     const siblings = currentNode.mentor.mentees;
     const idx = siblings.findIndex(s => s.id === currentNode.id);
     if (idx > 0) setCurrentNode(siblings[idx - 1]);
   };
   const goRight = () => {
+    console.log("goRight: currentNode", currentNode);
     if (!currentNode.mentor) return;
     const siblings = currentNode.mentor.mentees;
     const idx = siblings.findIndex(s => s.id === currentNode.id);

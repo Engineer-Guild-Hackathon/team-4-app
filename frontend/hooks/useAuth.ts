@@ -17,10 +17,12 @@ export function useAuth() {
 
   // トークン取得
   const loadTokens = useCallback(async () => {
+    console.log("loadTokens: start");
     const access = await SecureStore.getItemAsync(ACCESS_KEY);
     const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
     setAccessToken(access);
     setRefreshToken(refresh);
+    console.log("loadTokens: end, access:", access, "refresh:", refresh);
   }, []);
 
   // ログイン
@@ -66,19 +68,27 @@ export function useAuth() {
   // 初回ロード
   useEffect(() => {
     (async () => {
+      console.log("useEffect: initial load start");
       await loadTokens();
       setLoading(false);
+      console.log("useEffect: initial load end, loading set to false");
     })();
   }, [loadTokens]);
 
   // トークンがあればユーザー情報取得
   useEffect(() => {
+    console.log("useEffect: accessToken changed, accessToken:", accessToken, "loading:", loading);
     if (accessToken) {
+      console.log("useEffect: accessToken exists, not redirecting");
     } else if (!loading) {
+      console.log("useEffect: accessToken is null and not loading, checking pathname");
       // 認証不要画面（/login, /signup）は遷移しない
       if (pathname !== '/login' && pathname !== '/signup') {
+        console.log("useEffect: redirecting to login");
         router.replace('/login');
       }
+    } else {
+      console.log("useEffect: still loading, not redirecting");
     }
   }, [accessToken, loading, router, pathname]);
 

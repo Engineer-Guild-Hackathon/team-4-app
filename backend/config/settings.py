@@ -139,6 +139,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'users.CustomUser'
+
 # media settings
 # MEDIA_ROOT: アップロードされたファイルが実際に保存される場所
 MEDIA_ROOT = BASE_DIR / 'media'
