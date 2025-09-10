@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'expo-router';
 import { StyleSheet, View, Text, FlatList, Image, ActivityIndicator, Modal, Pressable } from 'react-native';
-// 1. ResizeMode をインポート
 import { Video, ResizeMode } from 'expo-av';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL; // あなたのIPアドレスに要変更
@@ -71,16 +71,24 @@ export default function PostListModal({ visible, onClose }: PostListModalProps) 
     }
 
     return (
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={visible}
-            onRequestClose={onClose}
-        >
+<Modal /* ... */ >
             <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>投稿一覧</Text>
+                    {/* 2. ヘッダー部分を追加 */}
+                    <View style={styles.header}>
+                        <Text style={styles.modalTitle}>投稿一覧</Text>
+                        
+                        {/* 3. 「投稿する」ボタンを追加 */}
+                        <Link href="/create-post" asChild>
+                            <Pressable style={styles.createButton}>
+                                <Text style={styles.createButtonText}>投稿する</Text>
+                            </Pressable>
+                        </Link>
+                    </View>
+
+                    {/* 投稿一覧の表示部分 */}
                     {content}
+                    
                     <Pressable style={styles.closeButton} onPress={onClose}>
                         <Text style={styles.closeButtonText}>閉じる</Text>
                     </Pressable>
@@ -100,5 +108,22 @@ const styles = StyleSheet.create({
     closeButtonText: { fontSize: 16 },
     post: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
     postContent: { fontSize: 16, marginBottom: 10 },
-    media: { width: '100%', height: 200, marginTop: 5, marginBottom: 5, backgroundColor: '#f0f0f0' }
+    media: { width: '100%', height: 200, marginTop: 5, marginBottom: 5, backgroundColor: '#f0f0f0' },
+        header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    createButton: {
+        backgroundColor: '#007AFF',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+    },
+    createButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
 });
