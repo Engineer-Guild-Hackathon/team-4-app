@@ -16,10 +16,11 @@ def list_users(request):
 def get_current_user(request):
     """現在のユーザー情報を取得する"""
     return request.user
-
+    
 @router.get("/{user_id}/", response=UserOut, auth=JWTAuth())
 def get_user(request, user_id: int):
     return User.objects.get(id=user_id)
+
 
 @router.get("/{user_id}/topics/", response=UserWithTopicsSchema, auth=JWTAuth())
 def get_user_with_topics(request, user_id: int):
