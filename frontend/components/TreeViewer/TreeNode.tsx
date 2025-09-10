@@ -1,36 +1,45 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Svg, { Circle } from "react-native-svg"; // Added import
 import { TreeNode } from "./treeUtils";
 
 interface Props {
   node: TreeNode;
 }
 
+const NODE_RADIUS = 20; // Radius of the circle node
+
 export const TreeNodeView: React.FC<Props> = ({ node }) => {
   return (
-    <View style={styles.container}>
-      <Text><Text style={styles.bold}>{node.username}</Text> (level: {node.level})</Text>
-      {node.mentees.length > 0 && (
-        <Text style={styles.mentees}>
-          直属の弟子: {node.mentees.map(m => m.username).join(", ")}
-        </Text>
-      )}
+    <View style={styles.nodeWrapper}>
+      <Svg height={NODE_RADIUS * 2} width={NODE_RADIUS * 2}>
+        <Circle
+          cx={NODE_RADIUS}
+          cy={NODE_RADIUS}
+          r={NODE_RADIUS}
+          stroke="#ccc"
+          strokeWidth={1}
+          fill="#fff"
+        />
+      </Svg>
+      <Text style={styles.nodeLabel}>{String(node.username ?? "")}</Text>
     </View>
   );
 };
 
+
 const styles = StyleSheet.create({
-    container: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 8,
-        margin: 4,
+    nodeWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        // Removed margin: 10, spacing will be handled by TreeViewer
     },
-    bold: {
-        fontWeight: 'bold',
-    },
-    mentees: {
+    nodeLabel: {
+        position: 'absolute',
+        top: NODE_RADIUS * 2 + 5,
         fontSize: 12,
-        marginTop: 4,
-    }
+        fontWeight: 'bold',
+        textAlign: 'center',
+        width: NODE_RADIUS * 4,
+    },
 });
