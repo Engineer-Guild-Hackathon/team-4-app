@@ -147,7 +147,3 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # MEDIA_URL: ブラウザからファイルにアクセスするためのURL
 MEDIA_URL = '/media/'
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-]
