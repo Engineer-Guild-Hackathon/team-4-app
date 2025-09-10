@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/utils/apiClient';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 
 export default function UserCreateScreen() {
-  const { authedApi } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -17,7 +16,7 @@ export default function UserCreateScreen() {
     setError('');
     setSuccess('');
     try {
-      const res = await authedApi('/api/users/', {
+      const res = await apiClient('/api/users/', {
         method: 'POST',
         body: { username, email, password },
       });
