@@ -56,6 +56,11 @@ class MenteeSubtreeOut(Schema):
     email: str
     level: int
 
+class UserNodeOut(Schema):
+    user: UserSchema
+    rank: int
+    mentor_id: int | None = None
+
 # --- APIエンドポイント定義 ---
 
 def get_mentorship_router():
@@ -109,6 +114,30 @@ def get_mentorship_router():
         """
         subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
         return subtree
+
+    @router.get("/tree/", response=List[UserNodeOut], summary="全てのユーザーと師弟関係のツリーデータを取得する")
+    def get_tree_data(request: HttpRequest):
+        """
+        全てのユーザーと、それぞれのユーザーのランク、師匠のIDを含むツリーデータを取得します。
+        """
+        users = User.objects.all()
+        mentor_relations = MentorRelation.objects.all().select_related('mentor', 'mentee')
+        print(f"mentor_relations: {mentor_relations}")
+
+        # Create a dictionary to quickly look up mentor_id by mentee_id
+        mentee_to_mentor = {relation.mentee.id: relation.mentor.id for relation in mentor_relations}
+        print(f"mentee_to_mentor: {mentee_to_mentor}")
+
+        data = []
+        for user in users:
+            mentor_id = mentee_to_mentor.get(user.id) # Get mentor_id if user is a mentee
+
+            data.append(UserNodeOut(
+                user=UserSchema(id=user.id, username=user.username),
+                rank=user.rank,
+                mentor_id=mentor_id
+            ))
+        return data
 
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -216,3 +245,4 @@ def get_mentorship_router():
         return _remove_relation(request.user, mentee, "expel")
 
     return router
+# Added a comment to force reload
