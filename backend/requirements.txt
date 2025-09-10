@@ -56,3 +56,4 @@ urllib3==2.5.0
 websockets==15.0.1
 whitenoise==6.9.0
 wikipedia==1.4.0
+django-cors-headers==4.7.0

@@ -47,10 +47,12 @@ INSTALLED_APPS = [
     'ninja_extra',
     'ninja_jwt',
     'mentorship',
-    'posts'
+    'posts',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -145,3 +147,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # MEDIA_URL: ブラウザからファイルにアクセスするためのURL
 MEDIA_URL = '/media/'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+]
