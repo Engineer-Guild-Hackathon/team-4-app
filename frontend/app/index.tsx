@@ -6,8 +6,42 @@ import { useAuth } from '@/hooks/useAuth';
 import { TouchableOpacity, Text } from 'react-native';
 import PostListModal from '../components/posts/PostListModal';
 
+interface Topic {
+  id: number;
+  title: string;
+  description: string;
+}
+
+// モックデータ
+const mockTopics: Topic[] = [
+  {
+    id: 1,
+    title: 'プログラミング',
+    description: 'コードの書き方',
+  },
+  {
+    id: 2,
+    title: 'デザイン',
+    description: 'UI/UXの基礎',
+  },
+  {
+    id: 3,
+    title: 'データベース',
+    description: 'SQLの基本操作',
+  },
+  {
+    id: 4,
+    title: 'ネットワーク',
+    description: 'HTTP通信の仕組み',
+  },
+  {
+    id: 5,
+    title: 'セキュリティ',
+    description: '暗号化と認証',
+  },
+];
+
 export default function HomeScreen() {
-<<<<<<< HEAD
   const { logout, accessToken, loading } = useAuth();
   
   // ローディング中は何も表示しない
@@ -32,11 +66,6 @@ export default function HomeScreen() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <SimpleTopicView />
-=======
-  const { logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   return (
     <View style={styles.container}>
@@ -64,7 +93,6 @@ export default function HomeScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
->>>>>>> feat/frontend/post
     </View>
   );
 }
@@ -74,12 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-<<<<<<< HEAD
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-=======
     postsButton: {
     position: 'absolute',
     right: 24,
@@ -100,20 +122,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: 1,
   },
-  logoutButton: {
-    position: 'absolute',
-    right: 24,
-    bottom: 32,
-    backgroundColor: '#e11d48', // ピンク系
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 32,
-    shadowColor: '#e11d48',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
->>>>>>> feat/frontend/post
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     fontSize: 18,
