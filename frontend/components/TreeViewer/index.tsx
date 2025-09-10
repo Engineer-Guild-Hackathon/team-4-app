@@ -1,28 +1,59 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from "react-native"; // Added PanResponder, Animated
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import { buildTree, TreeNode, UserNode } from "./treeUtils";
 import { TreeNodeView } from "./TreeNode";
 import { useTreeData } from "../../hooks/useTreeData";
+
+const AnimatedLine = Animated.createAnimatedComponent(Line);
+
+interface AnimatedLineData {
+  key: string;
+  x1: Animated.Value;
+  y1: Animated.Value;
+  x2: Animated.Value;
+  y2: Animated.Value;
+  stroke: string;
+}
 
 const NODE_RADIUS = 20;
 const NODE_WIDTH = NODE_RADIUS * 2;
 const NODE_HEIGHT = NODE_RADIUS * 2 + 20;
 const VERTICAL_SPACING = 200;
 const HORIZONTAL_SPACING = 80;
-const SWIPE_THRESHOLD = 50; // Re-added this constant
+const SWIPE_THRESHOLD = 50;
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+/**
+ * Safely returns a number from an Animated.Value or a plain number, with a guaranteed fallback.
+ * This is the most robust way to prevent crashes from `__getValue` on unexpected object types.
+ */
+const safeNumber = (val: Animated.Value | number | undefined | null, fallback: number): number => {
+  // If it's already a number, we're good.
+  if (typeof val === "number") {
+    return val;
+  }
+  // If it's an animatable object, try to get the value with multiple layers of safety.
+  if (val && typeof (val as any).__getValue === "function") {
+    try {
+      const v = (val as any).__getValue();
+      return typeof v === "number" ? v : fallback;
+    } catch {
+      return fallback; // Catch any error during __getValue call.
+    }
+  }
+  // For anything else (null, undefined, other objects), return the fallback.
+  return fallback;
+};
 
 export const TreeViewer: React.FC = () => {
-  // Animated values for the overall tree offset
-  const treeTranslateX = useRef(new Animated.Value(0)).current;
-  const treeTranslateY = useRef(new Animated.Value(0)).current;
-
   const { data, loading } = useTreeData();
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
-  const [nodesWithPositions, setNodesWithPositions] = useState<Map<number, { node: TreeNode, x: number, y: number }>>(new Map());
-  const [lines, setLines] = useState<Array<{ x1: number, y1: number, x2: number, y2: number, stroke: string }>>([]);
+  const [nodesWithPositions, setNodesWithPositions] = useState<
+    Map<number, { node: TreeNode; x: Animated.Value; y: Animated.Value }>
+  >(new Map());
+  const [lines, setLines] = useState<AnimatedLineData[]>([]);
   const [hasMoreMentees, setHasMoreMentees] = useState(false);
   const [hasMoreSiblingsLeft, setHasMoreSiblingsLeft] = useState(false);
   const [hasMoreSiblingsRight, setHasMoreSiblingsRight] = useState(false);
@@ -32,8 +63,33 @@ export const TreeViewer: React.FC = () => {
   const [hiddenSiblingsRightCount, setHiddenSiblingsRightCount] = useState(0);
 
   const currentNodeRef = useRef<TreeNode | null>(null);
-  const prevNodesWithPositionsRef = useRef<Map<number, { node: TreeNode, x: number, y: number }>>(new Map()); // To store previous positions for animation
+  const targetNodePositionsRef = useRef<Map<number, { node: TreeNode; x: number; y: number }>>(new Map());
 
+  // -----------------------
+  // Node Count Overlay Helper
+  // -----------------------
+  type NodeCountOverlayProps = {
+    node?: TreeNode | null;
+    offsetX?: number;
+    offsetY?: number;
+    text: string;
+  };
+
+  const NodeCountOverlay: React.FC<NodeCountOverlayProps> = ({ node, offsetX = 0, offsetY = 0, text }) => {
+    if (!node) return null;
+    const position = targetNodePositionsRef.current.get(node.id);
+    const left = ((position?.x) ?? 0) + offsetX;
+    const top = ((position?.y) ?? 0) + offsetY;
+    return (
+      <View style={{ position: "absolute", left, top }}>
+        <Text>{text}</Text>
+      </View>
+    );
+  };
+
+  // -----------------------
+  // Effects
+  // -----------------------
   useEffect(() => {
     currentNodeRef.current = currentNode;
   }, [currentNode]);
@@ -41,45 +97,35 @@ export const TreeViewer: React.FC = () => {
   useEffect(() => {
     if (Array.isArray(data) && data.length > 0) {
       const root = buildTree(data as UserNode[]);
-      setCurrentNode(root); // Set initial node to the root
+      setCurrentNode(root);
     }
   }, [data]);
 
-  // Effect to calculate positions and lines when currentNode changes
   useEffect(() => {
     if (!currentNode) return;
 
-    // Store the current nodesWithPositions before recalculating for animation
-    prevNodesWithPositionsRef.current = nodesWithPositions;
+    const targetNodePositions = new Map<number, { node: TreeNode; x: number; y: number }>();
+    const targetLines = new Map<string, { x1: number; y1: number; x2: number; y2: number; stroke: string }>();
 
-    const newNodesWithPositions = new Map<number, { node: TreeNode, x: number, y: number }>();
-    const newLines: Array<{ x1: number, y1: number, x2: number, y2: number, stroke: string }> = [];
-
-    // --- Layout Calculation ---
-    // This is a simplified layout for current node, mentor, and direct mentees/siblings
-    // More complex tree layout algorithms would be needed for a full tree.
-
-    // Current Node (center)
     const currentX = screenWidth / 2 - NODE_RADIUS;
     const currentY = screenHeight / 2 - NODE_RADIUS;
-    newNodesWithPositions.set(currentNode.id, { node: currentNode, x: currentX, y: currentY });
+    targetNodePositions.set(currentNode.id, { node: currentNode, x: currentX, y: currentY });
 
-    // Mentor Node (above current)
+    // Mentor
     if (currentNode.mentor) {
-      const mentorX = screenWidth / 2 - NODE_RADIUS;
-      const mentorY = currentY - VERTICAL_SPACING;
-      newNodesWithPositions.set(currentNode.mentor.id, { node: currentNode.mentor, x: mentorX, y: mentorY });
+      targetNodePositions.set(currentNode.mentor.id, { node: currentNode.mentor, x: currentX, y: currentY - VERTICAL_SPACING });
     }
 
-    // Mentees (below current, spread horizontally)
+    // Mentees
     if (currentNode.mentees.length > 0) {
       const displayedMentees = currentNode.mentees.slice(0, 3);
-      const totalMenteesWidth = displayedMentees.length * NODE_WIDTH + (displayedMentees.length - 1) * HORIZONTAL_SPACING;
+      const totalMenteesWidth =
+        displayedMentees.length * NODE_WIDTH + (displayedMentees.length - 1) * HORIZONTAL_SPACING;
       let startX = screenWidth / 2 - totalMenteesWidth / 2;
-      displayedMentees.forEach((mentee, index) => {
-        const menteeX = startX + index * (NODE_WIDTH + HORIZONTAL_SPACING);
+      displayedMentees.forEach((mentee, idx) => {
+        const menteeX = startX + idx * (NODE_WIDTH + HORIZONTAL_SPACING);
         const menteeY = currentY + VERTICAL_SPACING;
-        newNodesWithPositions.set(mentee.id, { node: mentee, x: menteeX, y: menteeY });
+        targetNodePositions.set(mentee.id, { node: mentee, x: menteeX, y: menteeY });
       });
       setHasMoreMentees(currentNode.mentees.length > 3);
       setDisplayedMenteesNodes(displayedMentees);
@@ -87,83 +133,39 @@ export const TreeViewer: React.FC = () => {
       setHasMoreMentees(false);
     }
 
-    // Siblings (same level as current, spread horizontally)
+    // Siblings
     if (currentNode.mentor) {
       const allSiblings = [...currentNode.mentor.mentees].sort((a, b) => a.id - b.id);
-      const currentIdx = allSiblings.findIndex(s => s.id === currentNode.id);
-
+      const currentIdx = allSiblings.findIndex((s) => s.id === currentNode.id);
       let displayedSiblings: (TreeNode | null)[] = new Array(3).fill(null);
-      let tempHasMoreSiblingsLeft = false;
-      let tempHasMoreSiblingsRight = false;
 
-      // Determine displayed siblings to ensure current node is centered
-      // displayedSiblings will always be an array of 3, with nulls for empty slots
-      if (allSiblings.length === 1) {
-        displayedSiblings[1] = currentNode;
-      } else if (allSiblings.length === 2) {
-        if (currentIdx === 0) {
-          displayedSiblings[1] = currentNode;
-          displayedSiblings[2] = allSiblings[1];
-        } else {
-          displayedSiblings[0] = allSiblings[0];
-          displayedSiblings[1] = currentNode;
-        }
-      } else { // allSiblings.length >= 3
-        if (currentIdx === 0) { // Current is the first sibling
-          displayedSiblings[1] = currentNode;
-          displayedSiblings[2] = allSiblings[1];
-        } else if (currentIdx === allSiblings.length - 1) { // Current is the last sibling
-          displayedSiblings[0] = allSiblings[currentIdx - 1];
-          displayedSiblings[1] = currentNode;
-        } else { // Current is in the middle
-          displayedSiblings[0] = allSiblings[currentIdx - 1];
-          displayedSiblings[1] = currentNode;
-          displayedSiblings[2] = allSiblings[currentIdx + 1];
-        }
+      displayedSiblings[1] = currentNode;
+      if (currentIdx > 0) {
+        displayedSiblings[0] = allSiblings[currentIdx - 1];
+      }
+      if (currentIdx < allSiblings.length - 1) {
+        displayedSiblings[2] = allSiblings[currentIdx + 1];
       }
 
-      // Calculate total width based on actual displayed nodes (non-null)
-      const actualDisplayedCount = displayedSiblings.filter(Boolean).length;
-      const totalSiblingsWidth = actualDisplayedCount * NODE_WIDTH + (actualDisplayedCount > 1 ? (actualDisplayedCount - 1) * HORIZONTAL_SPACING : 0);
-      let startX = screenWidth / 2 - totalSiblingsWidth / 2;
-
-      // Position the displayed siblings, accounting for nulls
-      displayedSiblings.forEach((sibling, index) => {
-        if (sibling) {
-          let siblingX = startX;
-          if (index === 1) { // Current node (center)
-            siblingX = screenWidth / 2 - NODE_RADIUS;
-          } else if (index === 0) { // Left sibling
-            siblingX = screenWidth / 2 - NODE_RADIUS - NODE_WIDTH - HORIZONTAL_SPACING;
-          } else if (index === 2) { // Right sibling
-            siblingX = screenWidth / 2 - NODE_RADIUS + NODE_WIDTH + HORIZONTAL_SPACING;
-          }
-          const siblingY = currentY; // Same level as current
-          newNodesWithPositions.set(sibling.id, { node: sibling, x: siblingX, y: siblingY });
+      displayedSiblings.forEach((sibling, idx) => {
+        // Only calculate position for non-null siblings that are not the current node
+        if (sibling && sibling.id !== currentNode.id) {
+          let siblingX = screenWidth / 2 - NODE_RADIUS;
+          if (idx === 0) siblingX -= NODE_WIDTH + HORIZONTAL_SPACING;
+          if (idx === 2) siblingX += NODE_WIDTH + HORIZONTAL_SPACING;
+          // The current node's position is already set, so we only set siblings
+          targetNodePositions.set(sibling.id, { node: sibling, x: siblingX, y: currentY });
         }
       });
 
-      // Update hasMoreSiblingsLeft/Right based on the original allSiblings array
-      tempHasMoreSiblingsLeft = currentIdx > 0;
-      tempHasMoreSiblingsRight = currentIdx < allSiblings.length - 1;
+      setHasMoreSiblingsLeft(currentIdx > 0);
+      setHasMoreSiblingsRight(currentIdx < allSiblings.length - 1);
 
-      // Calculate hidden counts based on the 3-node display window
-      let newHiddenSiblingsLeftCount = 0;
-      if (displayedSiblings[0] !== null) { // If there's a sibling to the left in the display
-        const leftmostDisplayedSiblingIndex = allSiblings.findIndex(s => s.id === displayedSiblings[0]?.id);
-        newHiddenSiblingsLeftCount = leftmostDisplayedSiblingIndex; // Number of siblings before the leftmost displayed
-      }
+      const leftmost = displayedSiblings[0] ? allSiblings.findIndex((s) => s.id === displayedSiblings[0]?.id) : currentIdx;
+      const rightmost = displayedSiblings[2] ? allSiblings.findIndex((s) => s.id === displayedSiblings[2]?.id) : currentIdx;
+      setHiddenSiblingsLeftCount(leftmost);
+      setHiddenSiblingsRightCount(allSiblings.length - 1 - rightmost);
 
-      let newHiddenSiblingsRightCount = 0;
-      if (displayedSiblings[2] !== null) { // If there's a sibling to the right in the display
-        const rightmostDisplayedSiblingIndex = allSiblings.findIndex(s => s.id === displayedSiblings[2]?.id);
-        newHiddenSiblingsRightCount = allSiblings.length - 1 - rightmostDisplayedSiblingIndex; // Number of siblings after the rightmost displayed
-      }
-
-      setHiddenSiblingsLeftCount(newHiddenSiblingsLeftCount);
-      setHiddenSiblingsRightCount(newHiddenSiblingsRightCount);
-      setHasMoreSiblingsLeft(tempHasMoreSiblingsLeft);
-      setHasMoreSiblingsRight(tempHasMoreSiblingsRight);
       setDisplayedSiblingsNodes(displayedSiblings);
     } else {
       setHasMoreSiblingsLeft(false);
@@ -172,246 +174,207 @@ export const TreeViewer: React.FC = () => {
       setHiddenSiblingsRightCount(0);
     }
 
-    // Now, draw lines for all displayed nodes
-    newNodesWithPositions.forEach((sourceNodeData) => {
-      const sourceNode = sourceNodeData.node;
-      if (sourceNode.mentor) {
-        const mentorNodeData = newNodesWithPositions.get(sourceNode.mentor.id);
-        if (mentorNodeData) {
-          const isDirectConnection = 
-            (sourceNode.id === currentNode.id && sourceNode.mentor.id === currentNode.mentor?.id) ||
-            (sourceNode.mentor.id === currentNode.id);
-          
-          newLines.push({
-            x1: mentorNodeData.x + NODE_RADIUS,
-            y1: mentorNodeData.y + NODE_RADIUS * 2,
-            x2: sourceNodeData.x + NODE_RADIUS,
-            y2: sourceNodeData.y,
-            stroke: isDirectConnection ? "grey" : "lightgrey",
-          });
-        }
+    // Lines
+    targetNodePositions.forEach((sourceNodeData) => {
+      const sourceNode = sourceNodeData?.node;
+      const mentorNode = sourceNode?.mentor;
+
+      // Defensively check that both the source and its mentor exist.
+      if (!sourceNode || !mentorNode) return;
+
+      // Ensure the mentor node is also being displayed before trying to draw a line to it.
+      const mentorNodeData = targetNodePositions.get(mentorNode.id);
+      if (!mentorNodeData) return;
+
+      const isDirectConnection =
+        (sourceNode.id === currentNode?.id && mentorNode.id === currentNode?.mentor?.id) ||
+        mentorNode.id === currentNode?.id;
+
+      const lineKey = `${mentorNodeData.node.id}-${sourceNode.id}`;
+      targetLines.set(lineKey, {
+        x1: mentorNodeData.x + NODE_RADIUS,
+        y1: mentorNodeData.y + NODE_RADIUS * 2,
+        x2: sourceNodeData.x + NODE_RADIUS,
+        y2: sourceNodeData.y,
+        stroke: isDirectConnection ? "grey" : "lightgrey",
+      });
+    });
+
+    // Animation
+    const newAnimatedNodes = new Map<number, { node: TreeNode; x: Animated.Value; y: Animated.Value }>();
+    const animations: Animated.CompositeAnimation[] = [];
+
+    targetNodePositions.forEach((targetPos, id) => {
+      const existingNode = nodesWithPositions.get(id);
+      if (existingNode) {
+        newAnimatedNodes.set(id, existingNode);
+        animations.push(
+          Animated.spring(existingNode.x, { toValue: targetPos.x, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(existingNode.y, { toValue: targetPos.y, useNativeDriver: false, tension: 20, friction: 10 })
+        );
+      } else {
+        // Node is new. Find a safe, logical start position for the animation.
+        const newNode = targetPos.node;
+        const mentorPrev = newNode.mentor ? nodesWithPositions.get(newNode.mentor.id) : undefined;
+        const menteePrev = newNode.mentees.length > 0 ? nodesWithPositions.get(newNode.mentees[0].id) : undefined;
+
+        // Use safeNumber to guarantee a valid number for the animation's starting point.
+        const startX = safeNumber(mentorPrev?.x, safeNumber(menteePrev?.x, targetPos.x ?? screenWidth / 2 - NODE_RADIUS));
+        const startY = safeNumber(mentorPrev?.y, safeNumber(menteePrev?.y, targetPos.y ?? screenHeight / 2 - NODE_RADIUS));
+
+        const animatedNode = {
+          node: targetPos.node,
+          x: new Animated.Value(startX),
+          y: new Animated.Value(startY),
+        };
+        newAnimatedNodes.set(id, animatedNode);
+        
+        animations.push(
+          Animated.spring(animatedNode.x, { toValue: targetPos.x, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(animatedNode.y, { toValue: targetPos.y, useNativeDriver: false, tension: 20, friction: 10 })
+        );
       }
     });
 
-    setNodesWithPositions(newNodesWithPositions);
-    setLines(newLines);
+    // Animate Lines
+    const newAnimatedLines: AnimatedLineData[] = [];
+    const currentLinesMap = new Map(lines.map((l) => [l.key, l]));
 
-    // Animation Logic
-    const oldNodesWithPositions = prevNodesWithPositionsRef.current;
-    if (oldNodesWithPositions.size > 0 && oldNodesWithPositions.has(currentNode.id)) {
-      const oldCurrentNodePos = oldNodesWithPositions.get(currentNode.id);
-      const newCurrentNodePos = newNodesWithPositions.get(currentNode.id); // This will be the center of the screen
+    targetLines.forEach((targetLine, key) => {
+      const existingLine = currentLinesMap.get(key);
+      if (existingLine) {
+        // Line exists, animate it to the new position
+        newAnimatedLines.push(existingLine);
+        animations.push(
+          Animated.spring(existingLine.x1, { toValue: targetLine.x1, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(existingLine.y1, { toValue: targetLine.y1, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(existingLine.x2, { toValue: targetLine.x2, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(existingLine.y2, { toValue: targetLine.y2, useNativeDriver: false, tension: 20, friction: 10 })
+        );
+      } else {
+        // New line, animate it "growing" from the mentor node.
+        const [mentorIdStr] = key.split("-");
+        const mentorId = parseInt(mentorIdStr, 10);
+        const mentorPrev = nodesWithPositions.get(mentorId);
 
-      if (oldCurrentNodePos && newCurrentNodePos) {
-        // Calculate the difference in position of the current node from its old position to its new (centered) position
-        const deltaX = newCurrentNodePos.x - oldCurrentNodePos.x;
-        const deltaY = newCurrentNodePos.y - oldCurrentNodePos.y;
+        // Use safeNumber to guarantee a valid starting coordinate for the new line.
+        const startX = safeNumber(mentorPrev?.x, targetLine.x1 - NODE_RADIUS) + NODE_RADIUS;
+        const startY = safeNumber(mentorPrev?.y, targetLine.y1 - NODE_RADIUS * 2) + NODE_RADIUS * 2;
 
-        // Set the initial transform values to offset the tree such that the old current node appears at the center
-        treeTranslateX.setValue(-deltaX);
-        treeTranslateY.setValue(-deltaY);
+        const animatedLine = {
+          key,
+          x1: new Animated.Value(startX), // The line starts from the mentor's center-bottom
+          y1: new Animated.Value(startY), // The line starts from the mentor's center-bottom
+          x2: new Animated.Value(startX), // Start at the same point
+          y2: new Animated.Value(startY), // Start at the same point
+          stroke: targetLine.stroke,
+        };
+        newAnimatedLines.push(animatedLine);
 
-        // Determine if it's primarily a vertical or horizontal swipe
-        const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
-
-        if (isVerticalSwipe) {
-          // Animate Y first, then X
-          Animated.spring(treeTranslateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            tension: 40,
-            friction: 7,
-          }).start(() => {
-            // After Y animation completes, animate X
-            if (deltaX !== 0) { // Only animate X if there's a horizontal component
-              Animated.spring(treeTranslateX, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 40,
-                friction: 7,
-              }).start();
-            }
-          });
-        } else {
-          // Animate X first, then Y (for horizontal swipes)
-          Animated.spring(treeTranslateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            tension: 40,
-            friction: 7,
-          }).start(() => {
-            // After X animation completes, animate Y
-            if (deltaY !== 0) { // Only animate Y if there's a vertical component
-              Animated.spring(treeTranslateY, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 40,
-                friction: 7,
-              }).start();
-            }
-          });
-        }
+        // Animate the line to its final position. We animate all 4 coords
+        // because the mentor node itself might be moving.
+        animations.push(
+          Animated.spring(animatedLine.x1, { toValue: targetLine.x1, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(animatedLine.y1, { toValue: targetLine.y1, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(animatedLine.x2, { toValue: targetLine.x2, useNativeDriver: false, tension: 20, friction: 10 }),
+          Animated.spring(animatedLine.y2, { toValue: targetLine.y2, useNativeDriver: false, tension: 20, friction: 10 })
+        );
       }
-    } else {
-      // For the very first render, or if the previous node wasn't found, just set to 0 without animation
-      treeTranslateX.setValue(0);
-      treeTranslateY.setValue(0);
-    }
+    });
 
-  }, [currentNode]); // Recalculate when currentNode changes
+    setLines(newAnimatedLines);
+    setNodesWithPositions(newAnimatedNodes);
+    targetNodePositionsRef.current = targetNodePositions;
 
-  // PanResponderのセットアップ
-  const panResponder = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onPanResponderRelease: (evt, gestureState) => {
-      const { dx, dy } = gestureState;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-        // 横方向スワイプ
-        if (dx > 0) {
-          goLeft(); // 右にスワイプ -> 左へ移動
-        } else {
-          goRight(); // 左にスワイプ -> 右へ移動
-        }
-      } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) {
-        // 縦方向スワイプ
-        if (dy > 0) {
-          goUp(); // 下にスワイプ -> 上へ移動
-        } else {
-          goDown(); // 上にスワイプ -> 下へ移動
-        }
-      }
-    },
-  })).current;
+    Animated.parallel(animations).start();
+  }, [currentNode]);
 
-  // 移動関数
-  const goUp = () => {
-    const current = currentNodeRef.current;
-    if (!current) return;
-    if (current.mentor) {
-      setCurrentNode(current.mentor);
-    }
-  };
+  // -----------------------
+  // PanResponder & Navigation
+  // -----------------------
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx, dy } = gestureState;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) dx > 0 ? goLeft() : goRight();
+        else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) dy > 0 ? goUp() : goDown();
+      },
+    })
+  ).current;
 
-  const goDown = () => {
-    const current = currentNodeRef.current;
-    if (!current) return;
-    if (current.mentees.length > 0) {
-      setCurrentNode(current.mentees[0]); // MVPでは最初の弟子のみ
-    }
-  };
-
+  const goUp = () => currentNodeRef.current?.mentor && setCurrentNode(currentNodeRef.current.mentor);
+  const goDown = () => currentNodeRef.current?.mentees.length && setCurrentNode(currentNodeRef.current.mentees[0]);
   const goLeft = () => {
     const current = currentNodeRef.current;
-    if (!current) return;
-    if (!current.mentor) return; // 師匠がいない場合は移動不可
+    if (!current?.mentor) return;
     const siblings = [...current.mentor.mentees].sort((a, b) => a.id - b.id);
-    const idx = siblings.findIndex(s => s.id === current.id);
-    if (idx > 0) {
-      setCurrentNode(siblings[idx - 1]);
-    }
+    const idx = siblings.findIndex((s) => s.id === current.id);
+    if (idx > 0) setCurrentNode(siblings[idx - 1]);
   };
-
   const goRight = () => {
     const current = currentNodeRef.current;
-    if (!current) return;
-    if (!current.mentor) return; // 師匠がいない場合は移動不可
+    if (!current?.mentor) return;
     const siblings = [...current.mentor.mentees].sort((a, b) => a.id - b.id);
-    const idx = siblings.findIndex(s => s.id === current.id);
-    if (idx < siblings.length - 1) {
-      setCurrentNode(siblings[idx + 1]);
-    }
+    const idx = siblings.findIndex((s) => s.id === current.id);
+    if (idx < siblings.length - 1) setCurrentNode(siblings[idx + 1]);
   };
 
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
-
-  if (!data || data.length === 0) {
-    return <Text>No data to display.</Text>;
-  }
-
-  if (!currentNode) {
-      return <Text>Processing data...</Text>;
-  }
+  // -----------------------
+  // Render
+  // -----------------------
+  if (loading) return <Text>Loading...</Text>;
+  if (!data || data.length === 0) return <Text>No data to display.</Text>;
+  if (!currentNode) return <Text>Processing data...</Text>;
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      <Animated.View style={{
-        flex: 1, // Ensure it takes full space
-        width: '100%',
-        height: '100%',
-        transform: [{ translateX: treeTranslateX }, { translateY: treeTranslateY }]
-      }}>
-        <Svg height="100%" width="100%" style={StyleSheet.absoluteFillObject}>
-          {lines.map((line, index) => (
-            <Line
-              key={String(index)} // ensure string key
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke={line.stroke} // Use stroke from line object
-              strokeWidth={2} // number, not string
-            />
-          ))}
-        </Svg>
-
-        {Array.from(nodesWithPositions.values()).map(({ node, x, y }) => (
-          <View
-            key={String(node.id)} // ensure string key
-            style={{ position: "absolute", left: x, top: y }}
-          >
-            <TreeNodeView node={node} />
-          </View>
+      <Svg height="100%" width="100%" style={StyleSheet.absoluteFillObject}>
+        {lines.map((line) => (
+          <AnimatedLine key={line.key} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} stroke={line.stroke} strokeWidth={2} />
         ))}
+      </Svg>
 
-        {hasMoreMentees && displayedMenteesNodes.length > 0 && (
-        <View style={{
-          position: "absolute",
-          left: Math.min((nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60), // 60 for text width + padding
-          top: (nodesWithPositions.get(displayedMenteesNodes[displayedMenteesNodes.length - 1].id)?.y || 0) - NODE_HEIGHT / 2 - 10,
-        }}>
-          <Text>+{currentNode.mentees.length - displayedMenteesNodes.length}人</Text>
-        </View>
-      )}
+      {Array.from(nodesWithPositions.values()).map(({ node, x, y }) => (
+        <Animated.View key={String(node.id)} style={{ position: "absolute", left: 0, top: 0, transform: [{ translateX: x }, { translateY: y }] }}>
+          <TreeNodeView node={node} />
+        </Animated.View>
+      ))}
 
-        {hasMoreSiblingsLeft && displayedSiblingsNodes.length > 0 && hiddenSiblingsLeftCount > 0 && (
-        <View style={{
-          position: "absolute",
-          left: Math.max((displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.x || 0) - (HORIZONTAL_SPACING / 2) - 50, 10), // 50 for text width, 10 for padding
-          top: (displayedSiblingsNodes[0] && nodesWithPositions.get(displayedSiblingsNodes[0].id)?.y || 0) - NODE_HEIGHT / 2 - 10,
-        }}>
-          <Text>+{hiddenSiblingsLeftCount}人</Text>
-        </View>
+      {/* Reusable Node Count Overlays */}
+      {hasMoreMentees && (
+        <NodeCountOverlay
+          node={displayedMenteesNodes[displayedMenteesNodes.length - 1]}
+          offsetX={NODE_WIDTH + HORIZONTAL_SPACING / 2}
+          offsetY={-NODE_HEIGHT / 2 - 10}
+          text={`+${currentNode.mentees.length - displayedMenteesNodes.length}人`}
+        />
       )}
-
-        {hasMoreSiblingsRight && displayedSiblingsNodes.length > 0 && hiddenSiblingsRightCount > 0 && (
-        <View style={{
-          position: "absolute",
-          left: (() => {
-            const lastSibling = displayedSiblingsNodes[displayedSiblingsNodes.length - 1];
-            const position = lastSibling ? nodesWithPositions.get(lastSibling.id) : undefined;
-            return Math.min((position?.x || 0) + NODE_WIDTH + (HORIZONTAL_SPACING / 2), screenWidth - 60);
-          })(), // 60 for text width + padding
-          top: (() => {
-            const lastSibling = displayedSiblingsNodes[displayedSiblingsNodes.length - 1];
-            const position = lastSibling ? nodesWithPositions.get(lastSibling.id) : undefined;
-            return (position?.y || 0) - NODE_HEIGHT / 2 - 10;
-          })(),
-        }}>
-          <Text>+{hiddenSiblingsRightCount}人</Text>
-        </View>
+      {hiddenSiblingsLeftCount > 0 && (
+        <NodeCountOverlay
+          node={displayedSiblingsNodes[0]}
+          offsetX={-HORIZONTAL_SPACING / 2 - 50}
+          offsetY={-NODE_HEIGHT / 2 - 10}
+          text={`+${hiddenSiblingsLeftCount}人`}
+        />
       )}
-      </Animated.View>
+      {hiddenSiblingsRightCount > 0 && (
+        <NodeCountOverlay
+          node={displayedSiblingsNodes[2]}
+          offsetX={NODE_WIDTH + HORIZONTAL_SPACING / 4}
+          offsetY={-NODE_HEIGHT / 2 - 10}
+          text={`+${hiddenSiblingsRightCount}人`}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
