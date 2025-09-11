@@ -91,7 +91,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   }
 
   return (
-    // ★ 変更点2: JSXの構造を変更
     <View style={styles.container}>
       <PagerView
         ref={pagerRef}
@@ -207,7 +206,6 @@ const styles = StyleSheet.create({
   userStripContainer: {
     height: 100,
     paddingLeft: 16,
-    // marginBottomは元の値でOK
     marginBottom: 20,
   },
   userIconContainer: {
