@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
-import { TopicPageIndicator } from './topicPageIndicator';
 import PagerView from 'react-native-pager-view';
 import { TreeViewer } from './TreeViewer';
+import { TopicPageIndicator } from './TopicPageIndicator';
 
 interface Topic {
   id: string;
@@ -60,20 +60,19 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   }, [propTopics, accessToken]);
 
   const handleSelectIndex = (index: number) => {
+    setCurrentIndex(index);
     pagerRef.current?.setPage(index);
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>トピックを読み込み中...</Text>
-        </View>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>読み込み中...</Text>
       </View>
     );
   }
 
-  if (topics.length === 0) {
+  if (topics.length === 0 && !propTopics) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
@@ -88,17 +87,17 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
           key={topics.length + 1}
         >
+          {/* 作成ページを一番左 */}
           <View key="manage" style={{ flex: 1 }}>
             <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
           {topics.map(topic => (
-            <View key={topic.id} style={styles.topicPageContainer}>
+            <View key={topic.id} style={{ flex: 1 }}>
               <View style={styles.descriptionContainer}>
                 <Text style={styles.topicTitle}>{topic.title}</Text>
                 <Text style={styles.topicDescription}>{topic.description}</Text>
               </View>
-
-              <View style={styles.treeContainer}>
+              <View style={styles.userStripContainer}>
                 <TreeViewer
                   topicId={topic.id}
                   onNodePress={(userId) => {
@@ -110,7 +109,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           ))}
         </PagerView>
       </View>
-      <View style={{ paddingBottom: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+      <View style={styles.indicatorContainer}>
         <TopicPageIndicator
           topics={topics}
           currentIndex={currentIndex}
@@ -124,7 +123,16 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'transparent',
+  },
+  pageView: {
+    flex: 1,
+  },
+  indicatorContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   topicPageContainer: {
     flex: 1,
@@ -162,5 +170,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#6b7280',
   },
+  userStripContainer: {
+    flex: 8,
+    height: 100,
+  },
+  userIconContainer: {
+    alignItems: 'center',
+    marginRight: 20,
+    width: 70,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginBottom: 8,
+  },
+  selfAvatar: {
+    borderWidth: 3,
+    borderColor: '#3b82f6',
+  },
+  userName: {
+    fontSize: 12,
+  },
 });
-

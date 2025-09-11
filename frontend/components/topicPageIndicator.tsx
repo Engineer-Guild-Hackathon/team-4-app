@@ -1,228 +1,176 @@
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import React, { useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
+
+interface Topic {
+  id: string;
+  title: string;
+}
 
 interface TopicPageIndicatorProps {
-  topics: { id: string; title: string }[];
+  topics: Topic[];
   currentIndex: number;
   onSelectIndex: (index: number) => void;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ITEM_WIDTH = 120;
+const ITEM_HEIGHT = 50;
+const ITEM_SPACING = 8;
+const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
+const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
 
 export const TopicPageIndicator: React.FC<TopicPageIndicatorProps> = ({
   topics,
   currentIndex,
   onSelectIndex,
 }) => {
-  const [isSnapping, setIsSnapping] = useState(false);
-  // スクロール終了時に中央判定してスナップ（e引数ありで統一）
-  const handleScrollEnd = (e: any) => {
-    return;
-    if (isSnapping) return;
-    let x = 0;
-    if (e && e.nativeEvent && e.nativeEvent.contentOffset) {
-      x = e.nativeEvent.contentOffset.x;
-    } else if (scrollRef.current) {
-      // ScrollViewの現在位置を取得
-      // @ts-ignore: scrollRef.current._scrollAnimatedValue._value は内部API
-      x = scrollRef.current._scrollAnimatedValue?._value ?? 0;
-    }
-    // スクロール位置から中央座標を算出
-    const centerX = x + screenWidth / 2 - itemWidth * 2;
-    // topicCenters: 各トピックの中心座標
-    const topicCenters = Array.from(
-      { length: topics.length + 1 },
-      (_, i) => itemWidth * i + itemWidth / 2
-    );
-    // 中央座標に最も近いトピックのインデックス
-    const closestIdx = topicCenters.reduce(
-      (closestIdx, center, i) =>
-        Math.abs(center - centerX) < Math.abs(topicCenters[closestIdx] - centerX) ? i : closestIdx,
-      0
-    );
-    setIsSnapping(true);
-    fixToCenter(closestIdx);
-    setSelectedIndex(closestIdx);
-    onSelectIndex(closestIdx);
-    setTimeout(() => setIsSnapping(false), 400); // スナップ完了後に解除
-  };
-  // 選択中トピックを中央にフィックス
-  const fixToCenter = (idx: number) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        x: itemWidth * idx - screenWidth / 2 + itemWidth / 2,
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<FlatList>(null);
+
+  const displayData = [
+    { id: 'left-spacer' },
+    { id: 'manage', title: '+' },
+    ...topics,
+    { id: 'right-spacer' },
+  ];
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      const targetIndex = currentIndex + 1;
+      flatListRef.current.scrollToIndex({
+        index: targetIndex,
         animated: true,
+        viewPosition: 0.5,
       });
     }
-  };
-  const scrollRef = useRef<ScrollView>(null);
-  const [selectedIndex, setSelectedIndex] = useState(currentIndex);
-  const itemWidth = 80; // トピック表示幅
-  const screenWidth = Dimensions.get('window').width;
+  }, [currentIndex]);
 
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const centerX = x + screenWidth / 2 - itemWidth * 2;
-    const topicCenters = Array.from(
-      { length: topics.length + 1 },
-      (_, i) => itemWidth * i + itemWidth / 2
-    );
-    const idx = topicCenters.reduce(
-      (closestIdx, center, i) =>
-        Math.abs(center - centerX) < Math.abs(topicCenters[closestIdx] - centerX) ? i : closestIdx,
-      0
-    );
-    // itemWidth以上移動した場合のみ反応
-    const prevCenter = topicCenters[selectedIndex];
-    if (
-      idx >= 0 &&
-      idx < topics.length + 1 &&
-      idx !== selectedIndex &&
-      Math.abs(topicCenters[idx] - prevCenter) >= itemWidth
-    ) {
-      setSelectedIndex(idx);
-      onSelectIndex(idx);
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    if (!item.title) {
+      return <View style={{ width: SPACER_ITEM_WIDTH }} />;
     }
-  };
 
-  // タップで中央に移動
-  // タップで中央にアニメーション付きで移動＆選択
-  const handleTap = (idx: number) => {
-    setSelectedIndex(idx);
-    onSelectIndex(idx);
-    if (scrollRef.current) {
-      // centerXの計算式に合わせて中央に来るようにスクロール
-      const scrollX = itemWidth * idx - screenWidth / 2 + itemWidth * 2 + 30;
-      scrollRef.current.scrollTo({ x: scrollX, animated: true });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
+    const pageIndex = index - 1;
+
+    const inputRange = [
+      (index - 2) * ITEM_FULL_WIDTH,
+      (index - 1) * ITEM_FULL_WIDTH,
+      index * ITEM_FULL_WIDTH,
+    ];
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.7, 1.1, 0.7],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [1, 1, 1],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <TouchableOpacity onPress={() => onSelectIndex(pageIndex)}>
+        <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
+          <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
+            <Text
+              style={[
+                styles.topicIconText,
+                currentIndex === pageIndex && styles.topicIconTextActive,
+              ]}
+              numberOfLines={1}
+            >
+              {item.title === '+' ? '+' : item.title.substring(0, 8)}
+            </Text>
+          </View>
+        </Animated.View>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <View style={{ alignItems: 'center', width: '100%', marginBottom: 24 }}>
-      <ScrollView
-        ref={scrollRef}
+    <View style={styles.container}>
+      <Animated.FlatList
+        ref={flatListRef}
+        data={displayData}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ width: '100%' }}
-        contentContainerStyle={{
-          alignItems: 'center',
-          paddingHorizontal: screenWidth / 2 - itemWidth / 2,
+        snapToInterval={ITEM_FULL_WIDTH}
+        decelerationRate="fast"
+        getItemLayout={(_, index) => ({
+          length: ITEM_FULL_WIDTH,
+          offset: ITEM_FULL_WIDTH * index,
+          index,
+        })}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: true,
+        })}
+        onMomentumScrollEnd={e => {
+          const newPageIndex = Math.round(e.nativeEvent.contentOffset.x / ITEM_FULL_WIDTH);
+          if (newPageIndex !== currentIndex) {
+            onSelectIndex(newPageIndex);
+          }
         }}
-        onScroll={handleScroll}
-        onScrollEndDrag={handleScrollEnd}
-        onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
-      >
-        {/* 作成ページ（index=0） */}
-        <Pressable style={{ width: itemWidth, alignItems: 'center' }} onPress={() => handleTap(0)}>
-          <View style={[styles.topicIcon, selectedIndex === 0 && styles.topicIconActive]}>
-            <Text style={[styles.topicIconText, selectedIndex === 0 && styles.topicIconTextActive]}>
-              +
-            </Text>
-          </View>
-        </Pressable>
-        {/* トピック: index=1~ */}
-        {topics.map((topic, index) => (
-          <Pressable
-            key={topic.id}
-            style={{ width: itemWidth, alignItems: 'center' }}
-            onPress={() => handleTap(index + 1)}
-          >
-            {selectedIndex === index + 1 ? (
-              <View style={styles.topicRectActive}>
-                <Text style={styles.topicRectTextActive}>{topic.title.slice(0, 8)}</Text>
-              </View>
-            ) : (
-              <View style={styles.topicDot} />
-            )}
-          </Pressable>
-        ))}
-      </ScrollView>
+      />
     </View>
   );
 };
-// ...existing code...
-// ...existing code...
 
 const styles = StyleSheet.create({
-  topicsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 60,
-    gap: 20,
+  container: {
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   topicIconWrapper: {
+    width: ITEM_WIDTH,
+    height: ITEM_HEIGHT + 30,
+    marginHorizontal: ITEM_SPACING / 2,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   topicIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#e5e7eb',
+    width: '100%',
+    height: ITEM_HEIGHT,
+    borderRadius: 25,
+    backgroundColor: '#1f2937',
     borderWidth: 2,
-    borderColor: '#d1d5db',
+    borderColor: '#374151',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  topicRectActive: {
-    minWidth: 80,
-    maxWidth: 120,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3b82f6',
-    borderColor: '#1d4ed8',
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 0 },
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  topicRectTextActive: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  topicDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#d1d5db',
-    marginHorizontal: 21,
+    shadowRadius: 5,
+    elevation: 5,
   },
   topicIconActive: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#1d4ed8',
-    shadowColor: '#3b82f6',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
+    backgroundColor: '#374151',
+    borderColor: '#374151',
+    shadowColor: '#374151',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 5,
+    elevation: 5,
   },
   topicIconText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#6b7280',
+    color: '#9ca3af',
   },
   topicIconTextActive: {
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  topicIconTextActiveFull: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    paddingHorizontal: 4,
   },
 });
