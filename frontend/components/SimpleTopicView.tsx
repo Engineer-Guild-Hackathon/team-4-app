@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -12,42 +20,73 @@ import { TopicManageView } from './TopicManageView';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+interface User {
+  id: number;
+  name: string;
+  avatarUrl: string;
+}
+
 interface Topic {
-  id: string; // UUID as string
+  id: string;
   title: string;
   description: string;
   created_at: string;
   updated_at: string;
+  mentor?: User;
+  mentees?: User[];
 }
 
 interface SimpleTopicViewProps {
   topics?: Topic[];
+  onUserPress: (topicId: string, userId: number) => void;
 }
 
-export function SimpleTopicView({ topics: propTopics }: SimpleTopicViewProps) {
+const selfUser: User = {
+  id: 1,
+  name: '自分',
+  avatarUrl: 'https://placehold.co/64x64/a9a9a9/ffffff?text=Me',
+};
+
+export function SimpleTopicView({
+  topics: propTopics,
+  onUserPress,
+}: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showManageMode, setShowManageMode] = useState(false);
   const translateX = useSharedValue(0);
   const { authedApi, accessToken } = useAuth();
 
-  // 参加しているトピック一覧を取得
-  useEffect(() => {
-    const fetchMyTopics = async () => {
-      try {
-        setLoading(true);
-        const response = await authedApi('/api/topics/me/');
-        setTopics(response.topics || []);
-        setCurrentIndex(0);
-      } catch (error) {
-        console.error('トピック取得エラー:', error);
-        setTopics([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const refreshMyTopics = async (switchToLastTopic = false) => {
+    try {
+      setLoading(true);
+      const response = await authedApi('/api/topics/me/');
+      let fetchedTopics = response.topics || [];
 
+      // 仮のユーザーデータを付与
+      fetchedTopics = fetchedTopics.map((topic: Topic, index: number) => ({
+        ...topic,
+        mentor: { id: 101 + index, name: `師匠${index + 1}`, avatarUrl: `https://placehold.co/64x64/ff6347/ffffff?text=M${index + 1}` },
+        mentees: [
+          { id: 201 + index, name: `弟子${index + 1}`, avatarUrl: `https://placehold.co/64x64/4682b4/ffffff?text=D${index + 1}` }
+        ],
+      }));
+
+      setTopics(fetchedTopics);
+      
+      if (switchToLastTopic) {
+        setCurrentIndex(Math.max(0, fetchedTopics.length - 1));
+      }
+
+    } catch (error) {
+      console.error('トピック取得エラー:', error);
+      setTopics([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (propTopics) {
       setTopics(propTopics);
       setLoading(false);
@@ -55,80 +94,54 @@ export function SimpleTopicView({ topics: propTopics }: SimpleTopicViewProps) {
     }
     
     if (accessToken) {
-      fetchMyTopics();
+      refreshMyTopics();
     } else {
       setLoading(false);
     }
   }, [propTopics, accessToken]);
 
 
-  const refreshMyTopics = async () => {
-    try {
-      const response = await authedApi('/api/topics/me/');
-      const newTopics = response.topics || [];
-      setTopics(newTopics);
-      if (currentIndex >= newTopics.length) {
-        setCurrentIndex(Math.max(0, newTopics.length - 1));
-      }
-    } catch (error) {
-      console.error('トピック取得エラー:', error);
-    }
-  };
-
   const panGesture = Gesture.Pan()
-    .onStart(() => {
-      'worklet';
-    })
-    .onUpdate(event => {
-      translateX.value = event.translationX;
-    })
+    .onStart(() => { 'worklet'; })
+    .onUpdate(event => { translateX.value = event.translationX; })
     .onEnd(event => {
+      'worklet';
       const threshold = screenWidth * 0.2;
       const velocity = event.velocityX;
 
       if (Math.abs(event.translationX) > threshold || Math.abs(velocity) > 300) {
-        if (event.translationX > 0) {
-          // 右にスワイプ
+        if (event.translationX > 0) { // 右にスワイプ
           if (currentIndex > 0) {
-            // 前のトピック
+            // 前のトピックへ
             runOnJS(setCurrentIndex)(currentIndex - 1);
           } else {
-            // 左端からさらに右にスワイプした場合は管理画面に移動
+            // 最初のトピックから右スワイプで管理画面へ
             runOnJS(setCurrentIndex)(topics.length);
           }
-          translateX.value = withSpring(0);
-        } else if (event.translationX < 0) {
-          // 左にスワイプ
-          if (currentIndex < topics.length) {
-            // 次のトピック
+        } else if (event.translationX < 0) { // 左にスワイプ
+          // --- ▼▼▼ このブロックを修正 ▼▼▼ ---
+          if (currentIndex < topics.length - 1) {
+            // 最後のトピックでなければ、次のトピックへ
             runOnJS(setCurrentIndex)(currentIndex + 1);
-          } else {
-            // 管理画面から左にスワイプした場合は最初のトピックに移動
+          } else if (currentIndex === topics.length) {
+            // 管理画面から左スワイプで最初のトピックへ
             runOnJS(setCurrentIndex)(0);
           }
-          translateX.value = withSpring(0);
-        } else {
-          // 元の位置に戻す
-          translateX.value = withSpring(0);
+          // 最後のトピック (currentIndex === topics.length - 1) の場合は何もしない
+          // --- ▲▲▲ ここまで修正 ▲▲▲ ---
         }
-      } else {
-        // 元の位置に戻す
-        translateX.value = withSpring(0);
       }
+      // 位置を元に戻すアニメーション
+      translateX.value = withSpring(0);
     });
-  //アニメーション追加するなら必要
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   const currentTopic = topics[currentIndex];
-
-  // 管理画面の表示判定
   const isManageMode = currentIndex === topics.length;
 
-  // ローディング状態
   if (loading) {
     return (
       <View style={styles.container}>
@@ -139,42 +152,69 @@ export function SimpleTopicView({ topics: propTopics }: SimpleTopicViewProps) {
     );
   }
 
-  // 管理画面の表示
   if (isManageMode) {
     return (
       <TopicManageView 
         onBack={() => {
-          setCurrentIndex(Math.max(0, topics.length - 1));
-          refreshMyTopics();
+          refreshMyTopics(true);
         }} 
       />
     );
   }
-
-  // トピックが存在しない場合
+  
   if (topics.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>参加しているトピックがありません</Text>
-          <Text style={styles.emptySubText}>トピック管理画面で新しいトピックを作成するか、他のユーザーから招待を受けてください</Text>
+        <View style={styles.container}>
+            <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>参加しているトピックがありません</Text>
+                <Text style={styles.emptySubText}>トピック管理画面で新しいトピックを作成するか、他のユーザーから招待を受けてください</Text>
+            </View>
         </View>
-      </View>
     );
   }
 
   return (
     <GestureDetector gesture={panGesture}>
       <View style={styles.container}>
-        {/* 説明文（画面上部） */}
         <View style={styles.descriptionContainer}>
           <Text style={styles.topicTitle}>{currentTopic?.title}</Text>
           <Text style={styles.topicDescription}>{currentTopic?.description}</Text>
         </View>
 
-        {/* トピックアイコン（インスタグラムストーリー風） */}
+        <View style={styles.userStripContainer}>
+          {currentTopic && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {currentTopic.mentor && (
+                <TouchableOpacity
+                  style={styles.userIconContainer}
+                  onPress={() => onUserPress(currentTopic.id, currentTopic.mentor!.id)}
+                >
+                  <Image source={{ uri: currentTopic.mentor.avatarUrl }} style={styles.avatar} />
+                  <Text style={styles.userName}>{currentTopic.mentor.name}</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.userIconContainer}
+                onPress={() => onUserPress(currentTopic.id, selfUser.id)}
+              >
+                <Image source={{ uri: selfUser.avatarUrl }} style={[styles.avatar, styles.selfAvatar]} />
+                <Text style={styles.userName}>{selfUser.name}</Text>
+              </TouchableOpacity>
+              {currentTopic.mentees?.map((mentee) => (
+                <TouchableOpacity
+                  key={mentee.id}
+                  style={styles.userIconContainer}
+                  onPress={() => onUserPress(currentTopic.id, mentee.id)}
+                >
+                  <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
+                  <Text style={styles.userName}>{mentee.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
         <View style={styles.topicsContainer}>
-          {/* 管理画面アイコン（左端） */}
           <View style={styles.topicIconWrapper}>
             <View style={[styles.topicIcon, isManageMode && styles.topicIconActive]}>
               <Text
@@ -196,7 +236,7 @@ export function SimpleTopicView({ topics: propTopics }: SimpleTopicViewProps) {
                     index === currentIndex && styles.topicIconTextActive,
                   ]}
                 >
-                  {topic.id}
+                  {topic.title.charAt(0)}
                 </Text>
               </View>
             </View>
@@ -304,4 +344,28 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 280,
   },
+  userStripContainer: {
+    height: 100,
+    paddingLeft: 16,
+    marginBottom: 20,
+  },
+  userIconContainer: {
+    alignItems: 'center',
+    marginRight: 20,
+    width: 70,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginBottom: 8,
+  },
+  selfAvatar: {
+    borderWidth: 3,
+    borderColor: '#3b82f6',
+  },
+  userName: {
+    fontSize: 12,
+  },
 });
+

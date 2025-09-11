@@ -8,23 +8,33 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 interface PostListModalProps {
   visible: boolean;
   onClose: () => void;
+  topicId?: string;
+  userId?: number;
 }
 
-export default function PostListModal({ visible, onClose }: PostListModalProps) {
+export default function PostListModal({ visible, onClose, topicId, userId }: PostListModalProps) {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (visible) {
+        if (visible && (topicId || userId)) {
             setLoading(true);
             setError(null);
             fetchPosts();
         }
-    }, [visible]);
+    }, [visible, topicId, userId]); 
 
     const fetchPosts = async () => {
-        const url = `${API_BASE_URL}/api/posts/`;
+        const params = new URLSearchParams();
+        if (topicId) {
+            params.append('topic_id', topicId);
+        }
+        if (userId) {
+            params.append('author_id', String(userId));
+        }
+        
+        const url = `${API_BASE_URL}/api/posts/?${params.toString()}`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
