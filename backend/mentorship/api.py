@@ -4,7 +4,7 @@ from ninja import Router, Schema
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
-from django.db import transaction
+from django.db import connection, transaction
 from ninja import Body 
 from topics.models import Topic
 
@@ -17,8 +17,13 @@ class Message(Schema):
     message: str
 
 class TopicSchema(Schema):
+    """トピック情報スキーマ"""
     id: uuid.UUID
     title: str
+
+class TopicId(Schema):
+    """トピックidスキーマ"""
+    topic_id: uuid.UUID
 
 class MentorRequestIn(Schema):
     """弟子入りリクエストの入力スキーマ"""
@@ -39,24 +44,85 @@ class MentorRequestOut(Schema):
     status: str
 
 class MenteeActionStatus(Schema):
+    """弟子に対するアクションのステータスレスポンススキーマ"""
     status: str
     mentee_id: int
 
-# --- APIエンドポイント定義 ---
+class PromoteUserIn(Schema):
+    """ユーザー昇格/降格の入力スキーマ"""
+    user_id: int
+    rank_difference: int
 
+class MenteeSubtreeOut(Schema):
+    """メンターの弟子ツリー情報スキーマ"""
+    id: int
+    username: str
+    email: str
+    level: int
+
+# --- APIエンドポイント定義 ---
 def get_mentorship_router():
     from .models import MentorRelationRequest, MentorRelation, ActionLog 
 
     router = Router(tags=["mentorship"])
 
-    def _remove_relation(mentor, mentee, action: str):
-        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee)
+    def _remove_relation(mentor, mentee, topic_id: str, action: str):
+        """
+        指定されたメンターと弟子の関係を削除し、アクションログを記録します。
+        """
+        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee, topic_id=topic_id)
         relation.delete()
 
         # ログを記録
         ActionLog.objects.create(actor=mentor, target=mentee, action=action)
 
         return {"status": action, "mentee_id": mentee.id}
+
+    def update_subtree_levels(mentee, topic_id, delta):
+        """
+        mentee（卒業したユーザー）とその全ての子孫（mentees）のUserTopic（topic_id）のlevelを再帰的にdelta分加算する。
+        mentee自身はlevelを加算しない（mentorと同じ値に揃える処理は別途呼び出し側で行う）。
+        """
+        """
+        mentee（卒業したユーザー）配下の全ての子孫（mentees）のUserTopic（topic_id）のlevelをPostgreSQLの再帰CTEで一括加算する。
+        mentee自身はlevelを加算しない（mentorと同じ値に揃える処理は呼び出し側で行う）。
+        """
+        from django.db import connection
+        from django.apps import apps
+        User = get_user_model()
+        MentorRelation = apps.get_model('mentorship', 'MentorRelation')
+        UserTopic = apps.get_model('topics', 'UserTopic')
+        user_table = User._meta.db_table
+        relation_table = MentorRelation._meta.db_table
+        usertopic_table = UserTopic._meta.db_table
+        with connection.cursor() as cursor:
+            sql = f"""
+                WITH RECURSIVE subtree AS (
+                    SELECT id
+                    FROM {user_table}
+                    WHERE id = %s
+                    UNION ALL
+                    SELECT u.id
+                    FROM {user_table} u
+                    JOIN {relation_table} mr ON u.id = mr.mentee_id
+                    JOIN subtree s ON mr.mentor_id = s.id
+                )
+                UPDATE {usertopic_table} ut
+                SET level = level + %s
+                WHERE ut.user_id IN (
+                    SELECT id FROM subtree WHERE id != %s
+                ) AND ut.topic_id = %s;
+            """
+            cursor.execute(sql, [mentee.id, delta, mentee.id, str(topic_id)])
+
+    # 使っていない
+    @router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
+    def get_mentor_subtree(request: HttpRequest, mentor_id: int):
+        """
+        指定されたメンターの全ての弟子（サブツリー）を取得します。
+        """
+        subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
+        return subtree
 
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -104,20 +170,12 @@ def get_mentorship_router():
         if request.user.id != mentor_request.to_user.id:
             return 403, {"message": "You do not have permission to perform this action."}
 
-        # 師匠のランクを取得（存在しない場合はデフォルト値100）
-        try:
-            mentor_rank = MentorRelation.objects.get(mentee=mentor_request.to_user).rank
-        except MentorRelation.DoesNotExist:
-            mentor_rank = 100
-
-        # 新しい弟子のランクを計算
-        new_mentee_rank = mentor_rank - 10
-
         # 師弟関係を作成
+        mentor = mentor_request.to_user
+        mentee = mentor_request.from_user
         MentorRelation.objects.create(
-            mentor=mentor_request.to_user,
-            mentee=mentor_request.from_user,
-            rank=new_mentee_rank,
+            mentor=mentor,
+            mentee=mentee,
             topic=mentor_request.topic
         )
 
@@ -147,20 +205,8 @@ def get_mentorship_router():
 
         return {"message": "Request rejected successfully."}
 
-    @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
-    def graduate_mentee(request: HttpRequest, mentee_id: int):
-        """
-        自身の弟子を卒業させ、師弟関係を解消します。
-
-        - 認証が必要です。
-        - 指定されたIDのユーザーが、実行者の弟子である必要があります。
-        """
-
-        mentee = get_object_or_404(User, id=mentee_id)
-        return _remove_relation(request.user, mentee, "graduate")
-
     @router.post("/mentees/{mentee_id}/expel", response={200: MenteeActionStatus, 404: Message}, summary="弟子を破門する")
-    def expel_mentee(request: HttpRequest, mentee_id: int):
+    def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
         """
         自身の弟子を破門し、師弟関係を解消します。
 
@@ -168,7 +214,27 @@ def get_mentorship_router():
         - 指定されたIDのユーザーが、実行者の弟子である必要があります。
         """
         
-        mentee = get_object_or_404(User, id=mentee_id)
-        return _remove_relation(request.user, mentee, "expel")
+        mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
+        mentee = mentership.mentee
+        return _remove_relation(request.user, mentee, topic_id=data.topic_id, action="expel")
+
+    @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
+    def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
+        """
+        自身の弟子を卒業させ、師弟関係を解消します。
+
+        - 認証が必要です。
+        - 指定されたIDのユーザーが、実行者の弟子である必要があります。
+    """
+        mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
+        mentee = mentership.mentee
+        delta = request.user.user_topics.get(topic_id=data.topic_id).level - mentee.user_topics.get(topic_id=data.topic_id).level
+        user_topic = mentee.user_topics.get(topic_id=data.topic_id)
+        user_topic.level += delta
+        user_topic.save()
+        # menteeとその全ての子孫のUserTopicのlevelを更新
+        update_subtree_levels(mentee, data.topic_id, delta)
+        return _remove_relation(request.user, mentee, data.topic_id, "graduate")
 
     return router
+

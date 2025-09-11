@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 import uuid
 
 
@@ -9,7 +9,7 @@ class Topic(models.Model):
     description = models.TextField(blank=True, verbose_name="説明")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
-    users = models.ManyToManyField(User, through='UserTopic', related_name='topics', verbose_name="関連ユーザー")
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, through='UserTopic', related_name='topics', verbose_name="関連ユーザー")
 
     class Meta:
         # モデルの名前表示を日本語に設定
@@ -25,7 +25,7 @@ class Topic(models.Model):
 
 class UserTopic(models.Model):
     """ユーザーとトピックの中間テーブル"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="ユーザー")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="ユーザー", related_name="user_topics")
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="トピック")
     level = models.IntegerField(default=1, verbose_name="レベル")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="参加日時")
