@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from "react-native";
-import Svg, { Line } from "react-native-svg";
-import { buildTree, TreeNode, UserNode } from "./treeUtils";
-import { TreeNodeView } from "./TreeNode";
-import { useTreeData } from "../../hooks/useTreeData";
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
+import { buildTree, TreeNode, UserNode } from './treeUtils';
+import { TreeNodeView } from './TreeNode';
+import { useTreeData } from '../../hooks/useTreeData';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
@@ -23,7 +23,7 @@ const VERTICAL_SPACING = 200;
 const HORIZONTAL_SPACING = 80;
 const SWIPE_THRESHOLD = 50;
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 /**
  * Safely returns a number from an Animated.Value or a plain number, with a guaranteed fallback.
@@ -31,14 +31,14 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
  */
 const safeNumber = (val: Animated.Value | number | undefined | null, fallback: number): number => {
   // If it's already a number, we're good.
-  if (typeof val === "number") {
+  if (typeof val === 'number') {
     return val;
   }
   // If it's an animatable object, try to get the value with multiple layers of safety.
-  if (val && typeof (val as any).__getValue === "function") {
+  if (val && typeof (val as any).__getValue === 'function') {
     try {
       const v = (val as any).__getValue();
-      return typeof v === "number" ? v : fallback;
+      return typeof v === 'number' ? v : fallback;
     } catch {
       return fallback; // Catch any error during __getValue call.
     }
@@ -63,7 +63,9 @@ export const TreeViewer: React.FC = () => {
   const [hiddenSiblingsRightCount, setHiddenSiblingsRightCount] = useState(0);
 
   const currentNodeRef = useRef<TreeNode | null>(null);
-  const targetNodePositionsRef = useRef<Map<number, { node: TreeNode; x: number; y: number }>>(new Map());
+  const targetNodePositionsRef = useRef<Map<number, { node: TreeNode; x: number; y: number }>>(
+    new Map()
+  );
 
   // -----------------------
   // Node Count Overlay Helper
@@ -75,7 +77,12 @@ export const TreeViewer: React.FC = () => {
     text: string;
   };
 
-  const NodeCountOverlay: React.FC<NodeCountOverlayProps> = ({ node, offsetX = 0, offsetY = 0, text }) => {
+  const NodeCountOverlay: React.FC<NodeCountOverlayProps> = ({
+    node,
+    offsetX = 0,
+    offsetY = 0,
+    text,
+  }) => {
     if (!node) return null;
 
     // Get the animated position values from the state
@@ -89,7 +96,7 @@ export const TreeViewer: React.FC = () => {
     return (
       <Animated.View
         style={{
-          position: "absolute",
+          position: 'absolute',
           left: 0, // Position is handled by transform for animation
           top: 0,
           // Apply the animated X and Y translations
@@ -97,7 +104,9 @@ export const TreeViewer: React.FC = () => {
         }}
       >
         {/* Apply the static offset to a non-animated child View */}
-        <View style={{ transform: [{ translateX: offsetX }, { translateY: offsetY }] }}><Text>{text}</Text></View>
+        <View style={{ transform: [{ translateX: offsetX }, { translateY: offsetY }] }}>
+          <Text>{text}</Text>
+        </View>
       </Animated.View>
     );
   };
@@ -120,7 +129,10 @@ export const TreeViewer: React.FC = () => {
     if (!currentNode) return;
 
     const targetNodePositions = new Map<number, { node: TreeNode; x: number; y: number }>();
-    const targetLines = new Map<string, { x1: number; y1: number; x2: number; y2: number; stroke: string }>();
+    const targetLines = new Map<
+      string,
+      { x1: number; y1: number; x2: number; y2: number; stroke: string }
+    >();
 
     const currentX = screenWidth / 2 - NODE_RADIUS;
     const currentY = screenHeight / 2 - NODE_RADIUS;
@@ -128,7 +140,11 @@ export const TreeViewer: React.FC = () => {
 
     // Mentor
     if (currentNode.mentor) {
-      targetNodePositions.set(currentNode.mentor.id, { node: currentNode.mentor, x: currentX, y: currentY - VERTICAL_SPACING });
+      targetNodePositions.set(currentNode.mentor.id, {
+        node: currentNode.mentor,
+        x: currentX,
+        y: currentY - VERTICAL_SPACING,
+      });
     }
 
     // Mentees
@@ -151,7 +167,7 @@ export const TreeViewer: React.FC = () => {
     // Siblings
     if (currentNode.mentor) {
       const allSiblings = [...currentNode.mentor.mentees].sort((a, b) => a.id - b.id);
-      const currentIdx = allSiblings.findIndex((s) => s.id === currentNode.id);
+      const currentIdx = allSiblings.findIndex(s => s.id === currentNode.id);
       let displayedSiblings: (TreeNode | null)[] = new Array(3).fill(null);
 
       displayedSiblings[1] = currentNode;
@@ -176,8 +192,12 @@ export const TreeViewer: React.FC = () => {
       setHasMoreSiblingsLeft(currentIdx > 0);
       setHasMoreSiblingsRight(currentIdx < allSiblings.length - 1);
 
-      const leftmost = displayedSiblings[0] ? allSiblings.findIndex((s) => s.id === displayedSiblings[0]?.id) : currentIdx;
-      const rightmost = displayedSiblings[2] ? allSiblings.findIndex((s) => s.id === displayedSiblings[2]?.id) : currentIdx;
+      const leftmost = displayedSiblings[0]
+        ? allSiblings.findIndex(s => s.id === displayedSiblings[0]?.id)
+        : currentIdx;
+      const rightmost = displayedSiblings[2]
+        ? allSiblings.findIndex(s => s.id === displayedSiblings[2]?.id)
+        : currentIdx;
       setHiddenSiblingsLeftCount(leftmost);
       setHiddenSiblingsRightCount(allSiblings.length - 1 - rightmost);
 
@@ -190,7 +210,7 @@ export const TreeViewer: React.FC = () => {
     }
 
     // Lines
-    targetNodePositions.forEach((sourceNodeData) => {
+    targetNodePositions.forEach(sourceNodeData => {
       const sourceNode = sourceNodeData?.node;
       const mentorNode = sourceNode?.mentor;
 
@@ -211,12 +231,15 @@ export const TreeViewer: React.FC = () => {
         y1: mentorNodeData.y + NODE_RADIUS * 2,
         x2: sourceNodeData.x + NODE_RADIUS,
         y2: sourceNodeData.y,
-        stroke: isDirectConnection ? "grey" : "lightgrey",
+        stroke: isDirectConnection ? 'grey' : 'lightgrey',
       });
     });
 
     // Animation
-    const newAnimatedNodes = new Map<number, { node: TreeNode; x: Animated.Value; y: Animated.Value }>();
+    const newAnimatedNodes = new Map<
+      number,
+      { node: TreeNode; x: Animated.Value; y: Animated.Value }
+    >();
     const animations: Animated.CompositeAnimation[] = [];
 
     targetNodePositions.forEach((targetPos, id) => {
@@ -224,18 +247,35 @@ export const TreeViewer: React.FC = () => {
       if (existingNode) {
         newAnimatedNodes.set(id, existingNode);
         animations.push(
-          Animated.spring(existingNode.x, { toValue: targetPos.x, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(existingNode.y, { toValue: targetPos.y, useNativeDriver: false, tension: 20, friction: 10 })
+          Animated.spring(existingNode.x, {
+            toValue: targetPos.x,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(existingNode.y, {
+            toValue: targetPos.y,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          })
         );
       } else {
         // Node is new. Find a safe, logical start position for the animation.
         const newNode = targetPos.node;
         const mentorPrev = newNode.mentor ? nodesWithPositions.get(newNode.mentor.id) : undefined;
-        const menteePrev = newNode.mentees.length > 0 ? nodesWithPositions.get(newNode.mentees[0].id) : undefined;
+        const menteePrev =
+          newNode.mentees.length > 0 ? nodesWithPositions.get(newNode.mentees[0].id) : undefined;
 
         // Use safeNumber to guarantee a valid number for the animation's starting point.
-        const startX = safeNumber(mentorPrev?.x, safeNumber(menteePrev?.x, targetPos.x ?? screenWidth / 2 - NODE_RADIUS));
-        const startY = safeNumber(mentorPrev?.y, safeNumber(menteePrev?.y, targetPos.y ?? screenHeight / 2 - NODE_RADIUS));
+        const startX = safeNumber(
+          mentorPrev?.x,
+          safeNumber(menteePrev?.x, targetPos.x ?? screenWidth / 2 - NODE_RADIUS)
+        );
+        const startY = safeNumber(
+          mentorPrev?.y,
+          safeNumber(menteePrev?.y, targetPos.y ?? screenHeight / 2 - NODE_RADIUS)
+        );
 
         const animatedNode = {
           node: targetPos.node,
@@ -243,17 +283,27 @@ export const TreeViewer: React.FC = () => {
           y: new Animated.Value(startY),
         };
         newAnimatedNodes.set(id, animatedNode);
-        
+
         animations.push(
-          Animated.spring(animatedNode.x, { toValue: targetPos.x, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(animatedNode.y, { toValue: targetPos.y, useNativeDriver: false, tension: 20, friction: 10 })
+          Animated.spring(animatedNode.x, {
+            toValue: targetPos.x,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(animatedNode.y, {
+            toValue: targetPos.y,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          })
         );
       }
     });
 
     // Animate Lines
     const newAnimatedLines: AnimatedLineData[] = [];
-    const currentLinesMap = new Map(lines.map((l) => [l.key, l]));
+    const currentLinesMap = new Map(lines.map(l => [l.key, l]));
 
     targetLines.forEach((targetLine, key) => {
       const existingLine = currentLinesMap.get(key);
@@ -264,14 +314,34 @@ export const TreeViewer: React.FC = () => {
         existingLine.stroke = targetLine.stroke;
         newAnimatedLines.push(existingLine);
         animations.push(
-          Animated.spring(existingLine.x1, { toValue: targetLine.x1, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(existingLine.y1, { toValue: targetLine.y1, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(existingLine.x2, { toValue: targetLine.x2, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(existingLine.y2, { toValue: targetLine.y2, useNativeDriver: false, tension: 20, friction: 10 })
+          Animated.spring(existingLine.x1, {
+            toValue: targetLine.x1,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(existingLine.y1, {
+            toValue: targetLine.y1,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(existingLine.x2, {
+            toValue: targetLine.x2,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(existingLine.y2, {
+            toValue: targetLine.y2,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          })
         );
       } else {
         // New line, animate it "growing" from the mentor node.
-        const [mentorIdStr] = key.split("-");
+        const [mentorIdStr] = key.split('-');
         const mentorId = parseInt(mentorIdStr, 10);
         const mentorPrev = nodesWithPositions.get(mentorId);
 
@@ -292,10 +362,30 @@ export const TreeViewer: React.FC = () => {
         // Animate the line to its final position. We animate all 4 coords
         // because the mentor node itself might be moving.
         animations.push(
-          Animated.spring(animatedLine.x1, { toValue: targetLine.x1, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(animatedLine.y1, { toValue: targetLine.y1, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(animatedLine.x2, { toValue: targetLine.x2, useNativeDriver: false, tension: 20, friction: 10 }),
-          Animated.spring(animatedLine.y2, { toValue: targetLine.y2, useNativeDriver: false, tension: 20, friction: 10 })
+          Animated.spring(animatedLine.x1, {
+            toValue: targetLine.x1,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(animatedLine.y1, {
+            toValue: targetLine.y1,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(animatedLine.x2, {
+            toValue: targetLine.x2,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          }),
+          Animated.spring(animatedLine.y2, {
+            toValue: targetLine.y2,
+            useNativeDriver: false,
+            tension: 20,
+            friction: 10,
+          })
         );
       }
     });
@@ -315,26 +405,30 @@ export const TreeViewer: React.FC = () => {
       onStartShouldSetPanResponder: () => true,
       onPanResponderRelease: (_, gestureState) => {
         const { dx, dy } = gestureState;
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) dx > 0 ? goLeft() : goRight();
-        else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) dy > 0 ? goUp() : goDown();
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD)
+          dx > 0 ? goLeft() : goRight();
+        else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD)
+          dy > 0 ? goUp() : goDown();
       },
     })
   ).current;
 
-  const goUp = () => currentNodeRef.current?.mentor && setCurrentNode(currentNodeRef.current.mentor);
-  const goDown = () => currentNodeRef.current?.mentees.length && setCurrentNode(currentNodeRef.current.mentees[0]);
+  const goUp = () =>
+    currentNodeRef.current?.mentor && setCurrentNode(currentNodeRef.current.mentor);
+  const goDown = () =>
+    currentNodeRef.current?.mentees.length && setCurrentNode(currentNodeRef.current.mentees[0]);
   const goLeft = () => {
     const current = currentNodeRef.current;
     if (!current?.mentor) return;
     const siblings = [...current.mentor.mentees].sort((a, b) => a.id - b.id);
-    const idx = siblings.findIndex((s) => s.id === current.id);
+    const idx = siblings.findIndex(s => s.id === current.id);
     if (idx > 0) setCurrentNode(siblings[idx - 1]);
   };
   const goRight = () => {
     const current = currentNodeRef.current;
     if (!current?.mentor) return;
     const siblings = [...current.mentor.mentees].sort((a, b) => a.id - b.id);
-    const idx = siblings.findIndex((s) => s.id === current.id);
+    const idx = siblings.findIndex(s => s.id === current.id);
     if (idx < siblings.length - 1) setCurrentNode(siblings[idx + 1]);
   };
 
@@ -348,13 +442,29 @@ export const TreeViewer: React.FC = () => {
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <Svg height="100%" width="100%" style={StyleSheet.absoluteFillObject}>
-        {lines.map((line) => (
-          <AnimatedLine key={line.key} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} stroke={line.stroke} strokeWidth={2} />
+        {lines.map(line => (
+          <AnimatedLine
+            key={line.key}
+            x1={line.x1}
+            y1={line.y1}
+            x2={line.x2}
+            y2={line.y2}
+            stroke={line.stroke}
+            strokeWidth={2}
+          />
         ))}
       </Svg>
 
       {Array.from(nodesWithPositions.values()).map(({ node, x, y }) => (
-        <Animated.View key={String(node.id)} style={{ position: "absolute", left: 0, top: 0, transform: [{ translateX: x }, { translateY: y }] }}>
+        <Animated.View
+          key={String(node.id)}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            transform: [{ translateX: x }, { translateY: y }],
+          }}
+        >
           <TreeNodeView node={node} />
         </Animated.View>
       ))}
@@ -391,8 +501,8 @@ export const TreeViewer: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

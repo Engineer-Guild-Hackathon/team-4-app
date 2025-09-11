@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import { TopicPageIndicator } from './topicPageIndicator';
@@ -42,10 +35,7 @@ const selfUser: User = {
 };
 
 // --- Component ---
-export function SimpleTopicView({
-  topics: propTopics,
-  onUserPress,
-}: SimpleTopicViewProps) {
+export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -82,7 +72,7 @@ export function SimpleTopicView({
       setLoading(false);
       return;
     }
-    
+
     if (accessToken) {
       refreshMyTopics();
     } else {
@@ -104,7 +94,7 @@ export function SimpleTopicView({
       </View>
     );
   }
-  
+
   // トピックが0件の場合は、管理画面のみを表示する
   if (topics.length === 0) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
@@ -112,70 +102,69 @@ export function SimpleTopicView({
 
   return (
     <View style={styles.container}>
-      <PagerView
-        ref={pagerRef}
-        style={{ flex: 1 }}
-        scrollEnabled={false} // ページインジケーターからのみ操作
-        initialPage={currentIndex}
-        onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
-        // PagerViewの子要素の数が変わったときに再描画を促すためのkey
-        key={topics.length} 
-      >
-        {/* ページ0: トピック管理画面 */}
-        <View key="manage-page">
-          <TopicManageView 
-            onBack={() => {
-              // 管理画面から戻るときは「最後のトピック」に移動
-              refreshMyTopics(true); 
-            }}
-          />
-        </View>
-
-        {/* ページ1以降: 各トピック画面 */}
-        {topics.map((topic) => (
-          <View key={topic.id}>
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.topicTitle}>{topic.title}</Text>
-              <Text style={styles.topicDescription}>{topic.description}</Text>
-            </View>
-            <View style={styles.userStripContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {topic.mentor && (
-                  <TouchableOpacity
-                    style={styles.userIconContainer}
-                    onPress={() => onUserPress(topic.id, topic.mentor!.id)}
-                  >
-                    <Image source={{ uri: topic.mentor.avatarUrl }} style={styles.avatar} />
-                    <Text style={styles.userName}>{topic.mentor.name}</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={styles.userIconContainer}
-                  onPress={() => onUserPress(topic.id, selfUser.id)}
-                >
-                  <Image source={{ uri: selfUser.avatarUrl }} style={[styles.avatar, styles.selfAvatar]} />
-                  <Text style={styles.userName}>{selfUser.name}</Text>
-                </TouchableOpacity>
-                {topic.mentees?.map((mentee) => (
-                  <TouchableOpacity
-                    key={mentee.id}
-                    style={styles.userIconContainer}
-                    onPress={() => onUserPress(topic.id, mentee.id)}
-                  >
-                    <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
-                    <Text style={styles.userName}>{mentee.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+      <View style={{ flex: 1 }}>
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          scrollEnabled={false}
+          initialPage={currentIndex}
+          onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
+          key={topics.length + 1}
+        >
+          {/* 作成ページを一番左 */}
+          <View key="manage" style={{ flex: 1 }}>
+            <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
-        ))}
-      </PagerView>
-      <TopicPageIndicator
-        topics={topics}
-        currentIndex={currentIndex}
-        onSelectIndex={handleSelectIndex}
-      />
+          {topics.map(topic => (
+            <View key={topic.id} style={{ flex: 1 }}>
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                <Text style={styles.topicDescription}>{topic.description}</Text>
+              </View>
+              <View style={styles.userStripContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {topic.mentor && (
+                    <TouchableOpacity
+                      style={styles.userIconContainer}
+                      onPress={() => onUserPress(topic.id, topic.mentor!.id)}
+                    >
+                      <Image source={{ uri: topic.mentor.avatarUrl }} style={styles.avatar} />
+                      <Text style={styles.userName}>{topic.mentor.name}</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.userIconContainer}
+                    onPress={() => onUserPress(topic.id, selfUser.id)}
+                  >
+                    <Image
+                      source={{ uri: selfUser.avatarUrl }}
+                      style={[styles.avatar, styles.selfAvatar]}
+                    />
+                    <Text style={styles.userName}>{selfUser.name}</Text>
+                  </TouchableOpacity>
+                  {topic.mentees?.map(mentee => (
+                    <TouchableOpacity
+                      key={mentee.id}
+                      style={styles.userIconContainer}
+                      onPress={() => onUserPress(topic.id, mentee.id)}
+                    >
+                      <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
+                      <Text style={styles.userName}>{mentee.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          ))}
+        </PagerView>
+      </View>
+      <View style={{ paddingBottom: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+        <TopicPageIndicator
+          topics={topics}
+          currentIndex={currentIndex}
+          onSelectIndex={handleSelectIndex}
+        />
+      </View>
     </View>
   );
 }

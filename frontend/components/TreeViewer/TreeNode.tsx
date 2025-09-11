@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Svg, { Circle } from "react-native-svg"; // Added import
-import { TreeNode } from "./treeUtils";
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Circle } from 'react-native-svg'; // Added import
+import { TreeNode } from './treeUtils';
 
 interface Props {
   node: TreeNode;
@@ -22,24 +22,23 @@ export const TreeNodeView: React.FC<Props> = ({ node }) => {
           fill="#fff"
         />
       </Svg>
-      <Text style={styles.nodeLabel}>{String(node.username ?? "")}</Text>
+      <Text style={styles.nodeLabel}>{String(node.username ?? '')}</Text>
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
-    nodeWrapper: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        // Removed margin: 10, spacing will be handled by TreeViewer
-    },
-    nodeLabel: {
-        position: 'absolute',
-        top: NODE_RADIUS * 2 + 5,
-        fontSize: 12,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        width: NODE_RADIUS * 4,
-    },
+  nodeWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Removed margin: 10, spacing will be handled by TreeViewer
+  },
+  nodeLabel: {
+    position: 'absolute',
+    top: NODE_RADIUS * 2 + 5,
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: NODE_RADIUS * 4,
+  },
 });

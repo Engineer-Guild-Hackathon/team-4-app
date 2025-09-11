@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Modal,
+} from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Topic {
-  id: string; 
+  id: string;
   title: string;
   description: string;
   created_at: string;
@@ -71,7 +80,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
           description: newTopicDescription.trim(),
         },
       });
-      
+
       setNewTopicTitle('');
       setNewTopicDescription('');
       await fetchMyTopics();
@@ -88,7 +97,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       await authedApi(`/api/topics/${topicId}/me/`, {
         method: 'POST',
       });
-      
+
       await fetchMyTopics();
       setShowJoinModal(false);
       Alert.alert('成功', 'トピックに参加しました');
@@ -112,32 +121,28 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
 
   // トピックから抜ける
   const leaveTopic = async (topicId: string) => {
-    Alert.alert(
-      '確認',
-      'このトピックから抜けますか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '抜ける',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // ユーザーIDを取得（現在のユーザー情報から）
-              const userResponse = await authedApi('/api/users/me/');
-              await authedApi(`/api/topics/${topicId}/users/${userResponse.id}/`, {
-                method: 'DELETE',
-              });
-              
-              await fetchMyTopics();
-              Alert.alert('成功', 'トピックから抜けました');
-            } catch (error: any) {
-              const errorMessage = error?.message || 'トピックからの退出に失敗しました';
-              Alert.alert('エラー', errorMessage);
-            }
-          },
+    Alert.alert('確認', 'このトピックから抜けますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '抜ける',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // ユーザーIDを取得（現在のユーザー情報から）
+            const userResponse = await authedApi('/api/users/me/');
+            await authedApi(`/api/topics/${topicId}/users/${userResponse.id}/`, {
+              method: 'DELETE',
+            });
+
+            await fetchMyTopics();
+            Alert.alert('成功', 'トピックから抜けました');
+          } catch (error: any) {
+            const errorMessage = error?.message || 'トピックからの退出に失敗しました';
+            Alert.alert('エラー', errorMessage);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   if (loading) {
@@ -159,7 +164,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             <Text style={styles.backButtonText}>戻る</Text>
           </TouchableOpacity>
         </View>
-        
+
         {/* 新規トピック作成 */}
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
@@ -199,23 +204,19 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               <Text style={styles.emptyTopicsSubText}>トピックを作成してください</Text>
             </View>
           ) : (
-            myTopics.map((topic) => (
+            myTopics.map(topic => (
               <View key={topic.id} style={styles.topicItem}>
                 <View style={styles.topicInfo}>
                   <Text style={styles.topicItemTitle}>{topic.title}</Text>
                   <Text style={styles.topicItemDescription}>{topic.description}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.leaveButton}
-                  onPress={() => leaveTopic(topic.id)}
-                >
+                <TouchableOpacity style={styles.leaveButton} onPress={() => leaveTopic(topic.id)}>
                   <Text style={styles.leaveButtonText}>抜ける</Text>
                 </TouchableOpacity>
               </View>
             ))
           )}
         </View>
-
       </ScrollView>
 
       {/* トピック参加モーダル */}
@@ -235,7 +236,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               <Text style={styles.modalCloseButtonText}>閉じる</Text>
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView style={styles.modalContent}>
             {joinLoading ? (
               <View style={styles.loadingContainer}>
@@ -246,10 +247,12 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                 {getAvailableTopics().length === 0 ? (
                   <View style={styles.emptyTopicsContainer}>
                     <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
-                    <Text style={styles.emptyTopicsSubText}>新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください</Text>
+                    <Text style={styles.emptyTopicsSubText}>
+                      新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
+                    </Text>
                   </View>
                 ) : (
-                  getAvailableTopics().map((topic) => (
+                  getAvailableTopics().map(topic => (
                     <View key={topic.id} style={styles.availableTopicItem}>
                       <View style={styles.availableTopicInfo}>
                         <Text style={styles.availableTopicTitle}>{topic.title}</Text>

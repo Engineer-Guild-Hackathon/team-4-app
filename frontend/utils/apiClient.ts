@@ -12,10 +12,7 @@ export interface ApiOptions {
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL; // 自分のPCのIPアドレスを指定
 
-export async function apiClient<T = any>(
-  endpoint: string,
-  options: ApiOptions = {}
-): Promise<T> {
+export async function apiClient<T = any>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { method = 'GET', body, token, headers = {} } = options;
   const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
 
