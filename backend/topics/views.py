@@ -1,4 +1,5 @@
 from ninja import Router
+from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 import uuid
@@ -14,7 +15,7 @@ User = get_user_model()
 
 router = Router(tags=["topics"])
 
-@router.post("/", response=TopicResponseSchema)
+@router.post("/", response=TopicResponseSchema, auth=JWTAuth())
 def create_topic(request, data: TopicCreateSchema):
     """トピックを作成する"""
     topic = Topic.objects.create(
@@ -34,6 +35,16 @@ def list_topics(request):
         "count": topics.count()
     }
 
+@router.get("/me/", response=TopicListResponseSchema, auth=JWTAuth())
+def get_my_topics(request):
+    """自分が参加しているトピック一覧を取得する"""
+    user = request.user
+    topics = user.topics.all()
+    return {
+        "topics": list(topics),
+        "count": topics.count()
+    }
+
 
 @router.get("/{topic_id}/", response=TopicResponseSchema)
 def get_topic(request, topic_id: uuid.UUID):
@@ -42,7 +53,7 @@ def get_topic(request, topic_id: uuid.UUID):
     return topic
 
 
-@router.put("/{topic_id}/", response=TopicResponseSchema)
+@router.put("/{topic_id}/", response=TopicResponseSchema, auth=JWTAuth())
 def update_topic(request, topic_id: uuid.UUID, data: TopicUpdateSchema):
     """トピックを更新する"""
     topic = get_object_or_404(Topic, id=topic_id)
@@ -57,7 +68,7 @@ def update_topic(request, topic_id: uuid.UUID, data: TopicUpdateSchema):
     return topic
 
 
-@router.delete("/{topic_id}/")
+@router.delete("/{topic_id}/", auth=JWTAuth())
 def delete_topic(request, topic_id: uuid.UUID):
     """トピックを削除する"""
     topic = get_object_or_404(Topic, id=topic_id)
@@ -66,7 +77,7 @@ def delete_topic(request, topic_id: uuid.UUID):
 
 
 # UserTopic関連のエンドポイント
-@router.post("/{topic_id}/users/", response=UserTopicResponseSchema)
+@router.post("/{topic_id}/users/", response=UserTopicResponseSchema, auth=JWTAuth())
 def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateSchema):
     """ユーザーをトピックに参加させる"""
     topic = get_object_or_404(Topic, id=topic_id)
@@ -74,7 +85,7 @@ def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateSchema)
     
     # 既に参加しているかチェック
     if UserTopic.objects.filter(user=user, topic=topic).exists():
-        return {"error": "ユーザーは既にこのトピックに参加しています"}, 400
+        return {"detail": "ユーザーは既にこのトピックに参加しています"}, 400
     
     user_topic = UserTopic.objects.create(
         user=user,
@@ -125,7 +136,7 @@ def get_topic_users(request, topic_id: uuid.UUID):
     }
 
 
-@router.put("/{topic_id}/users/{user_id}/", response=UserTopicResponseSchema)
+@router.put("/{topic_id}/users/{user_id}/", response=UserTopicResponseSchema, auth=JWTAuth())
 def update_user_topic_level(request, topic_id: uuid.UUID, user_id: int, data: UserTopicUpdateSchema):
     """ユーザーのトピック参加レベルを更新する"""
     user_topic = get_object_or_404(UserTopic, topic_id=topic_id, user_id=user_id)
@@ -144,9 +155,37 @@ def update_user_topic_level(request, topic_id: uuid.UUID, user_id: int, data: Us
     )
 
 
-@router.delete("/{topic_id}/users/{user_id}/")
+@router.delete("/{topic_id}/users/{user_id}/", auth=JWTAuth())
 def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
     """ユーザーをトピックから退出させる"""
     user_topic = get_object_or_404(UserTopic, topic_id=topic_id, user_id=user_id)
     user_topic.delete()
     return {"message": "ユーザーをトピックから退出させました"}
+
+
+@router.post("/{topic_id}/me/", response=UserTopicResponseSchema, auth=JWTAuth())
+def join_topic(request, topic_id: uuid.UUID):
+    """現在のユーザーをトピックに参加させる"""
+    topic = get_object_or_404(Topic, id=topic_id)
+    user = request.user
+    
+    # 既に参加しているかチェック
+    if UserTopic.objects.filter(user=user, topic=topic).exists():
+        return {"detail": "既にこのトピックに参加しています"}, 400
+    
+    user_topic = UserTopic.objects.create(
+        user=user,
+        topic=topic,
+        level=1  # デフォルトレベル
+    )
+    
+    return UserTopicResponseSchema(
+        id=user_topic.id,
+        user_id=user_topic.user.id,
+        username=user_topic.user.username,
+        topic_id=user_topic.topic.id,
+        topic_title=user_topic.topic.title,
+        level=user_topic.level,
+        created_at=user_topic.created_at,
+        updated_at=user_topic.updated_at
+    )
