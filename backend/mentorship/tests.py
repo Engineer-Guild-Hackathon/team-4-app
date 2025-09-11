@@ -64,7 +64,7 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         mr.refresh_from_db()
         self.assertEqual(mr.status, "approved")
-        self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1, topic=self.topic).exists())
 
     def test_approve_mentor_request_unauthorized_fails(self):
         """
@@ -194,7 +194,7 @@ class MentorAPITestCase(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "expel", "mentee_id": self.user1.id})
-        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1, topic=self.topic).exists())
         self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="expel").exists())
 
     def test_expel_mentee_unauthorized_fails(self):

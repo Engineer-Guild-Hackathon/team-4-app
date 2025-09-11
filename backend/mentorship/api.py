@@ -18,7 +18,6 @@ class Message(Schema):
 
 class TopicSchema(Schema):
     """トピック情報スキーマ"""
-    """トピック情報スキーマ"""
     id: uuid.UUID
     title: str
 
@@ -45,7 +44,6 @@ class MentorRequestOut(Schema):
     status: str
 
 class MenteeActionStatus(Schema):
-    """弟子に対するアクションのステータスレスポンススキーマ"""
     """弟子に対するアクションのステータスレスポンススキーマ"""
     status: str
     mentee_id: int
@@ -79,15 +77,14 @@ def get_mentorship_router():
         """
         指定された師弟関係を削除し、アクションログを記録します。
         """
-        mentee_id = relation.mentee.id
-        actor = relation.mentor
-        target = relation.mentee
+        mentor = relation.mentor
+        mentee = relation.mentee
         relation.delete()
 
         # ログを記録
-        ActionLog.objects.create(actor=actor, target=target, action=action)
+        ActionLog.objects.create(actor=mentor, target=mentee, action=action)
 
-        return {"status": action, "mentee_id": mentee_id}
+        return {"status": action, "mentee_id": mentee.id}
 
     def update_subtree_ranks(user: User, rank_difference: int):
         """
@@ -136,7 +133,6 @@ def get_mentorship_router():
             """, [user.id, level_difference, user.id, topic_id])
 
 
-
     @router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
     def get_mentor_subtree(request: HttpRequest, mentor_id: int):
         """
@@ -152,11 +148,9 @@ def get_mentorship_router():
         """
         users = User.objects.all()
         mentor_relations = MentorRelation.objects.all().select_related('mentor', 'mentee')
-        print(f"mentor_relations: {mentor_relations}")
 
         # Create a dictionary to quickly look up mentor_id by mentee_id
         mentee_to_mentor = {relation.mentee.id: relation.mentor.id for relation in mentor_relations}
-        print(f"mentee_to_mentor: {mentee_to_mentor}")
 
         data = []
         for user in users:
@@ -219,8 +213,8 @@ def get_mentorship_router():
         mentor = mentor_request.to_user
         mentee = mentor_request.from_user
         MentorRelation.objects.create(
-            mentor=mentor,
-            mentee=mentee,
+            mentor=mentor_request.to_user,
+            mentee=mentor_request.from_user,
             topic=mentor_request.topic
         )
 
@@ -287,6 +281,5 @@ def get_mentorship_router():
         # menteeの子孫のUserTopicのlevelを更新
         update_descendant_levels(mentee, data.topic_id, delta)
         return _remove_relation(mentorship, action="graduate")
-
     return router
 # Added a comment to force reload
