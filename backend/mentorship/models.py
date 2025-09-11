@@ -48,6 +48,53 @@ class MentorRelationRequest(models.Model):
         verbose_name_plural = '師弟関係リクエスト'
 
 
+from django.db import connection
+
+class MentorRelationManager(models.Manager):
+    """師弟関係のカスタムマネージャー"""
+    def get_mentee_subtree(self, mentor_id):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                WITH RECURSIVE mentee_tree AS (
+                    SELECT
+                        mr.mentee_id,
+                        mr.mentor_id,
+                        1 as level
+                    FROM
+                        mentorship_mentorrelation mr
+                    WHERE
+                        mr.mentor_id = %s
+                    UNION ALL
+                    SELECT
+                        mr.mentee_id,
+                        mr.mentor_id,
+                        mt.level + 1
+                    FROM
+                        mentorship_mentorrelation mr
+                    INNER JOIN
+                        mentee_tree mt ON mr.mentor_id = mt.mentee_id
+                )
+                SELECT
+                    auth_user.id,
+                    auth_user.username,
+                    auth_user.email,
+                    mentee_tree.level
+                FROM
+                    mentee_tree
+                INNER JOIN
+                    auth_user ON mentee_tree.mentee_id = auth_user.id
+                ORDER BY
+                    mentee_tree.level, auth_user.username;
+                """,
+                [mentor_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            return [
+                dict(zip(columns, row))
+                for row in cursor.fetchall()
+            ]
+
 class MentorRelation(models.Model):
     """師弟関係を管理するモデル"""
     mentor = models.ForeignKey(
@@ -57,18 +104,13 @@ class MentorRelation(models.Model):
         verbose_name='師匠'
     )
     # 一人のユーザーは同時に一人の師匠しか持てない想定
-    mentee = models.OneToOneField(
+    mentee = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='mentor_relation',
+        related_name='mentorships',
         verbose_name='弟子'
     )
-    rank = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        verbose_name='ランク',
-        db_index=True
-    )
+    
     topic = models.ForeignKey(
         Topic,
         on_delete=models.CASCADE,
@@ -78,12 +120,15 @@ class MentorRelation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='作成日時')
 
+    objects = MentorRelationManager()
+
     def __str__(self):
         return f"Mentor: {self.mentor}, Mentee: {self.mentee}"
 
     class Meta:
         verbose_name = '師弟関係'
         verbose_name_plural = '師弟関係'
+        unique_together = ('mentee', 'topic')
 
 class ActionLog(models.Model):
     ACTION_CHOICES = [
@@ -102,4 +147,3 @@ class ActionLog(models.Model):
 
     def __str__(self):
         return f"{self.actor} {self.action} {self.target} at {self.created_at}"
-

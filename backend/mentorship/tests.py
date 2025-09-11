@@ -1,14 +1,18 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from mentorship.models import MentorRelationRequest, MentorRelation, ActionLog
-from topics.models import Topic
+from topics.models import Topic, UserTopic
 
 User = get_user_model()
 
 class MentorAPITestCase(TestCase):
     def setUp(self):
+        """Set up test users and a topic for all tests."""
         self.user1 = User.objects.create_user(username="user1", password="pass123")
         self.user2 = User.objects.create_user(username="user2", password="pass123")
+        self.user3 = User.objects.create_user(username="user3", password="pass123")
+        self.user4 = User.objects.create_user(username="user4", password="pass123")
+        self.superuser = User.objects.create_superuser(username="superuser", password="pass123")
         self.topic = Topic.objects.create(title="Test Topic", description="Description for test topic")
         self.client.login(username="user1", password="pass123")
 
@@ -54,20 +58,20 @@ class MentorAPITestCase(TestCase):
         Test: 弟子入りリクエストの承認（成功）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        self.client.login(username="user2", password="pass123") # Login as recipient
+        self.client.login(username="user2", password="pass123") # 受信者としてログイン
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
 
         self.assertEqual(response.status_code, 200)
         mr.refresh_from_db()
         self.assertEqual(mr.status, "approved")
-        self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertTrue(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1, topic=self.topic).exists())
 
     def test_approve_mentor_request_unauthorized_fails(self):
         """
         Test: 権限のないユーザーによる承認（失敗）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        # user1 is logged in, who is not the recipient
+        # user1がログインしていますが、受信者ではありません
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
         self.assertEqual(response.status_code, 403)
 
@@ -76,7 +80,7 @@ class MentorAPITestCase(TestCase):
         Test: 弟子入りリクエストの拒否（成功）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        self.client.login(username="user2", password="pass123") # Login as recipient
+        self.client.login(username="user2", password="pass123") # 受信者としてログイン
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
 
         self.assertEqual(response.status_code, 200)
@@ -88,7 +92,7 @@ class MentorAPITestCase(TestCase):
         Test: 権限のないユーザーによる拒否（失敗）
         """
         mr = MentorRelationRequest.objects.create(from_user=self.user1, to_user=self.user2, topic=self.topic)
-        # user1 is logged in, who is not the recipient
+        # user1がログインしていますが、受信者ではありません
         response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
         self.assertEqual(response.status_code, 403)
 
@@ -96,19 +100,18 @@ class MentorAPITestCase(TestCase):
         """
         Test: 異なるメンターへ複数のリクエストを作成（成功）
         """
-        mentor3 = User.objects.create_user(username="mentor3", password="pass123")
         topic2 = Topic.objects.create(title="Test Topic 2")
 
         # Request 1: user1 -> user2 with self.topic
-        self.client.post(
+        response1 = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
             content_type="application/json"
         )
-        # Request 2: user1 -> mentor3 with topic2
-        self.client.post(
+        # Request 2: user1 -> user3 with topic2
+        response2 = self.client.post(
             "/api/mentorship/request",
-            {"to_user_id": mentor3.id, "topic_id": str(topic2.id)},
+            {"to_user_id": self.user3.id, "topic_id": str(topic2.id)},
             content_type="application/json"
         )
 
@@ -131,62 +134,77 @@ class MentorAPITestCase(TestCase):
         """
         Test: 弟子を卒業させる（成功）
         """
-        # Create a mentor-mentee relationship
+        # Setup: user2 (mentor) -> user1 (mentee) -> user3 (grandchild)
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
-        
-        # Login as the mentor
+        MentorRelation.objects.create(mentor=self.user1, mentee=self.user3, topic=self.topic)
+
+        # Setup topic levels
+        mentor_level = 10
+        mentee_level = 5
+        grandchild_level = 2
+        UserTopic.objects.create(user=self.user2, topic=self.topic, level=mentor_level)
+        UserTopic.objects.create(user=self.user1, topic=self.topic, level=mentee_level)
+        UserTopic.objects.create(user=self.user3, topic=self.topic, level=grandchild_level)
+
+        # Action: user2 graduates user1
         self.client.login(username="user2", password="pass123")
-        
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
-        
+        response = self.client.post(
+            f"/api/mentorship/mentees/{self.user1.id}/graduate",
+            {"topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
+
+        # Assertions
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "graduate", "mentee_id": self.user1.id})
-        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        
+        # Assert levels were updated correctly
+        self.assertEqual(UserTopic.objects.get(user=self.user1, topic=self.topic).level, mentor_level)
+        level_delta = mentor_level - mentee_level
+        self.assertEqual(UserTopic.objects.get(user=self.user3, topic=self.topic).level, grandchild_level + level_delta)
+        
+        # Assert relation was removed and log was created
+        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1, topic=self.topic).exists())
         self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="graduate").exists())
 
     def test_graduate_mentee_unauthorized_fails(self):
         """
         Test: 権限のないユーザーによる卒業（失敗）
         """
-        # Create a mentor-mentee relationship
+        # 師弟関係を作成
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as a different user (not the mentor)
-        user3 = User.objects.create_user(username="user3", password="pass123")
+        # 別のユーザー（師匠ではない）としてログイン
         self.client.login(username="user3", password="pass123")
-        
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/graduate")
-        
+        response = self.client.post(
+            f"/api/mentorship/mentees/{self.user1.id}/graduate",
+            {"topic_id": str(self.topic.id)},
+            content_type="application/json"
+        )
         self.assertEqual(response.status_code, 404)
 
     def test_expel_mentee_success(self):
         """
         Test: 弟子を破門する（成功）
         """
-        # Create a mentor-mentee relationship
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as the mentor
         self.client.login(username="user2", password="pass123")
         
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel", {"topic_id": str(self.topic.id)}, content_type="application/json")
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "expel", "mentee_id": self.user1.id})
-        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1).exists())
+        self.assertFalse(MentorRelation.objects.filter(mentor=self.user2, mentee=self.user1, topic=self.topic).exists())
         self.assertTrue(ActionLog.objects.filter(actor=self.user2, target=self.user1, action="expel").exists())
 
     def test_expel_mentee_unauthorized_fails(self):
         """
         Test: 権限のないユーザーによる破門（失敗）
         """
-        # Create a mentor-mentee relationship
         MentorRelation.objects.create(mentor=self.user2, mentee=self.user1, topic=self.topic)
         
-        # Login as a different user (not the mentor)
-        user3 = User.objects.create_user(username="user3", password="pass123")
         self.client.login(username="user3", password="pass123")
         
-        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel")
+        response = self.client.post(f"/api/mentorship/mentees/{self.user1.id}/expel", {"topic_id": str(self.topic.id)}, content_type="application/json")
         
         self.assertEqual(response.status_code, 404)

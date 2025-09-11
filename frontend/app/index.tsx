@@ -5,12 +5,12 @@ import { useLocalSearchParams } from 'expo-router';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import PostListModal from '../components/posts/PostListModal';
 
-// TopicインターフェースはSimpleTopicViewに渡すために残しておくと良いでしょう
-interface Topic {
-  id: number;
-  title: string;
-  description: string;
-}
+// // TopicインターフェースはSimpleTopicViewに渡すために残しておくと良いでしょう
+// interface Topic {
+//   id: number;
+//   title: string;
+//   description: string;
+// }
 
 export default function HomeScreen() {
   const { logout, accessToken, loading } = useAuth();
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+    paddingTop: 50, // Add padding to avoid overlap with status bar
   },
   // ログアウトボタン用のスタイルを追加
   logoutButton: {

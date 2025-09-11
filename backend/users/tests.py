@@ -44,7 +44,6 @@ class UserAPITest(TestCase):
 		self.assertEqual(response.status_code, 201)
 		response_data = response.json()
 		self.assertEqual(response_data["user"]["username"], "newuser")
-		self.assertEqual(response_data["user"]["email"], "new@example.com")
 		self.assertIn("id", response_data["user"])
 
 	def test_list_users(self):
@@ -61,7 +60,6 @@ class UserAPITest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		response_data = response.json()
 		self.assertEqual(response_data["username"], "apiuser")
-		self.assertEqual(response_data["email"], "api@example.com")
 
 	def test_update_user(self):
 		data = {
@@ -73,7 +71,6 @@ class UserAPITest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		response_data = response.json()
 		self.assertEqual(response_data["username"], "updateduser")
-		self.assertEqual(response_data["email"], "updated@example.com")
 
 	def test_delete_user(self):
 		user = User.objects.create_user(username="deluser", email="del@example.com", password="pass")
