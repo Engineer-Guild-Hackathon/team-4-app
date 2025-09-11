@@ -4,10 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import { TopicPageIndicator } from './topicPageIndicator';
 import PagerView from 'react-native-pager-view';
-// ▼▼▼ 1. TreeViewerコンポーネントをインポート ▼▼▼
 import { TreeViewer } from './TreeViewer';
 
-// --- Interfaces and Types ---
 interface Topic {
   id: string;
   title: string;
@@ -21,7 +19,6 @@ interface SimpleTopicViewProps {
   onUserPress: (topicId: string, userId: number) => void;
 }
 
-// --- Component ---
 export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
@@ -91,25 +88,19 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
           key={topics.length + 1}
         >
-          {/* ページ0: 管理画面 */}
           <View key="manage" style={{ flex: 1 }}>
             <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
-          {/* ページ1以降: 各トピック */}
           {topics.map(topic => (
             <View key={topic.id} style={styles.topicPageContainer}>
-              {/* 上部：トピック概要エリア (変更なし) */}
               <View style={styles.descriptionContainer}>
                 <Text style={styles.topicTitle}>{topic.title}</Text>
                 <Text style={styles.topicDescription}>{topic.description}</Text>
               </View>
 
-              {/* ▼▼▼ 2. 中央のユーザーアイコン表示をTreeViewerに置き換え ▼▼▼ */}
               <View style={styles.treeContainer}>
                 <TreeViewer
-                  // 表示すべきトピックのIDを渡す
                   topicId={topic.id}
-                  // TreeViewer内でアイコンがタップされたら、onUserPressを呼び出す
                   onNodePress={(userId) => {
                     onUserPress(topic.id, userId);
                   }}
@@ -119,7 +110,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           ))}
         </PagerView>
       </View>
-      {/* 下部：トピックインジケーター (変更なし) */}
       <View style={{ paddingBottom: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
         <TopicPageIndicator
           topics={topics}
@@ -140,7 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   descriptionContainer: {
-    flex: 4, // 画面の4割を占める
+    flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
@@ -160,9 +150,8 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     maxWidth: 300,
   },
-  // ▼▼▼ 3. TreeViewer用のコンテナスタイルを追加 ▼▼▼
   treeContainer: {
-    flex: 6, // 画面の6割を占める
+    flex: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -173,6 +162,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#6b7280',
   },
-  // userStripContainerとそれに関連するスタイルは不要になったため削除
 });
 
