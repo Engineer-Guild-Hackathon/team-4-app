@@ -47,7 +47,7 @@ export default function PostListModal({
     if (topicId) params.append('topic_id', topicId);
     if (userId) params.append('author_id', String(userId));
     const url = `${API_BASE_URL}/api/posts/?${params.toString()}`;
-    
+
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -70,7 +70,7 @@ export default function PostListModal({
           const mediaUrl = `${API_BASE_URL}${media.file}`;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
-          } 
+          }
           // else if (media.media_type === 'video') {
           //   return (
           //     <Video
@@ -98,21 +98,12 @@ export default function PostListModal({
     content = <Text style={styles.centered}>まだ投稿がありません。</Text>;
   } else {
     content = (
-      <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
     );
   }
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
+    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.header}>

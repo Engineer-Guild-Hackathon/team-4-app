@@ -1,25 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
+import { TopicPageIndicator } from './topicPageIndicator';
+import PagerView from 'react-native-pager-view';
 
-const { width: screenWidth } = Dimensions.get('window');
-
+// --- Interfaces and Types ---
 interface User {
   id: number;
   name: string;
@@ -41,34 +27,37 @@ interface SimpleTopicViewProps {
   onUserPress: (topicId: string, userId: number) => void;
 }
 
+// --- Mock Data ---
 const selfUser: User = {
-  id: 1,
+  id: 1, // 実際のユーザーIDに置き換えることを推奨
   name: '自分',
   avatarUrl: 'https://placehold.co/64x64/a9a9a9/ffffff?text=Me',
 };
 
-export function SimpleTopicView({
-  topics: propTopics,
-  onUserPress,
-}: SimpleTopicViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+// --- Component ---
+export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
+  const [currentIndex, setCurrentIndex] = useState(1);
+  const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const translateX = useSharedValue(0);
   const { authedApi, accessToken } = useAuth();
 
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
       setLoading(true);
       const response = await authedApi('/api/topics/me/');
-      let fetchedTopics = response.topics || [];
-
+      const fetchedTopics = response.topics || [];
       setTopics(fetchedTopics);
-      
-      if (switchToLastTopic) {
-        setCurrentIndex(Math.max(0, fetchedTopics.length - 1));
-      }
 
+      if (switchToLastTopic) {
+        // 新しいトピックが追加された後、そのページに移動する
+        // ページ0が管理画面なので、最後のトピックのindexは `fetchedTopics.length` になる
+        const lastTopicIndex = fetchedTopics.length;
+        // PagerViewをプログラムで操作してページを切り替え
+        pagerRef.current?.setPage(lastTopicIndex);
+        // インジケーターの表示も更新
+        setCurrentIndex(lastTopicIndex);
+      }
     } catch (error) {
       console.error('トピック取得エラー:', error);
       setTopics([]);
@@ -83,7 +72,7 @@ export function SimpleTopicView({
       setLoading(false);
       return;
     }
-    
+
     if (accessToken) {
       refreshMyTopics();
     } else {
@@ -91,47 +80,10 @@ export function SimpleTopicView({
     }
   }, [propTopics, accessToken]);
 
-
-  const panGesture = Gesture.Pan()
-    .onStart(() => { 'worklet'; })
-    .onUpdate(event => { translateX.value = event.translationX; })
-    .onEnd(event => {
-      'worklet';
-      const threshold = screenWidth * 0.2;
-      const velocity = event.velocityX;
-
-      if (Math.abs(event.translationX) > threshold || Math.abs(velocity) > 300) {
-        if (event.translationX > 0) { // 右にスワイプ
-          if (currentIndex > 0) {
-            // 前のトピックへ
-            runOnJS(setCurrentIndex)(currentIndex - 1);
-          } else {
-            // 最初のトピックから右スワイプで管理画面へ
-            runOnJS(setCurrentIndex)(topics.length);
-          }
-        } else if (event.translationX < 0) { // 左にスワイプ
-          // --- ▼▼▼ このブロックを修正 ▼▼▼ ---
-          if (currentIndex < topics.length - 1) {
-            // 最後のトピックでなければ、次のトピックへ
-            runOnJS(setCurrentIndex)(currentIndex + 1);
-          } else if (currentIndex === topics.length) {
-            // 管理画面から左スワイプで最初のトピックへ
-            runOnJS(setCurrentIndex)(0);
-          }
-          // 最後のトピック (currentIndex === topics.length - 1) の場合は何もしない
-          // --- ▲▲▲ ここまで修正 ▲▲▲ ---
-        }
-      }
-      // 位置を元に戻すアニメーション
-      translateX.value = withSpring(0);
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  const currentTopic = topics[currentIndex];
-  const isManageMode = currentIndex === topics.length;
+  const handleSelectIndex = (index: number) => {
+    // インジケーターからのタップで、アニメーション付きでページを切り替え
+    pagerRef.current?.setPage(index);
+  };
 
   if (loading) {
     return (
@@ -143,98 +95,77 @@ export function SimpleTopicView({
     );
   }
 
-  if (isManageMode) {
-    return (
-      <TopicManageView 
-        onBack={() => {
-          refreshMyTopics(true);
-        }} 
-      />
-    );
-  }
-  
+  // トピックが0件の場合は、管理画面のみを表示する
   if (topics.length === 0) {
-    return (
-        <View style={styles.container}>
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>参加しているトピックがありません</Text>
-                <Text style={styles.emptySubText}>トピック管理画面で新しいトピックを作成するか、他のユーザーから招待を受けてください</Text>
-            </View>
-        </View>
-    );
+    return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
   return (
-    <GestureDetector gesture={panGesture}>
-      <View style={styles.container}>
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.topicTitle}>{currentTopic?.title}</Text>
-          <Text style={styles.topicDescription}>{currentTopic?.description}</Text>
-        </View>
-
-        <View style={styles.userStripContainer}>
-          {currentTopic && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {currentTopic.mentor && (
-                <TouchableOpacity
-                  style={styles.userIconContainer}
-                  onPress={() => onUserPress(currentTopic.id, currentTopic.mentor!.id)}
-                >
-                  <Image source={{ uri: currentTopic.mentor.avatarUrl }} style={styles.avatar} />
-                  <Text style={styles.userName}>{currentTopic.mentor.name}</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={styles.userIconContainer}
-                onPress={() => onUserPress(currentTopic.id, selfUser.id)}
-              >
-                <Image source={{ uri: selfUser.avatarUrl }} style={[styles.avatar, styles.selfAvatar]} />
-                <Text style={styles.userName}>{selfUser.name}</Text>
-              </TouchableOpacity>
-              {currentTopic.mentees?.map((mentee) => (
-                <TouchableOpacity
-                  key={mentee.id}
-                  style={styles.userIconContainer}
-                  onPress={() => onUserPress(currentTopic.id, mentee.id)}
-                >
-                  <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
-                  <Text style={styles.userName}>{mentee.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View style={styles.topicsContainer}>
-          <View style={styles.topicIconWrapper}>
-            <View style={[styles.topicIcon, isManageMode && styles.topicIconActive]}>
-              <Text
-                style={[
-                  styles.topicIconText,
-                  isManageMode && styles.topicIconTextActive,
-                ]}
-              >
-                +
-              </Text>
-            </View>
+    <View style={styles.container}>
+      <View style={{ flex: 1 }}>
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          scrollEnabled={false}
+          initialPage={currentIndex}
+          onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
+          key={topics.length + 1}
+        >
+          {/* 作成ページを一番左 */}
+          <View key="manage" style={{ flex: 1 }}>
+            <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
-          {topics.map((topic, index) => (
-            <View key={topic.id} style={styles.topicIconWrapper}>
-              <View style={[styles.topicIcon, index === currentIndex && styles.topicIconActive]}>
-                <Text
-                  style={[
-                    styles.topicIconText,
-                    index === currentIndex && styles.topicIconTextActive,
-                  ]}
-                >
-                  {topic.title.charAt(0)}
-                </Text>
+          {topics.map(topic => (
+            <View key={topic.id} style={{ flex: 1 }}>
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                <Text style={styles.topicDescription}>{topic.description}</Text>
+              </View>
+              <View style={styles.userStripContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {topic.mentor && (
+                    <TouchableOpacity
+                      style={styles.userIconContainer}
+                      onPress={() => onUserPress(topic.id, topic.mentor!.id)}
+                    >
+                      <Image source={{ uri: topic.mentor.avatarUrl }} style={styles.avatar} />
+                      <Text style={styles.userName}>{topic.mentor.name}</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.userIconContainer}
+                    onPress={() => onUserPress(topic.id, selfUser.id)}
+                  >
+                    <Image
+                      source={{ uri: selfUser.avatarUrl }}
+                      style={[styles.avatar, styles.selfAvatar]}
+                    />
+                    <Text style={styles.userName}>{selfUser.name}</Text>
+                  </TouchableOpacity>
+                  {topic.mentees?.map(mentee => (
+                    <TouchableOpacity
+                      key={mentee.id}
+                      style={styles.userIconContainer}
+                      onPress={() => onUserPress(topic.id, mentee.id)}
+                    >
+                      <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
+                      <Text style={styles.userName}>{mentee.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             </View>
           ))}
-        </View>
+        </PagerView>
       </View>
-    </GestureDetector>
+      <View style={{ paddingBottom: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+        <TopicPageIndicator
+          topics={topics}
+          currentIndex={currentIndex}
+          onSelectIndex={handleSelectIndex}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -242,48 +173,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-  },
-  topicsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 60,
-    gap: 20,
-  },
-  topicIconWrapper: {
-    alignItems: 'center',
-  },
-  topicIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#e5e7eb',
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topicIconActive: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#1d4ed8',
-    shadowColor: '#3b82f6',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  topicIconText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#6b7280',
-  },
-  topicIconTextActive: {
-    color: '#ffffff',
   },
   descriptionContainer: {
     flex: 1,
@@ -359,4 +248,3 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
-

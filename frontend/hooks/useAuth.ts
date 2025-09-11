@@ -91,7 +91,6 @@ export function useAuth() {
       if (e.message?.includes('token') || e.message?.includes('expired')) {
         const refreshed = await refreshAccessToken();
         if (refreshed) {
-
           // リフレッシュ後の新しいアクセストークンを取得
           const newAccessToken = await SecureStore.getItemAsync(ACCESS_KEY);
           return await apiClient(endpoint, { ...options, token: newAccessToken });

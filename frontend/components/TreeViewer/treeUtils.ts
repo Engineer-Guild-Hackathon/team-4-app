@@ -21,7 +21,7 @@ export function buildTree(nodes: UserNode[]): TreeNode | null {
   const map = new Map<number, TreeNode>();
   let root: TreeNode | null = null;
 
-  nodes.forEach(n => 
+  nodes.forEach(n =>
     map.set(n.user.id, { id: n.user.id, username: n.user.username, level: n.rank, mentees: [] })
   );
 

@@ -14,7 +14,7 @@ import PostListModal from '../components/posts/PostListModal';
 
 export default function HomeScreen() {
   const { logout, accessToken, loading } = useAuth();
-  
+
   // 1. モーダルと、どの投稿リストを表示するかの状態を管理
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
@@ -76,14 +76,14 @@ export default function HomeScreen() {
       */}
 
       {/* ログアウトボタンは残しておくと便利です */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.logoutButton}
         onPress={logout}
         activeOpacity={0.8}
       >
         <Text style={styles.logoutText}>ログアウト</Text>
-      </TouchableOpacity>
-      
+      </TouchableOpacity> */}
+
       {/* 5. モーダルに選択されたtopicIdとuserIdを渡す */}
       <PostListModal
         visible={modalVisible}
@@ -133,4 +133,3 @@ const styles = StyleSheet.create({
   },
   // postsButtonのスタイルは不要になったため削除してもOK
 });
-

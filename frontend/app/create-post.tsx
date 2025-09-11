@@ -68,7 +68,7 @@ export default function CreatePostScreen() {
     for (const asset of mediaAssets) {
       const media_type = asset.type === 'image' ? 'image' : 'video';
       metadata.push({ media_type });
-      
+
       formData.append('files', {
         uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
         name: asset.fileName || 'media.jpg',
@@ -82,24 +82,24 @@ export default function CreatePostScreen() {
       const response = await fetch(`${API_BASE_URL}/api/posts/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw errorData; 
+        throw errorData;
       }
 
       Alert.alert('成功', '投稿が完了しました！');
       router.replace({ pathname: '/', params: { openModal: 'true' } });
-
     } catch (error: any) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
-      const errorMessage = error?.detail || '投稿に失敗しました。ネットワーク接続を確認するか、時間をおいて再試行してください。';
+      const errorMessage =
+        error?.detail ||
+        '投稿に失敗しました。ネットワーク接続を確認するか、時間をおいて再試行してください。';
       Alert.alert('投稿エラー', errorMessage);
-
     } finally {
       setIsSubmitting(false);
     }
@@ -120,16 +120,12 @@ export default function CreatePostScreen() {
       <Button title="画像・動画を選択" onPress={pickMedia} />
 
       <ScrollView horizontal style={styles.previewContainer}>
-        {mediaAssets.map((asset) => {
+        {mediaAssets.map(asset => {
           if (asset.type === 'image') {
             return (
-              <Image 
-                key={asset.assetId} 
-                source={{ uri: asset.uri }} 
-                style={styles.previewImage} 
-              />
+              <Image key={asset.assetId} source={{ uri: asset.uri }} style={styles.previewImage} />
             );
-          } 
+          }
           // else if (asset.type === 'video') {
           //   return (
           //     <Video
@@ -148,8 +144,8 @@ export default function CreatePostScreen() {
 
       <View style={{ flex: 1 }} />
 
-      <Button 
-        title={isSubmitting ? "投稿中..." : "投稿する"}
+      <Button
+        title={isSubmitting ? '投稿中...' : '投稿する'}
         onPress={handlePost}
         disabled={isSubmitting}
       />
