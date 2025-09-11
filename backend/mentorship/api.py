@@ -60,17 +60,25 @@ class MenteeSubtreeOut(Schema):
     email: str
     level: int
 
+class UserNodeOut(Schema):
+    user: UserSchema
+    rank: int
+    mentor_id: int | None = None
+
 # --- APIエンドポイント定義 ---
 def get_mentorship_router():
     from .models import MentorRelationRequest, MentorRelation, ActionLog 
 
+    user_table = User._meta.db_table
+
     router = Router(tags=["mentorship"])
 
-    def _remove_relation(mentor, mentee, topic_id: str, action: str):
+    def _remove_relation(relation: MentorRelation, action: str):
         """
-        指定されたメンターと弟子の関係を削除し、アクションログを記録します。
+        指定された師弟関係を削除し、アクションログを記録します。
         """
-        relation = get_object_or_404(MentorRelation, mentor=mentor, mentee=mentee, topic_id=topic_id)
+        mentor = relation.mentor
+        mentee = relation.mentee
         relation.delete()
 
         # ログを記録
@@ -78,44 +86,53 @@ def get_mentorship_router():
 
         return {"status": action, "mentee_id": mentee.id}
 
-    def update_subtree_levels(mentee, topic_id, delta):
+    def update_subtree_ranks(user: User, rank_difference: int):
         """
-        mentee（卒業したユーザー）とその全ての子孫（mentees）のUserTopic（topic_id）のlevelを再帰的にdelta分加算する。
-        mentee自身はlevelを加算しない（mentorと同じ値に揃える処理は別途呼び出し側で行う）。
+        指定されたユーザーとその配下の弟子全員のランクを更新します。
+        再帰CTEを使用して、効率的にサブツリー全体のランクを更新します。
         """
-        """
-        mentee（卒業したユーザー）配下の全ての子孫（mentees）のUserTopic（topic_id）のlevelをPostgreSQLの再帰CTEで一括加算する。
-        mentee自身はlevelを加算しない（mentorと同じ値に揃える処理は呼び出し側で行う）。
-        """
-        from django.db import connection
-        from django.apps import apps
-        User = get_user_model()
-        MentorRelation = apps.get_model('mentorship', 'MentorRelation')
-        UserTopic = apps.get_model('topics', 'UserTopic')
-        user_table = User._meta.db_table
-        relation_table = MentorRelation._meta.db_table
-        usertopic_table = UserTopic._meta.db_table
         with connection.cursor() as cursor:
-            sql = f"""
+            # PostgreSQLの再帰CTEを使用してサブツリー内の全ユーザーIDを取得し、ランクを更新
+            cursor.execute(f"""
                 WITH RECURSIVE subtree AS (
+                    -- アンカーメンバー: 初期ユーザー
                     SELECT id
                     FROM {user_table}
                     WHERE id = %s
+
+                    UNION ALL
+
+                    -- 再帰メンバー: サブツリー内のユーザーの弟子を見つける
+                    SELECT u.id
+                    FROM {user_table} u
+                    JOIN mentorship_mentorrelation mr ON u.id = mr.mentee_id
+                    JOIN subtree s ON mr.mentor_id = s.id
+                )
+                UPDATE {user_table}
+                SET rank = rank + %s
+                WHERE id IN (SELECT id FROM subtree);
+            """, [user.id, rank_difference])
+
+    def update_descendant_levels(user: User, topic_id: uuid.UUID, level_difference: int):
+        """
+        指定されたユーザーの配下の弟子全員（子孫）の特定のトピックのレベルを更新します。
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(f"""
+                WITH RECURSIVE subtree AS (
+                    SELECT id FROM {user_table} WHERE id = %s -- This is the anchor, but we exclude it below
                     UNION ALL
                     SELECT u.id
                     FROM {user_table} u
-                    JOIN {relation_table} mr ON u.id = mr.mentee_id
+                    JOIN mentorship_mentorrelation mr ON u.id = mr.mentee_id
                     JOIN subtree s ON mr.mentor_id = s.id
                 )
-                UPDATE {usertopic_table} ut
+                UPDATE topics_usertopic
                 SET level = level + %s
-                WHERE ut.user_id IN (
-                    SELECT id FROM subtree WHERE id != %s
-                ) AND ut.topic_id = %s;
-            """
-            cursor.execute(sql, [mentee.id, delta, mentee.id, str(topic_id)])
+                WHERE user_id IN (SELECT id FROM subtree WHERE id != %s) AND topic_id = %s;
+            """, [user.id, level_difference, user.id, topic_id])
 
-    # 使っていない
+
     @router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
     def get_mentor_subtree(request: HttpRequest, mentor_id: int):
         """
@@ -123,6 +140,28 @@ def get_mentorship_router():
         """
         subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
         return subtree
+
+    @router.get("/tree/", response=List[UserNodeOut], summary="全てのユーザーと師弟関係のツリーデータを取得する")
+    def get_tree_data(request: HttpRequest):
+        """
+        全てのユーザーと、それぞれのユーザーのランク、師匠のIDを含むツリーデータを取得します。
+        """
+        users = User.objects.all()
+        mentor_relations = MentorRelation.objects.all().select_related('mentor', 'mentee')
+
+        # Create a dictionary to quickly look up mentor_id by mentee_id
+        mentee_to_mentor = {relation.mentee.id: relation.mentor.id for relation in mentor_relations}
+
+        data = []
+        for user in users:
+            mentor_id = mentee_to_mentor.get(user.id) # Get mentor_id if user is a mentee
+
+            data.append(UserNodeOut(
+                user=UserSchema(id=user.id, username=user.username),
+                rank=user.rank,
+                mentor_id=mentor_id
+            ))
+        return data
 
     @router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
     def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -174,8 +213,8 @@ def get_mentorship_router():
         mentor = mentor_request.to_user
         mentee = mentor_request.from_user
         MentorRelation.objects.create(
-            mentor=mentor,
-            mentee=mentee,
+            mentor=mentor_request.to_user,
+            mentee=mentor_request.from_user,
             topic=mentor_request.topic
         )
 
@@ -214,9 +253,12 @@ def get_mentorship_router():
         - 指定されたIDのユーザーが、実行者の弟子である必要があります。
         """
         
-        mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
-        mentee = mentership.mentee
-        return _remove_relation(request.user, mentee, topic_id=data.topic_id, action="expel")
+        mentorship = get_object_or_404(
+            MentorRelation,
+            mentor=request.user,
+            mentee_id=mentee_id,
+            topic_id=data.topic_id)
+        return _remove_relation(mentorship, action="expel")
 
     @router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
     def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
@@ -225,16 +267,19 @@ def get_mentorship_router():
 
         - 認証が必要です。
         - 指定されたIDのユーザーが、実行者の弟子である必要があります。
-    """
-        mentership = get_object_or_404(MentorRelation, topic_id=data.topic_id, mentee_id=mentee_id)
-        mentee = mentership.mentee
-        delta = request.user.user_topics.get(topic_id=data.topic_id).level - mentee.user_topics.get(topic_id=data.topic_id).level
-        user_topic = mentee.user_topics.get(topic_id=data.topic_id)
+        """
+        mentorship = get_object_or_404(
+            MentorRelation,
+            mentor=request.user,
+            mentee_id=mentee_id,
+            topic_id=data.topic_id)
+        mentee = mentorship.mentee
+        delta = request.user.usertopic_set.get(topic_id=data.topic_id).level - mentee.usertopic_set.get(topic_id=data.topic_id).level
+        user_topic = mentee.usertopic_set.get(topic_id=data.topic_id)
         user_topic.level += delta
         user_topic.save()
-        # menteeとその全ての子孫のUserTopicのlevelを更新
-        update_subtree_levels(mentee, data.topic_id, delta)
-        return _remove_relation(request.user, mentee, data.topic_id, "graduate")
-
+        # menteeの子孫のUserTopicのlevelを更新
+        update_descendant_levels(mentee, data.topic_id, delta)
+        return _remove_relation(mentorship, action="graduate")
     return router
-
+# Added a comment to force reload

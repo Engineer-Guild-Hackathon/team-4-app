@@ -104,10 +104,10 @@ class MentorRelation(models.Model):
         verbose_name='師匠'
     )
     # 一人のユーザーは同時に一人の師匠しか持てない想定
-    mentee = models.OneToOneField(
+    mentee = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='mentor_relation',
+        related_name='mentorships',
         verbose_name='弟子'
     )
     
@@ -128,6 +128,7 @@ class MentorRelation(models.Model):
     class Meta:
         verbose_name = '師弟関係'
         verbose_name_plural = '師弟関係'
+        unique_together = ('mentee', 'topic')
 
 class ActionLog(models.Model):
     ACTION_CHOICES = [
@@ -146,4 +147,3 @@ class ActionLog(models.Model):
 
     def __str__(self):
         return f"{self.actor} {self.action} {self.target} at {self.created_at}"
-

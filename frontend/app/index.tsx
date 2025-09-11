@@ -1,13 +1,11 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { View } from 'react-native';
-import { SimpleTopicView } from '../components/SimpleTopicView';
+import { StyleSheet, View, Text } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
-import { TouchableOpacity, Text } from 'react-native';
+import { TreeViewer } from '../components/TreeViewer';
 
 export default function HomeScreen() {
-  const { logout, accessToken, loading } = useAuth();
-  
+  const { accessToken, loading } = useAuth();
+
   // ローディング中は何も表示しない
   if (loading) {
     return (
@@ -32,7 +30,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <SimpleTopicView />
+      <TreeViewer />
     </View>
   );
 }
@@ -41,6 +39,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+    paddingTop: 50, // Add padding to avoid overlap with status bar
   },
   loadingContainer: {
     flex: 1,
