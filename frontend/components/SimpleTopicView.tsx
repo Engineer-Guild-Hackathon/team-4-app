@@ -63,15 +63,6 @@ export function SimpleTopicView({
       const response = await authedApi('/api/topics/me/');
       let fetchedTopics = response.topics || [];
 
-      // 仮のユーザーデータを付与
-      fetchedTopics = fetchedTopics.map((topic: Topic, index: number) => ({
-        ...topic,
-        mentor: { id: 101 + index, name: `師匠${index + 1}`, avatarUrl: `https://placehold.co/64x64/ff6347/ffffff?text=M${index + 1}` },
-        mentees: [
-          { id: 201 + index, name: `弟子${index + 1}`, avatarUrl: `https://placehold.co/64x64/4682b4/ffffff?text=D${index + 1}` }
-        ],
-      }));
-
       setTopics(fetchedTopics);
       
       if (switchToLastTopic) {
