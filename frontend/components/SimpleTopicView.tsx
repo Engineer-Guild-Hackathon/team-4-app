@@ -5,7 +5,6 @@ import { TopicManageView } from './TopicManageView';
 import PagerView from 'react-native-pager-view';
 import { TopicPageIndicator } from './TopicPageIndicator';
 
-// --- Interfaces, Types, Mock Data は変更なし ---
 interface User {
   id: number;
   name: string;
@@ -33,9 +32,6 @@ const selfUser: User = {
   avatarUrl: 'https://placehold.co/64x64/a9a9a9/ffffff?text=Me',
 };
 
-// ★ 変更点1: インジケーターの高さを定数として定義
-const INDICATOR_HEIGHT = 120; // TopicPageIndicatorのおおよその高さ
-
 export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
@@ -43,7 +39,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const [loading, setLoading] = useState(true);
   const { authedApi, accessToken } = useAuth();
 
-  // refreshMyTopics, useEffect, handleSelectIndex は変更なし
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
       setLoading(true);
@@ -106,14 +101,11 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
         onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
         key={topics.length + 1}
       >
-        {/* ページ0: トピック管理画面 */}
         <View key="manage" style={styles.pageView}>
           <TopicManageView onBack={() => refreshMyTopics(true)} />
         </View>
 
-        {/* ページ1以降: 各トピック */}
         {topics.map(topic => (
-          // ★ 変更点3: 各ページにスタイルを適用して下部に余白を確保
           <View key={topic.id} style={styles.pageView}>
             <View style={styles.descriptionContainer}>
               <Text style={styles.topicTitle}>{topic.title}</Text>
@@ -156,7 +148,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
         ))}
       </PagerView>
 
-      {/* ★ 変更点4: インジケーターを絶対位置で配置するためのコンテナを追加 */}
       <View style={styles.indicatorContainer}>
         <TopicPageIndicator
           topics={topics}
@@ -173,17 +164,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  // ★ 変更点5: 新しいスタイルを追加
   pageView: {
     flex: 1,
-    // paddingBottom: INDICATOR_HEIGHT, // インジケーターの高さ分の余白
   },
   indicatorContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    // 背景色はTopicPageIndicator側でtransparentに設定されている
   },
   descriptionContainer: {
     flex: 1,

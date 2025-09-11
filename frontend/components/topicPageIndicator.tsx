@@ -132,8 +132,6 @@ const styles = StyleSheet.create({
   container: {
     paddingBottom: 10,
     paddingTop: 10,
-    // backgroundColor: '#ff0000',
-    // 影が見切れないように上下のpaddingをさらに増やす // 以前の20から30に増やす
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
@@ -141,38 +139,36 @@ const styles = StyleSheet.create({
     marginHorizontal: ITEM_SPACING / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor: '#0000ff'
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
     borderRadius: 25,
-    backgroundColor: '#1f2937', // ダークグレー
+    backgroundColor: '#1f2937',
     borderWidth: 2,
-    borderColor: '#374151', // 少し明るいグレー
+    borderColor: '#374151',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
-    // 非アクティブ時の影を追加
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 }, // 上下にもしっかりとグローが出るように
-    shadowOpacity: 0.6, // 影の濃さを少し濃く
-    shadowRadius: 5, // 影の広がりを大きく
-    elevation: 5, // Android用の影の強さ
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 5,
+    elevation: 5,
   },
   topicIconActive: {
-    backgroundColor: '#374151', // 少し明るいグレー
-    borderColor: '#374151', // アクティブな青のボーダー
-    shadowColor: '#374151', // 影の色を青に
-    shadowOffset: { width: 0, height: 4 }, // 上下にもしっかりとグローが出るように
-    shadowOpacity: 0.6, // 影の濃さを少し濃く
-    shadowRadius: 5, // 影の広がりを大きく
-    elevation: 5, // Android用の影の強さ
+    backgroundColor: '#374151',
+    borderColor: '#374151',
+    shadowColor: '#374151',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 5,
+    elevation: 5,
   },
   topicIconText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#9ca3af', // ライトグレー
+    color: '#9ca3af',
   },
   topicIconTextActive: {
     color: '#ffffff',
