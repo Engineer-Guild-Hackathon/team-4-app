@@ -40,7 +40,10 @@
     "react-native-screens": "~4.11.1",
     "react-native-svg": "^15.13.0",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "expo-av": "~15.1.7",
+    "expo-image-picker": "~16.1.4",
+    "expo-video": "~2.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

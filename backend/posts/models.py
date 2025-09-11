@@ -1,7 +1,12 @@
 from django.db import models
+from django.contrib.auth.models import User 
+from topics.models import Topic
 
 class Post(models.Model):
     """投稿モデル"""
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name="投稿者")
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='posts', verbose_name="トピック")
+
     content = models.TextField("投稿内容")
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
