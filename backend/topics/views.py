@@ -6,7 +6,8 @@ import uuid
 from .models import Topic, UserTopic
 from .schemas import (
     TopicCreateSchema, TopicUpdateSchema, TopicResponseSchema, TopicListResponseSchema, TreeStructureOut,
-    UserTopicCreateSchema, UserTopicUpdateSchema, UserTopicResponseSchema, TopicUsersResponseSchema
+    UserTopicCreateSchema, UserTopicUpdateSchema, UserTopicResponseSchema, TopicUsersResponseSchema,
+    TreeResponseSchema
 )
 from mentorship.models import MentorRelation
 
@@ -189,3 +190,33 @@ def join_topic(request, topic_id: uuid.UUID):
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at
     )
+
+@router.get("/{topic_id}/tree/", response=TreeResponseSchema)
+def get_topic_tree(request, topic_id: uuid.UUID):
+    """
+    指定されたトピックの師弟関係をTreeViewer用の形式で返す
+    """
+    topic = get_object_or_404(Topic, id=topic_id)
+    
+    # 1. このトピックに参加している全ユーザーとそのレベルを取得
+    user_topics = UserTopic.objects.filter(topic=topic).select_related('user')
+    
+    # 2. このトピックの師弟関係を全て取得
+    mentorships = MentorRelation.objects.filter(topic=topic)
+    # 弟子のIDをキー、師匠のIDを値とする辞書を作成（高速な検索のため）
+    mentee_to_mentor_map = {m.mentee_id: m.mentor_id for m in mentorships}
+
+    # 3. TreeViewerが期待する UserNode のリスト形式に変換
+    tree_data = []
+    for ut in user_topics:
+        user_node_data = {
+            "user": {
+                "id": ut.user.id,
+                "username": ut.user.username
+            },
+            "rank": ut.level,
+            "mentor_id": mentee_to_mentor_map.get(ut.user.id) 
+        }
+        tree_data.append(user_node_data)
+
+    return {"tree": tree_data}

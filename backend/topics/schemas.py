@@ -71,3 +71,17 @@ class TopicUsersResponseSchema(Schema):
     users: List[UserTopicResponseSchema]
     count: int
 
+class TreeUserSchema(Schema):
+    """ツリー表示で使う、簡潔なユーザー情報"""
+    id: int
+    username: str
+
+class TreeUserNodeSchema(Schema):
+    """TreeViewerコンポーネントが期待するノードの形"""
+    user: TreeUserSchema
+    rank: int
+    mentor_id: Optional[int] = None
+
+class TreeResponseSchema(Schema):
+    """/tree/ エンドポイントの最終的なレスポンスの形"""
+    tree: List[TreeUserNodeSchema]

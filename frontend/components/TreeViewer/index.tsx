@@ -47,8 +47,13 @@ const safeNumber = (val: Animated.Value | number | undefined | null, fallback: n
   return fallback;
 };
 
-export const TreeViewer: React.FC = () => {
-  const { data, loading } = useTreeData();
+interface TreeViewerProps {
+  topicId: string | null; // 表示するトピックのID
+  onNodePress: (userId: number) => void;
+}
+
+export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
+  const { data, loading } = useTreeData(topicId);
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
   const [nodesWithPositions, setNodesWithPositions] = useState<
     Map<number, { node: TreeNode; x: Animated.Value; y: Animated.Value }>

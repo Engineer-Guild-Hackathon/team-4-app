@@ -1,38 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import { TopicPageIndicator } from './topicPageIndicator';
 import PagerView from 'react-native-pager-view';
+// ▼▼▼ 1. TreeViewerコンポーネントをインポート ▼▼▼
+import { TreeViewer } from './TreeViewer';
 
 // --- Interfaces and Types ---
-interface User {
-  id: number;
-  name: string;
-  avatarUrl: string;
-}
-
 interface Topic {
   id: string;
   title: string;
   description: string;
   created_at: string;
   updated_at: string;
-  mentor?: User;
-  mentees?: User[];
 }
 
 interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
 }
-
-// --- Mock Data ---
-const selfUser: User = {
-  id: 1, // 実際のユーザーIDに置き換えることを推奨
-  name: '自分',
-  avatarUrl: 'https://placehold.co/64x64/a9a9a9/ffffff?text=Me',
-};
 
 // --- Component ---
 export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
@@ -50,12 +37,8 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
       setTopics(fetchedTopics);
 
       if (switchToLastTopic) {
-        // 新しいトピックが追加された後、そのページに移動する
-        // ページ0が管理画面なので、最後のトピックのindexは `fetchedTopics.length` になる
         const lastTopicIndex = fetchedTopics.length;
-        // PagerViewをプログラムで操作してページを切り替え
         pagerRef.current?.setPage(lastTopicIndex);
-        // インジケーターの表示も更新
         setCurrentIndex(lastTopicIndex);
       }
     } catch (error) {
@@ -72,7 +55,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
       setLoading(false);
       return;
     }
-
     if (accessToken) {
       refreshMyTopics();
     } else {
@@ -81,7 +63,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   }, [propTopics, accessToken]);
 
   const handleSelectIndex = (index: number) => {
-    // インジケーターからのタップで、アニメーション付きでページを切り替え
     pagerRef.current?.setPage(index);
   };
 
@@ -95,7 +76,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     );
   }
 
-  // トピックが0件の場合は、管理画面のみを表示する
   if (topics.length === 0) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
@@ -111,53 +91,35 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
           key={topics.length + 1}
         >
-          {/* 作成ページを一番左 */}
+          {/* ページ0: 管理画面 */}
           <View key="manage" style={{ flex: 1 }}>
             <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
+          {/* ページ1以降: 各トピック */}
           {topics.map(topic => (
-            <View key={topic.id} style={{ flex: 1 }}>
+            <View key={topic.id} style={styles.topicPageContainer}>
+              {/* 上部：トピック概要エリア (変更なし) */}
               <View style={styles.descriptionContainer}>
                 <Text style={styles.topicTitle}>{topic.title}</Text>
                 <Text style={styles.topicDescription}>{topic.description}</Text>
               </View>
-              <View style={styles.userStripContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {topic.mentor && (
-                    <TouchableOpacity
-                      style={styles.userIconContainer}
-                      onPress={() => onUserPress(topic.id, topic.mentor!.id)}
-                    >
-                      <Image source={{ uri: topic.mentor.avatarUrl }} style={styles.avatar} />
-                      <Text style={styles.userName}>{topic.mentor.name}</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    style={styles.userIconContainer}
-                    onPress={() => onUserPress(topic.id, selfUser.id)}
-                  >
-                    <Image
-                      source={{ uri: selfUser.avatarUrl }}
-                      style={[styles.avatar, styles.selfAvatar]}
-                    />
-                    <Text style={styles.userName}>{selfUser.name}</Text>
-                  </TouchableOpacity>
-                  {topic.mentees?.map(mentee => (
-                    <TouchableOpacity
-                      key={mentee.id}
-                      style={styles.userIconContainer}
-                      onPress={() => onUserPress(topic.id, mentee.id)}
-                    >
-                      <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
-                      <Text style={styles.userName}>{mentee.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+
+              {/* ▼▼▼ 2. 中央のユーザーアイコン表示をTreeViewerに置き換え ▼▼▼ */}
+              <View style={styles.treeContainer}>
+                <TreeViewer
+                  // 表示すべきトピックのIDを渡す
+                  topicId={topic.id}
+                  // TreeViewer内でアイコンがタップされたら、onUserPressを呼び出す
+                  onNodePress={(userId) => {
+                    onUserPress(topic.id, userId);
+                  }}
+                />
               </View>
             </View>
           ))}
         </PagerView>
       </View>
+      {/* 下部：トピックインジケーター (変更なし) */}
       <View style={{ paddingBottom: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
         <TopicPageIndicator
           topics={topics}
@@ -174,12 +136,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  descriptionContainer: {
+  topicPageContainer: {
     flex: 1,
-    justifyContent: 'flex-start',
+  },
+  descriptionContainer: {
+    flex: 4, // 画面の4割を占める
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    paddingTop: 80,
   },
   topicTitle: {
     marginBottom: 20,
@@ -196,6 +160,10 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     maxWidth: 300,
   },
+  // ▼▼▼ 3. TreeViewer用のコンテナスタイルを追加 ▼▼▼
+  treeContainer: {
+    flex: 6, // 画面の6割を占める
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -205,46 +173,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#6b7280',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 280,
-  },
-  userStripContainer: {
-    height: 100,
-    paddingLeft: 16,
-    marginBottom: 20,
-  },
-  userIconContainer: {
-    alignItems: 'center',
-    marginRight: 20,
-    width: 70,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginBottom: 8,
-  },
-  selfAvatar: {
-    borderWidth: 3,
-    borderColor: '#3b82f6',
-  },
-  userName: {
-    fontSize: 12,
-  },
+  // userStripContainerとそれに関連するスタイルは不要になったため削除
 });
+
