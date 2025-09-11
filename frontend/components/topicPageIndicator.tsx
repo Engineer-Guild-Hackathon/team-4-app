@@ -82,7 +82,13 @@ export const TopicPageIndicator: React.FC<TopicPageIndicatorProps> = ({
       <TouchableOpacity onPress={() => onSelectIndex(pageIndex)}>
         <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
           <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
-            <Text style={[styles.topicIconText, currentIndex === pageIndex && styles.topicIconTextActive]} numberOfLines={1}>
+            <Text
+              style={[
+                styles.topicIconText,
+                currentIndex === pageIndex && styles.topicIconTextActive,
+              ]}
+              numberOfLines={1}
+            >
               {item.title === '+' ? '+' : item.title.substring(0, 8)}
             </Text>
           </View>
@@ -97,16 +103,20 @@ export const TopicPageIndicator: React.FC<TopicPageIndicatorProps> = ({
         ref={flatListRef}
         data={displayData}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToInterval={ITEM_FULL_WIDTH}
         decelerationRate="fast"
-        getItemLayout={(_, index) => ({ length: ITEM_FULL_WIDTH, offset: ITEM_FULL_WIDTH * index, index })}
+        getItemLayout={(_, index) => ({
+          length: ITEM_FULL_WIDTH,
+          offset: ITEM_FULL_WIDTH * index,
+          index,
+        })}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
           useNativeDriver: true,
         })}
-        onMomentumScrollEnd={(e) => {
+        onMomentumScrollEnd={e => {
           const newPageIndex = Math.round(e.nativeEvent.contentOffset.x / ITEM_FULL_WIDTH);
           if (newPageIndex !== currentIndex) {
             onSelectIndex(newPageIndex);

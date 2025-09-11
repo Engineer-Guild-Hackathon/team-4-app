@@ -50,7 +50,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
       const response = await authedApi('/api/topics/me/');
       const fetchedTopics = response.topics || [];
       setTopics(fetchedTopics);
-      
+
       if (switchToLastTopic) {
         const lastTopicIndex = fetchedTopics.length;
         pagerRef.current?.setPage(lastTopicIndex);
@@ -70,7 +70,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
       setLoading(false);
       return;
     }
-    
+
     if (accessToken) {
       refreshMyTopics();
     } else {
@@ -84,13 +84,16 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   };
 
   if (loading) {
-    return <View style={styles.loadingContainer}><Text style={styles.loadingText}>読み込み中...</Text></View>;
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>読み込み中...</Text>
+      </View>
+    );
   }
 
   if (topics.length === 0 && !propTopics) {
-     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
+    return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
-
 
   return (
     // ★ 変更点2: JSXの構造を変更
@@ -107,7 +110,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
         <View key="manage" style={styles.pageView}>
           <TopicManageView onBack={() => refreshMyTopics(true)} />
         </View>
-        
+
         {/* ページ1以降: 各トピック */}
         {topics.map(topic => (
           // ★ 変更点3: 各ページにスタイルを適用して下部に余白を確保
@@ -131,10 +134,13 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
                   style={styles.userIconContainer}
                   onPress={() => onUserPress(topic.id, selfUser.id)}
                 >
-                  <Image source={{ uri: selfUser.avatarUrl }} style={[styles.avatar, styles.selfAvatar]} />
+                  <Image
+                    source={{ uri: selfUser.avatarUrl }}
+                    style={[styles.avatar, styles.selfAvatar]}
+                  />
                   <Text style={styles.userName}>{selfUser.name}</Text>
                 </TouchableOpacity>
-                {topic.mentees?.map((mentee) => (
+                {topic.mentees?.map(mentee => (
                   <TouchableOpacity
                     key={mentee.id}
                     style={styles.userIconContainer}
@@ -149,7 +155,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
           </View>
         ))}
       </PagerView>
-      
+
       {/* ★ 変更点4: インジケーターを絶対位置で配置するためのコンテナを追加 */}
       <View style={styles.indicatorContainer}>
         <TopicPageIndicator
@@ -214,7 +220,7 @@ const styles = StyleSheet.create({
     height: 100,
     paddingLeft: 16,
     // marginBottomは元の値でOK
-    marginBottom: 20, 
+    marginBottom: 20,
   },
   userIconContainer: {
     alignItems: 'center',
