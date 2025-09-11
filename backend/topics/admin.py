@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Topic
+from .models import Topic, UserTopic
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
@@ -8,3 +8,9 @@ class TopicAdmin(admin.ModelAdmin):
     search_fields = ('title', 'description')
     readonly_fields = ('id', 'created_at', 'updated_at')
     ordering = ('-created_at',)
+
+@admin.register(UserTopic)
+class UserTopicAdmin(admin.ModelAdmin):
+    list_display = ('user', 'topic', 'level', 'created_at')
+    list_filter = ('topic',)
+    search_fields = ('user__username', 'topic__title')

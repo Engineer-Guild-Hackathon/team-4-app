@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import PagerView from 'react-native-pager-view';
+import { TreeViewer } from './TreeViewer';
 import { TopicPageIndicator } from './TopicPageIndicator';
-
-interface User {
-  id: number;
-  name: string;
-  avatarUrl: string;
-}
 
 interface Topic {
   id: string;
@@ -17,20 +12,12 @@ interface Topic {
   description: string;
   created_at: string;
   updated_at: string;
-  mentor?: User;
-  mentees?: User[];
 }
 
 interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
 }
-
-const selfUser: User = {
-  id: 1,
-  name: '自分',
-  avatarUrl: 'https://placehold.co/64x64/a9a9a9/ffffff?text=Me',
-};
 
 export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
@@ -65,7 +52,6 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
       setLoading(false);
       return;
     }
-
     if (accessToken) {
       refreshMyTopics();
     } else {
@@ -92,61 +78,37 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
 
   return (
     <View style={styles.container}>
-      <PagerView
-        ref={pagerRef}
-        style={{ flex: 1 }}
-        scrollEnabled={false}
-        initialPage={currentIndex}
-        onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
-        key={topics.length + 1}
-      >
-        <View key="manage" style={styles.pageView}>
-          <TopicManageView onBack={() => refreshMyTopics(true)} />
-        </View>
-
-        {topics.map(topic => (
-          <View key={topic.id} style={styles.pageView}>
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.topicTitle}>{topic.title}</Text>
-              <Text style={styles.topicDescription}>{topic.description}</Text>
-            </View>
-            <View style={styles.userStripContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {topic.mentor && (
-                  <TouchableOpacity
-                    style={styles.userIconContainer}
-                    onPress={() => onUserPress(topic.id, topic.mentor!.id)}
-                  >
-                    <Image source={{ uri: topic.mentor.avatarUrl }} style={styles.avatar} />
-                    <Text style={styles.userName}>{topic.mentor.name}</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={styles.userIconContainer}
-                  onPress={() => onUserPress(topic.id, selfUser.id)}
-                >
-                  <Image
-                    source={{ uri: selfUser.avatarUrl }}
-                    style={[styles.avatar, styles.selfAvatar]}
-                  />
-                  <Text style={styles.userName}>{selfUser.name}</Text>
-                </TouchableOpacity>
-                {topic.mentees?.map(mentee => (
-                  <TouchableOpacity
-                    key={mentee.id}
-                    style={styles.userIconContainer}
-                    onPress={() => onUserPress(topic.id, mentee.id)}
-                  >
-                    <Image source={{ uri: mentee.avatarUrl }} style={styles.avatar} />
-                    <Text style={styles.userName}>{mentee.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+      <View style={{ flex: 1 }}>
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          scrollEnabled={false}
+          initialPage={currentIndex}
+          onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
+          key={topics.length + 1}
+        >
+          {/* 作成ページを一番左 */}
+          <View key="manage" style={{ flex: 1 }}>
+            <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
-        ))}
-      </PagerView>
-
+          {topics.map(topic => (
+            <View key={topic.id} style={{ flex: 1 }}>
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                <Text style={styles.topicDescription}>{topic.description}</Text>
+              </View>
+              <View style={styles.userStripContainer}>
+                <TreeViewer
+                  topicId={topic.id}
+                  onNodePress={(userId) => {
+                    onUserPress(topic.id, userId);
+                  }}
+                />
+              </View>
+            </View>
+          ))}
+        </PagerView>
+      </View>
       <View style={styles.indicatorContainer}>
         <TopicPageIndicator
           topics={topics}
@@ -172,12 +134,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  descriptionContainer: {
+  topicPageContainer: {
     flex: 1,
-    justifyContent: 'flex-start',
+  },
+  descriptionContainer: {
+    flex: 2,
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    paddingTop: 80,
   },
   topicTitle: {
     marginBottom: 20,
@@ -194,6 +158,9 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     maxWidth: 300,
   },
+  treeContainer: {
+    flex: 8,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -204,9 +171,8 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   userStripContainer: {
+    flex: 8,
     height: 100,
-    paddingLeft: 16,
-    marginBottom: 20,
   },
   userIconContainer: {
     alignItems: 'center',
