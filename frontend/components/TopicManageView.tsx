@@ -10,6 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 
 interface Topic {
   id: string;
@@ -30,8 +31,11 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const { authedApi, accessToken } = useAuth();
+  const router = useRouter();
 
   // 初期データ取得
   useEffect(() => {
@@ -91,20 +95,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
   };
 
-  // トピックに参加する
-  const joinTopic = async (topicId: string) => {
-    try {
-      await authedApi(`/api/topics/${topicId}/me/`, {
-        method: 'POST',
-      });
-
-      await fetchMyTopics();
-      setShowJoinModal(false);
-      Alert.alert('成功', 'トピックに参加しました');
-    } catch (error: any) {
-      const errorMessage = error?.message || 'トピックへの参加に失敗しました';
-      Alert.alert('エラー', errorMessage);
-    }
+  // トピックに参加する（画面遷移）
+  const handleJoinTopic = (topicId: string) => {
+    router.push({ pathname: '/select-level-mentor', params: { topicId } });
   };
 
   // 参加可能なトピックを取得（既に参加しているトピックを除外）
@@ -113,9 +106,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     return allTopics.filter(topic => !myTopicIds.includes(topic.id));
   };
 
-  // トピック参加モーダルを開く
-  const openJoinModal = async () => {
-    setShowJoinModal(true);
+  // トピック作成モーダルを開く
+  const openCreateModal = async () => {
+    setShowCreateModal(true);
     await fetchAllTopics();
   };
 
@@ -166,36 +159,51 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         </View>
 
         {/* 新規トピック作成 */}
+
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="タイトル"
-            value={newTopicTitle}
-            onChangeText={setNewTopicTitle}
-          />
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="説明（任意）"
-            value={newTopicDescription}
-            onChangeText={setNewTopicDescription}
-            multiline
-            numberOfLines={3}
-          />
-          <TouchableOpacity style={styles.createButton} onPress={createTopic}>
-            <Text style={styles.createButtonText}>作成</Text>
+          <TouchableOpacity style={styles.createButton} onPress={openCreateModal}>
+            <Text style={styles.createButtonText}>新規トピック作成</Text>
           </TouchableOpacity>
         </View>
 
         {/* トピック参加 */}
-        <View style={styles.joinSection}>
-          <Text style={styles.sectionTitle}>トピックに参加する</Text>
-          <TouchableOpacity style={styles.joinButton} onPress={openJoinModal}>
-            <Text style={styles.joinButtonText}>参加可能なトピックを表示</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>参加可能なトピック</Text>
+        <ScrollView style={styles.joinSection}>
+          {joinLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>読み込み中...</Text>
+            </View>
+          ) : (
+            <>
+              {getAvailableTopics().length === 0 ? (
+                <View style={styles.emptyTopicsContainer}>
+                  <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
+                  <Text style={styles.emptyTopicsSubText}>
+                    新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
+                  </Text>
+                </View>
+              ) : (
+                getAvailableTopics().map(topic => (
+                  <View key={topic.id} style={styles.availableTopicItem}>
+                    <View style={styles.availableTopicInfo}>
+                      <Text style={styles.availableTopicTitle}>{topic.title}</Text>
+                      <Text style={styles.availableTopicDescription}>{topic.description}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.joinTopicButton}
+                      onPress={() => handleJoinTopic(topic.id)}
+                    >
+                      <Text style={styles.joinTopicButtonText}>参加</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </>
+          )}
+        </ScrollView>
 
-        {/* 参加トピック一覧 */}
+        {/* 参加中トピック一覧 */}
         <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>参加中のトピック</Text>
           {myTopics.length === 0 ? (
@@ -217,59 +225,46 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             ))
           )}
         </View>
+        <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* トピック参加モーダル */}
+      {/* トピック作成モーダル */}
       <Modal
-        visible={showJoinModal}
+        visible={showCreateModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowJoinModal(false)}
+        onRequestClose={() => setShowCreateModal(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>参加可能なトピック</Text>
+            <Text style={styles.modalTitle}>新規トピック作成</Text>
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setShowJoinModal(false)}
+              onPress={() => setShowCreateModal(false)}
             >
               <Text style={styles.modalCloseButtonText}>閉じる</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalContent}>
-            {joinLoading ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>読み込み中...</Text>
-              </View>
-            ) : (
-              <>
-                {getAvailableTopics().length === 0 ? (
-                  <View style={styles.emptyTopicsContainer}>
-                    <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
-                    <Text style={styles.emptyTopicsSubText}>
-                      新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
-                    </Text>
-                  </View>
-                ) : (
-                  getAvailableTopics().map(topic => (
-                    <View key={topic.id} style={styles.availableTopicItem}>
-                      <View style={styles.availableTopicInfo}>
-                        <Text style={styles.availableTopicTitle}>{topic.title}</Text>
-                        <Text style={styles.availableTopicDescription}>{topic.description}</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.joinTopicButton}
-                        onPress={() => joinTopic(topic.id)}
-                      >
-                        <Text style={styles.joinTopicButtonText}>参加</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))
-                )}
-              </>
-            )}
-          </ScrollView>
+          <View style={styles.modalContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="タイトル"
+              value={newTopicTitle}
+              onChangeText={setNewTopicTitle}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="説明（任意）"
+              value={newTopicDescription}
+              onChangeText={setNewTopicDescription}
+              multiline
+              numberOfLines={3}
+            />
+            <TouchableOpacity style={styles.createButton} onPress={createTopic}>
+              <Text style={styles.createButtonText}>作成</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -356,6 +351,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   topicItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+  },
+  emptyTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f9fafb',

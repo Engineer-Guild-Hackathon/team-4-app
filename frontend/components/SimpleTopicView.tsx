@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import PagerView from 'react-native-pager-view';
 import { TreeViewer } from './TreeViewer';
-import { TopicPageIndicator } from './TopicPageIndicator';
+import { TopicCarousel } from './TopicCarousel';
 
 interface Topic {
   id: string;
@@ -96,7 +96,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
               <View style={styles.treeContainer}>
                 <TreeViewer
                   topicId={topic.id}
-                  onNodePress={(userId) => {
+                  onNodePress={userId => {
                     onUserPress(topic.id, userId);
                   }}
                 />
@@ -110,7 +110,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
         </PagerView>
       </View>
       <View style={styles.indicatorContainer}>
-        <TopicPageIndicator
+        <TopicCarousel
           topics={topics}
           currentIndex={currentIndex}
           onSelectIndex={handleSelectIndex}

@@ -7,11 +7,10 @@ import PostListModal from '../components/posts/PostListModal';
 
 export default function HomeScreen() {
   const { accessToken, user, loading: authLoading } = useAuth();
-  
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
-  
+
   const params = useLocalSearchParams();
 
   // 投稿作成画面から戻ってきた時にモーダルを再度開くための処理
@@ -34,7 +33,7 @@ export default function HomeScreen() {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
   // 未ログイン時の表示
-  if (!accessToken) { 
+  if (!accessToken) {
     return (
       <View style={styles.centered}>
         <Text>ログインが必要です</Text>
@@ -46,7 +45,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
       <SimpleTopicView onUserPress={handleUserPress} />
-      
+
       <PostListModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -69,4 +68,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-

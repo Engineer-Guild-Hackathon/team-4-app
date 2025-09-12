@@ -14,7 +14,7 @@ interface Topic {
   title: string;
 }
 
-interface TopicPageIndicatorProps {
+interface TopicCarouselProps {
   topics: Topic[];
   currentIndex: number;
   onSelectIndex: (index: number) => void;
@@ -27,7 +27,7 @@ const ITEM_SPACING = 8;
 const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
 
-export const TopicPageIndicator: React.FC<TopicPageIndicatorProps> = ({
+export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   topics,
   currentIndex,
   onSelectIndex,

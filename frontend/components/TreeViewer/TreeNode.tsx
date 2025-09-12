@@ -5,7 +5,7 @@ import { TreeNode } from './treeUtils';
 
 interface Props {
   node: TreeNode;
-  onPress: (node: TreeNode) => void; 
+  onPress: (node: TreeNode) => void;
 }
 
 const NODE_RADIUS = 20; // Radius of the circle node
@@ -24,7 +24,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress }) => {
             fill="#573cfa"
           />
         </Svg>
-        <Text style={styles.nodeLabel}>{String(node.username ?? "")}</Text>
+        <Text style={styles.nodeLabel}>{String(node.username ?? '')}</Text>
       </View>
     </TouchableOpacity>
   );
