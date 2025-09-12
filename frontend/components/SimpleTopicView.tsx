@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { TopicManageView } from './TopicManageView';
 import PagerView from 'react-native-pager-view';
 import { TreeViewer } from './TreeViewer';
-import { TopicPageIndicator } from './TopicPageIndicator';
+import { TopicPageIndicator } from './topicPageIndicator';
 
 interface Topic {
   id: string;
