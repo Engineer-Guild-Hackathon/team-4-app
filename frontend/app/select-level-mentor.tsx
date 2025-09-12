@@ -80,12 +80,7 @@ export default function SelectLevelMentorScreen() {
     <View style={styles.container}>
       {/* 右側レベル選択UI */}
       <View style={styles.rightBarContainer}>
-        <VerticalLevelSelector
-          min={LEVEL_MIN}
-          max={LEVEL_MAX}
-          value={level}
-          onChange={setLevel}
-        />
+        <VerticalLevelSelector min={LEVEL_MIN} max={LEVEL_MAX} value={level} onChange={setLevel} />
       </View>
       {/* 中央にpost表示とタイトル */}
       <View style={styles.centerContent}>
@@ -96,13 +91,15 @@ export default function SelectLevelMentorScreen() {
           <View style={styles.postBox}>
             <View>
               {posts[0].media?.map((media: any, idx: number) => {
-                  const mediaUrl = media.file.startsWith('http') ? media.file : `${process.env.EXPO_PUBLIC_API_URL}${media.file}`;
-                  if (media.media_type === 'image') {
-                      return <Image key={idx} source={{ uri: mediaUrl }} style={styles.media} />;
-                    }
-                    // 動画対応は今後
-                    return null;
-                })}
+                const mediaUrl = media.file.startsWith('http')
+                  ? media.file
+                  : `${process.env.EXPO_PUBLIC_API_URL}${media.file}`;
+                if (media.media_type === 'image') {
+                  return <Image key={idx} source={{ uri: mediaUrl }} style={styles.media} />;
+                }
+                // 動画対応は今後
+                return null;
+              })}
             </View>
             <Text style={styles.postContent}>{posts[0].content || '内容なし'}</Text>
           </View>
@@ -111,34 +108,34 @@ export default function SelectLevelMentorScreen() {
         )}
       </View>
       {/* 下中央にOKボタン */}
-    <View style={styles.bottomButtonContainer}>
-      <View
-        style={{
-        backgroundColor: '#000',
-        borderRadius: 32,
-        shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 8,
-        elevation: 4,
-        paddingVertical: 14,
-        paddingHorizontal: 48,
-        minWidth: 180,
-        }}
-      >
-        <Text
-        style={{
-          color: '#fff',
-          fontSize: 18,
-          fontWeight: 'bold',
-          textAlign: 'center',
-        }}
-        onPress={handleJoin}
+      <View style={styles.bottomButtonContainer}>
+        <View
+          style={{
+            backgroundColor: '#000',
+            borderRadius: 32,
+            shadowColor: '#000',
+            shadowOpacity: 0.3,
+            shadowOffset: { width: 0, height: 4 },
+            shadowRadius: 8,
+            elevation: 4,
+            paddingVertical: 14,
+            paddingHorizontal: 48,
+            minWidth: 180,
+          }}
         >
-        OK
-        </Text>
+          <Text
+            style={{
+              color: '#fff',
+              fontSize: 18,
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}
+            onPress={handleJoin}
+          >
+            OK
+          </Text>
+        </View>
       </View>
-    </View>
     </View>
   );
 }

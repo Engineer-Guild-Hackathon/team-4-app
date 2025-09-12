@@ -12,9 +12,9 @@ interface VerticalLevelSelectorProps {
 
 // ★ 1. 定数を調整
 const BAR_HEIGHT = 300;
-const BAR_WIDTH = 24;   // 棒の幅を細く
+const BAR_WIDTH = 24; // 棒の幅を細く
 const KNOB_HEIGHT = 48; // つまみのサイズを調整
-const KNOB_WIDTH = 48;  // つまみのサイズを調整
+const KNOB_WIDTH = 48; // つまみのサイズを調整
 
 export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
   min,
@@ -79,10 +79,7 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
         <View style={styles.barTrack} />
       </View>
 
-      <Animated.View
-        style={[styles.knobContainer, { top: panY }]}
-        {...panResponder.panHandlers}
-      >
+      <Animated.View style={[styles.knobContainer, { top: panY }]} {...panResponder.panHandlers}>
         <LinearGradient
           colors={['#000000ff', '#000000ff']} // グラデーションを少し変更
           style={styles.knobGradient}
