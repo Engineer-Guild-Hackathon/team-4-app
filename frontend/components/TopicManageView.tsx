@@ -179,38 +179,38 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         {/* トピック参加 */}
         <Text style={styles.sectionTitle}>参加可能なトピック</Text>
         <ScrollView style={styles.joinSection}>
-            {joinLoading ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>読み込み中...</Text>
-              </View>
-            ) : (
-              <>
-                {getAvailableTopics().length === 0 ? (
-                  <View style={styles.emptyTopicsContainer}>
-                    <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
-                    <Text style={styles.emptyTopicsSubText}>
-                      新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
-                    </Text>
-                  </View>
-                ) : (
-                  getAvailableTopics().map(topic => (
-                    <View key={topic.id} style={styles.availableTopicItem}>
-                      <View style={styles.availableTopicInfo}>
-                        <Text style={styles.availableTopicTitle}>{topic.title}</Text>
-                        <Text style={styles.availableTopicDescription}>{topic.description}</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.joinTopicButton}
-                        onPress={() => joinTopic(topic.id)}
-                      >
-                        <Text style={styles.joinTopicButtonText}>参加</Text>
-                      </TouchableOpacity>
+          {joinLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>読み込み中...</Text>
+            </View>
+          ) : (
+            <>
+              {getAvailableTopics().length === 0 ? (
+                <View style={styles.emptyTopicsContainer}>
+                  <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
+                  <Text style={styles.emptyTopicsSubText}>
+                    新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
+                  </Text>
+                </View>
+              ) : (
+                getAvailableTopics().map(topic => (
+                  <View key={topic.id} style={styles.availableTopicItem}>
+                    <View style={styles.availableTopicInfo}>
+                      <Text style={styles.availableTopicTitle}>{topic.title}</Text>
+                      <Text style={styles.availableTopicDescription}>{topic.description}</Text>
                     </View>
-                  ))
-                )}
-              </>
-            )}
-          </ScrollView>
+                    <TouchableOpacity
+                      style={styles.joinTopicButton}
+                      onPress={() => joinTopic(topic.id)}
+                    >
+                      <Text style={styles.joinTopicButtonText}>参加</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </>
+          )}
+        </ScrollView>
 
         {/* 参加中トピック一覧 */}
         <View style={styles.listSection}>
@@ -234,11 +234,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             ))
           )}
         </View>
-        
-
       </ScrollView>
 
-       {/* トピック作成モーダル */}
+      {/* トピック作成モーダル */}
       <Modal
         visible={showCreateModal}
         animationType="slide"
@@ -255,7 +253,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               <Text style={styles.modalCloseButtonText}>閉じる</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.modalContent}>
             <TextInput
               style={styles.input}
@@ -277,9 +275,6 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
           </View>
         </View>
       </Modal>
-
-
-     
     </View>
   );
 }
