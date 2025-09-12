@@ -30,7 +30,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const { authedApi, accessToken } = useAuth();
 
   // 初期データ取得
@@ -113,9 +115,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     return allTopics.filter(topic => !myTopicIds.includes(topic.id));
   };
 
-  // トピック参加モーダルを開く
-  const openJoinModal = async () => {
-    setShowJoinModal(true);
+  // トピック作成モーダルを開く
+  const openCreateModal = async () => {
+    setShowCreateModal(true);
     await fetchAllTopics();
   };
 
@@ -166,78 +168,17 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         </View>
 
         {/* 新規トピック作成 */}
+
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="タイトル"
-            value={newTopicTitle}
-            onChangeText={setNewTopicTitle}
-          />
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="説明（任意）"
-            value={newTopicDescription}
-            onChangeText={setNewTopicDescription}
-            multiline
-            numberOfLines={3}
-          />
-          <TouchableOpacity style={styles.createButton} onPress={createTopic}>
-            <Text style={styles.createButtonText}>作成</Text>
+          <TouchableOpacity style={styles.createButton} onPress={openCreateModal}>
+            <Text style={styles.createButtonText}>新規トピック作成</Text>
           </TouchableOpacity>
         </View>
 
         {/* トピック参加 */}
-        <View style={styles.joinSection}>
-          <Text style={styles.sectionTitle}>トピックに参加する</Text>
-          <TouchableOpacity style={styles.joinButton} onPress={openJoinModal}>
-            <Text style={styles.joinButtonText}>参加可能なトピックを表示</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 参加トピック一覧 */}
-        <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>参加中のトピック</Text>
-          {myTopics.length === 0 ? (
-            <View style={styles.emptyTopicsContainer}>
-              <Text style={styles.emptyTopicsText}>参加しているトピックがありません</Text>
-              <Text style={styles.emptyTopicsSubText}>トピックを作成してください</Text>
-            </View>
-          ) : (
-            myTopics.map(topic => (
-              <View key={topic.id} style={styles.topicItem}>
-                <View style={styles.topicInfo}>
-                  <Text style={styles.topicItemTitle}>{topic.title}</Text>
-                  <Text style={styles.topicItemDescription}>{topic.description}</Text>
-                </View>
-                <TouchableOpacity style={styles.leaveButton} onPress={() => leaveTopic(topic.id)}>
-                  <Text style={styles.leaveButtonText}>抜ける</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-
-      {/* トピック参加モーダル */}
-      <Modal
-        visible={showJoinModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowJoinModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>参加可能なトピック</Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowJoinModal(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>閉じる</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
+        <Text style={styles.sectionTitle}>参加可能なトピック</Text>
+        <ScrollView style={styles.joinSection}>
             {joinLoading ? (
               <View style={styles.loadingContainer}>
                 <Text style={styles.loadingText}>読み込み中...</Text>
@@ -270,8 +211,75 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               </>
             )}
           </ScrollView>
+
+        {/* 参加中トピック一覧 */}
+        <View style={styles.listSection}>
+          <Text style={styles.sectionTitle}>参加中のトピック</Text>
+          {myTopics.length === 0 ? (
+            <View style={styles.emptyTopicsContainer}>
+              <Text style={styles.emptyTopicsText}>参加しているトピックがありません</Text>
+              <Text style={styles.emptyTopicsSubText}>トピックを作成してください</Text>
+            </View>
+          ) : (
+            myTopics.map(topic => (
+              <View key={topic.id} style={styles.topicItem}>
+                <View style={styles.topicInfo}>
+                  <Text style={styles.topicItemTitle}>{topic.title}</Text>
+                  <Text style={styles.topicItemDescription}>{topic.description}</Text>
+                </View>
+                <TouchableOpacity style={styles.leaveButton} onPress={() => leaveTopic(topic.id)}>
+                  <Text style={styles.leaveButtonText}>抜ける</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+        
+
+      </ScrollView>
+
+       {/* トピック作成モーダル */}
+      <Modal
+        visible={showCreateModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>新規トピック作成</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowCreateModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>閉じる</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="タイトル"
+              value={newTopicTitle}
+              onChangeText={setNewTopicTitle}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="説明（任意）"
+              value={newTopicDescription}
+              onChangeText={setNewTopicDescription}
+              multiline
+              numberOfLines={3}
+            />
+            <TouchableOpacity style={styles.createButton} onPress={createTopic}>
+              <Text style={styles.createButtonText}>作成</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
+
+
+     
     </View>
   );
 }
@@ -356,6 +364,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   topicItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+  },
+  emptyTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f9fafb',
