@@ -63,7 +63,9 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
         const newLevel = yToValue(clampedY);
         if (newLevel !== lastNotifiedLevel.current) {
           onChange(newLevel);
-          Haptics.selectionAsync();
+          if (newLevel % 5 === 0) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
           lastNotifiedLevel.current = newLevel;
         }
         panY.setValue(clampedY);

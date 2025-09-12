@@ -225,7 +225,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             ))
           )}
         </View>
+      <View style={{ height: 80 }} />
       </ScrollView>
+
 
       {/* トピック作成モーダル */}
       <Modal
