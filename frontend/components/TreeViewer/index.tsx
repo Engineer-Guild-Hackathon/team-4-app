@@ -470,7 +470,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
             transform: [{ translateX: x }, { translateY: y }],
           }}
         >
-          <TreeNodeView node={node} onPress={(n) => onNodePress(n.id)} />
+          <TreeNodeView node={node} onPress={n => onNodePress(n.id)} />
         </Animated.View>
       ))}
 

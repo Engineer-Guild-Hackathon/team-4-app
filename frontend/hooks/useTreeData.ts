@@ -23,26 +23,25 @@ export const useTreeData = (topicId: string | null) => {
         // --- ▼▼▼ authedApiを、手動でヘッダーを設定した`fetch`に置き換え ▼▼▼ ---
         const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
         const url = `${API_BASE_URL}/api/topics/${topicId}/tree/`;
-        
+
         console.log(`デバッグ: ${url} にリクエストを送信します...`);
 
         const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            },
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
         });
 
         if (!response.ok) {
-            // サーバーからエラーが返ってきた場合、その内容を読み取ってエラーとして投げる
-            const errorText = await response.text();
-            throw new Error(`APIサーバーからの応答エラー: ${response.status} - ${errorText}`);
+          // サーバーからエラーが返ってきた場合、その内容を読み取ってエラーとして投げる
+          const errorText = await response.text();
+          throw new Error(`APIサーバーからの応答エラー: ${response.status} - ${errorText}`);
         }
-        
+
         const responseData = await response.json();
         setData(responseData.tree || []);
-
       } catch (error: any) {
         // --- ▼▼▼ エラーハンドリングを強化 ▼▼▼ ---
         console.error('ツリーデータの取得で予期せぬエラーが発生しました。');
@@ -66,4 +65,3 @@ export const useTreeData = (topicId: string | null) => {
 
   return { data, loading };
 };
-
