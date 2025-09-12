@@ -35,12 +35,12 @@ export function useAuth() {
     setRefreshToken(res.refresh);
 
     try {
-        const userData = await apiClient('/api/users/me/', { token: res.access });
-        setUser(userData);
-        router.replace('/');
-    } catch(e) {
-        console.error("ログイン後のユーザー情報取得に失敗:", e)
-        router.replace('/');
+      const userData = await apiClient('/api/users/me/', { token: res.access });
+      setUser(userData);
+      router.replace('/');
+    } catch (e) {
+      console.error('ログイン後のユーザー情報取得に失敗:', e);
+      router.replace('/');
     }
   };
 
@@ -82,12 +82,12 @@ export function useAuth() {
   // トークンがあればユーザー情報取得
   useEffect(() => {
     const fetchUser = async () => {
-      if (!accessToken) return; 
+      if (!accessToken) return;
       try {
         const userData = await authedApi('/api/users/me/');
         setUser(userData);
       } catch (e) {
-        console.error("ユーザー情報の取得に失敗しました:", e);
+        console.error('ユーザー情報の取得に失敗しました:', e);
         setUser(null);
       }
     };

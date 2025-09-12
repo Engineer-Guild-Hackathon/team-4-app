@@ -41,7 +41,6 @@ export default function PostListModal({
 
   useEffect(() => {
     if (visible && (topicId || userId)) {
-      
       setLoading(true);
       setError(null);
       fetchPosts();
@@ -69,41 +68,34 @@ export default function PostListModal({
   };
 
   const handleDeletePost = async (postId: number) => {
-    Alert.alert(
-      "投稿の削除",
-      "この投稿を本当に削除しますか？",
-      [
-        { text: "キャンセル", style: "cancel" },
-        { 
-          text: "削除", 
-          style: "destructive", 
-          onPress: async () => {
-            try {
-              const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-              });
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || '削除に失敗しました。');
-              }
-              fetchPosts(); 
-            } catch (e: any) {
-              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+    Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.detail || '削除に失敗しました。');
             }
-          } 
-        }
-      ]
-    );
+            fetchPosts();
+          } catch (e: any) {
+            Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+          }
+        },
+      },
+    ]);
   };
 
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.post}>
       {Number(selfUserId) === Number(item.author?.id) && (
-        <TouchableOpacity 
-          style={styles.deleteButton} 
-          onPress={() => handleDeletePost(item.id)}
-        >
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
           <Text style={styles.deleteButtonText}>削除</Text>
         </TouchableOpacity>
       )}
@@ -112,7 +104,7 @@ export default function PostListModal({
           const mediaUrl = `${API_BASE_URL}${media.file}`;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
-          } 
+          }
           return null;
         })}
       </View>
@@ -226,7 +218,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     backgroundColor: '#f0f0f0',
   },
-    deleteButton: {
+  deleteButton: {
     position: 'absolute',
     top: 15,
     right: 0,
