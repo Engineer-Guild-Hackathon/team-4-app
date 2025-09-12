@@ -506,7 +506,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    // backgroundColor: '#f0f0f0',
     alignItems: 'center',
     justifyContent: 'center',
   },
