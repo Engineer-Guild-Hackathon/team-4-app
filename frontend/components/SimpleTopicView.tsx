@@ -92,18 +92,18 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
             <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
           {topics.map(topic => (
-            <View key={topic.id} style={{ flex: 1 }}>
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.topicTitle}>{topic.title}</Text>
-                <Text style={styles.topicDescription}>{topic.description}</Text>
-              </View>
-              <View style={styles.userStripContainer}>
+            <View key={topic.id} style={styles.topicPageContainer}>
+              <View style={styles.treeContainer}>
                 <TreeViewer
                   topicId={topic.id}
                   onNodePress={userId => {
                     onUserPress(topic.id, userId);
                   }}
                 />
+              </View>
+              <View style={styles.descriptionContainer} pointerEvents="box-none">
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                <Text style={styles.topicDescription}>{topic.description}</Text>
               </View>
             </View>
           ))}
@@ -136,30 +136,44 @@ const styles = StyleSheet.create({
   },
   topicPageContainer: {
     flex: 1,
-  },
-  descriptionContainer: {
-    flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  descriptionContainer: {
+    position: 'absolute',
+    top: 30,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    alignItems: 'center',
     paddingHorizontal: 40,
+  },
+  treeContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   topicTitle: {
     marginBottom: 20,
     textAlign: 'center',
     fontSize: 28,
     fontWeight: 'bold',
-    lineHeight: 34,
     color: '#1f2937',
+    textShadowColor: 'rgba(255, 255, 255, 1)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
   topicDescription: {
     textAlign: 'center',
     fontSize: 18,
     lineHeight: 26,
-    color: '#6b7280',
+    color: '#1f2937',
     maxWidth: 300,
-  },
-  treeContainer: {
-    flex: 8,
+    textShadowColor: 'rgba(255, 255, 255, 0.7)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
   loadingContainer: {
     flex: 1,
@@ -169,27 +183,5 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#6b7280',
-  },
-  userStripContainer: {
-    flex: 8,
-    height: 100,
-  },
-  userIconContainer: {
-    alignItems: 'center',
-    marginRight: 20,
-    width: 70,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginBottom: 8,
-  },
-  selfAvatar: {
-    borderWidth: 3,
-    borderColor: '#3b82f6',
-  },
-  userName: {
-    fontSize: 12,
   },
 });

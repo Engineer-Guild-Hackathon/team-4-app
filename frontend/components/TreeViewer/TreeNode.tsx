@@ -19,9 +19,9 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress }) => {
             cx={NODE_RADIUS}
             cy={NODE_RADIUS}
             r={NODE_RADIUS}
-            stroke="#ccc"
-            strokeWidth={1}
-            fill="#fff"
+            // stroke="#000000ff"
+            // strokeWidth={2}
+            fill="#573cfa"
           />
         </Svg>
         <Text style={styles.nodeLabel}>{String(node.username ?? '')}</Text>

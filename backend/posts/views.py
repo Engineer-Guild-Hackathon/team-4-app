@@ -10,7 +10,6 @@ from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
 from topics.models import Topic
 
-# postsアプリ用のルーターを作成
 router = Router()
 
 @router.get("/", response=List[PostOut])
@@ -19,7 +18,7 @@ def list_posts(request, topic_id: UUID = None, author_id: int = None):
     投稿の一覧を取得する。
     topic_idとauthor_idで絞り込み可能。
     """
-    posts = Post.objects.prefetch_related('media').all()
+    posts = Post.objects.prefetch_related('media').select_related('author').all()
 
     if topic_id:
         posts = posts.filter(topic_id=topic_id)

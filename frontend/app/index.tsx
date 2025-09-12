@@ -5,13 +5,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import PostListModal from '../components/posts/PostListModal';
 
-// ログインしているユーザー自身のID（仮）
-const SELF_USER_ID = 1;
-
 export default function HomeScreen() {
-  const { accessToken, loading: authLoading } = useAuth();
-
-  // モーダルの表示状態と、どの投稿リストを表示するかの状態を管理
+  const { accessToken, user, loading: authLoading } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
@@ -34,7 +29,7 @@ export default function HomeScreen() {
   };
 
   // 認証情報を読み込み中の表示
-  if (authLoading) {
+  if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
   // 未ログイン時の表示
@@ -56,7 +51,7 @@ export default function HomeScreen() {
         onClose={() => setModalVisible(false)}
         topicId={selectedTopicId}
         userId={selectedUserId}
-        isSelf={selectedUserId === SELF_USER_ID}
+        selfUserId={user.id}
       />
     </View>
   );
