@@ -107,7 +107,6 @@ export default function PostListModal({
           <Text style={styles.deleteButtonText}>削除</Text>
         </TouchableOpacity>
       )}
-      <Text style={styles.postContent}>{item.content}</Text>
       <View>
         {item.media.map((media: any, index: number) => {
           const mediaUrl = `${API_BASE_URL}${media.file}`;
@@ -117,6 +116,7 @@ export default function PostListModal({
           return null;
         })}
       </View>
+      <Text style={styles.postContent}>{item.content}</Text>
     </View>
   );
 

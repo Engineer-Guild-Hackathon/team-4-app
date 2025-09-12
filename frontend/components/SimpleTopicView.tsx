@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   descriptionContainer: {
     position: 'absolute',
-    top: 40,
+    top: 30,
     left: 0,
     right: 0,
     zIndex: 1,
