@@ -10,6 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 
 interface Topic {
   id: string;
@@ -34,6 +35,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [joinLoading, setJoinLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const { authedApi, accessToken } = useAuth();
+  const router = useRouter();
 
   // 初期データ取得
   useEffect(() => {
@@ -93,20 +95,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
   };
 
-  // トピックに参加する
-  const joinTopic = async (topicId: string) => {
-    try {
-      await authedApi(`/api/topics/${topicId}/me/`, {
-        method: 'POST',
-      });
-
-      await fetchMyTopics();
-      setShowJoinModal(false);
-      Alert.alert('成功', 'トピックに参加しました');
-    } catch (error: any) {
-      const errorMessage = error?.message || 'トピックへの参加に失敗しました';
-      Alert.alert('エラー', errorMessage);
-    }
+  // トピックに参加する（画面遷移）
+  const handleJoinTopic = (topicId: string) => {
+    router.push({ pathname: '/select-level-mentor', params: { topicId } });
   };
 
   // 参加可能なトピックを取得（既に参加しているトピックを除外）
@@ -201,7 +192,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                     </View>
                     <TouchableOpacity
                       style={styles.joinTopicButton}
-                      onPress={() => joinTopic(topic.id)}
+                      onPress={() => handleJoinTopic(topic.id)}
                     >
                       <Text style={styles.joinTopicButtonText}>参加</Text>
                     </TouchableOpacity>
@@ -234,6 +225,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             ))
           )}
         </View>
+        <View style={{ height: 80 }} />
       </ScrollView>
 
       {/* トピック作成モーダル */}
