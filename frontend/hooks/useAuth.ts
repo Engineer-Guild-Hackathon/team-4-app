@@ -33,7 +33,15 @@ export function useAuth() {
     await SecureStore.setItemAsync(REFRESH_KEY, res.refresh);
     setAccessToken(res.access);
     setRefreshToken(res.refresh);
-    router.replace('/'); // ログイン後トップへ
+
+    try {
+        const userData = await apiClient('/api/users/me/', { token: res.access });
+        setUser(userData);
+        router.replace('/');
+    } catch(e) {
+        console.error("ログイン後のユーザー情報取得に失敗:", e)
+        router.replace('/');
+    }
   };
 
   // ログアウト
@@ -73,7 +81,19 @@ export function useAuth() {
 
   // トークンがあればユーザー情報取得
   useEffect(() => {
+    const fetchUser = async () => {
+      if (!accessToken) return; 
+      try {
+        const userData = await authedApi('/api/users/me/');
+        setUser(userData);
+      } catch (e) {
+        console.error("ユーザー情報の取得に失敗しました:", e);
+        setUser(null);
+      }
+    };
+
     if (accessToken) {
+      fetchUser();
     } else if (!loading) {
       // 認証不要画面（/login, /signup）は遷移しない
       if (pathname !== '/login' && pathname !== '/signup') {

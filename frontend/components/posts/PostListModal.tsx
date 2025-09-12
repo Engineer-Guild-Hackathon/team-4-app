@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-// Videoコンポーネントのインポート
 // import { Video } from 'expo-video';
 import { Link } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -21,6 +23,7 @@ interface PostListModalProps {
   topicId?: string;
   userId?: number;
   isSelf?: boolean;
+  selfUserId?: number; // ログインしているユーザー自身のID
 }
 
 export default function PostListModal({
@@ -29,13 +32,16 @@ export default function PostListModal({
   topicId,
   userId,
   isSelf,
+  selfUserId,
 }: PostListModalProps) {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { accessToken } = useAuth();
 
   useEffect(() => {
     if (visible && (topicId || userId)) {
+      
       setLoading(true);
       setError(null);
       fetchPosts();
@@ -62,27 +68,52 @@ export default function PostListModal({
     }
   };
 
+  const handleDeletePost = async (postId: number) => {
+    Alert.alert(
+      "投稿の削除",
+      "この投稿を本当に削除しますか？",
+      [
+        { text: "キャンセル", style: "cancel" },
+        { 
+          text: "削除", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+              });
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || '削除に失敗しました。');
+              }
+              fetchPosts(); 
+            } catch (e: any) {
+              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.post}>
+      {Number(selfUserId) === Number(item.author?.id) && (
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={() => handleDeletePost(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>削除</Text>
+        </TouchableOpacity>
+      )}
       <Text style={styles.postContent}>{item.content}</Text>
       <View>
         {item.media.map((media: any, index: number) => {
           const mediaUrl = `${API_BASE_URL}${media.file}`;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
-          }
-          // else if (media.media_type === 'video') {
-          //   return (
-          //     <Video
-          //       key={index}
-          //       source={{ uri: mediaUrl }}
-          //       style={styles.media}
-          //       controls={true}
-          //       muted={false}
-          //       playing={false}
-          //     />
-          //   );
-          // }
+          } 
           return null;
         })}
       </View>
@@ -108,7 +139,7 @@ export default function PostListModal({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.modalTitle}>投稿一覧</Text>
-            {isSelf && (
+            {Number(selfUserId) === Number(userId) && (
               <Link
                 href={{
                   pathname: '/create-post',
@@ -194,5 +225,20 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 5,
     backgroundColor: '#f0f0f0',
+  },
+    deleteButton: {
+    position: 'absolute',
+    top: 15,
+    right: 0,
+    backgroundColor: '#ff4d4d',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    zIndex: 1,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
