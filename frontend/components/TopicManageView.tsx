@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { TopicListOut } from '@/types/topic';
+import { UserOut, UserWithTopicsOut } from '@/types/user';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
+  Alert,
+  Modal,
+  ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  ScrollView,
-  Modal,
+  View,
 } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
 
 interface Topic {
   id: string;
@@ -37,6 +39,29 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const { authedApi, accessToken } = useAuth();
   const router = useRouter();
 
+  // 参加トピック一覧を取得
+  const fetchMyTopics = useCallback(async () => {
+    try {
+      const response = await authedApi<UserWithTopicsOut>('/api/topics/me/');
+      setMyTopics(response.topics || []);
+    } catch {
+      setMyTopics([]);
+    }
+  }, [authedApi]);
+
+  // 全トピック一覧を取得
+  const fetchAllTopics = async () => {
+    try {
+      setJoinLoading(true);
+      const response = await authedApi<TopicListOut>('/api/topics/');
+      setAllTopics(response.topics || []);
+    } catch {
+      setAllTopics([]);
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
   // 初期データ取得
   useEffect(() => {
     if (accessToken) {
@@ -44,30 +69,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     } else {
       setLoading(false);
     }
-  }, [accessToken]);
-
-  // 参加トピック一覧を取得
-  const fetchMyTopics = async () => {
-    try {
-      const response = await authedApi('/api/topics/me/');
-      setMyTopics(response.topics || []);
-    } catch (error: any) {
-      setMyTopics([]);
-    }
-  };
-
-  // 全トピック一覧を取得
-  const fetchAllTopics = async () => {
-    try {
-      setJoinLoading(true);
-      const response = await authedApi('/api/topics/');
-      setAllTopics(response.topics || []);
-    } catch (error: any) {
-      setAllTopics([]);
-    } finally {
-      setJoinLoading(false);
-    }
-  };
+  }, [accessToken, fetchMyTopics]);
 
   // トピック作成
   const createTopic = async () => {
@@ -122,16 +124,15 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         onPress: async () => {
           try {
             // ユーザーIDを取得（現在のユーザー情報から）
-            const userResponse = await authedApi('/api/users/me/');
+            const userResponse = await authedApi<UserOut>('/api/users/me/');
             await authedApi(`/api/topics/${topicId}/users/${userResponse.id}/`, {
               method: 'DELETE',
             });
 
             await fetchMyTopics();
             Alert.alert('成功', 'トピックから抜けました');
-          } catch (error: any) {
-            const errorMessage = error?.message || 'トピックからの退出に失敗しました';
-            Alert.alert('エラー', errorMessage);
+          } catch {
+            Alert.alert('エラー', 'トピックからの退出に失敗しました');
           }
         },
       },

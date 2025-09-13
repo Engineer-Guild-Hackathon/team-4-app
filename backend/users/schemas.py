@@ -18,7 +18,6 @@ class UserCreateOut(Schema):
 class UserWithTopicsOut(Schema):
     id: int
     username: str
-    email: str
     is_active: bool
     is_staff: bool
     topics: List[TopicOut]

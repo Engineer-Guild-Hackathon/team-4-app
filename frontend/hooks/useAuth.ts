@@ -1,8 +1,9 @@
 // frontend/hooks/useAuth.ts
-import { useState, useEffect, useCallback } from 'react';
+import { UserCreateOut, UserOut } from '@/types/user';
 import { apiClient } from '@/utils/apiClient';
+import { usePathname, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useRouter, usePathname } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 
 const ACCESS_KEY = 'accessToken';
 const REFRESH_KEY = 'refreshToken';
@@ -10,7 +11,7 @@ const REFRESH_KEY = 'refreshToken';
 export function useAuth() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserOut | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -25,7 +26,7 @@ export function useAuth() {
 
   // ログイン
   const login = async (username: string, password: string) => {
-    const res = await apiClient('/api/token/pair', {
+    const res = await apiClient<UserCreateOut>('/api/token/pair', {
       method: 'POST',
       body: { username, password },
     });
@@ -35,7 +36,7 @@ export function useAuth() {
     setRefreshToken(res.refresh);
 
     try {
-      const userData = await apiClient('/api/users/me/', { token: res.access });
+      const userData = await apiClient<UserOut>('/api/users/me/', { token: res.access });
       setUser(userData);
       router.replace('/');
     } catch (e) {
@@ -45,20 +46,20 @@ export function useAuth() {
   };
 
   // ログアウト
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await SecureStore.deleteItemAsync(ACCESS_KEY);
     await SecureStore.deleteItemAsync(REFRESH_KEY);
     setAccessToken(null);
     setRefreshToken(null);
     setUser(null);
     router.replace('/login');
-  };
+  }, [router]);
 
   // アクセストークンのリフレッシュ
   const refreshAccessToken = useCallback(async () => {
     if (!refreshToken) return false;
     try {
-      const res = await apiClient('/api/token/refresh', {
+      const res = await apiClient<UserCreateOut>('/api/token/refresh', {
         method: 'POST',
         body: { refresh: refreshToken },
       });
@@ -69,7 +70,7 @@ export function useAuth() {
       await logout();
       return false;
     }
-  }, [refreshToken]);
+  }, [refreshToken, logout]);
 
   // 初回ロード
   useEffect(() => {
@@ -79,12 +80,40 @@ export function useAuth() {
     })();
   }, [loadTokens]);
 
+  // API呼び出しラッパー（自動リフレッシュ）
+  const authedApi = useCallback(
+    async <T>(endpoint: string, options: Record<string, unknown> = {}): Promise<T> => {
+      try {
+        return await apiClient<T>(endpoint, { ...options, token: accessToken ?? undefined });
+      } catch (e: unknown) {
+        if (
+          typeof e === 'object' &&
+          e !== null &&
+          'message' in e &&
+          typeof (e as { message?: string }).message === 'string' &&
+          ((e as { message: string }).message.includes('token') ||
+            (e as { message: string }).message.includes('expired'))
+        ) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            const newAccessToken = (await SecureStore.getItemAsync(ACCESS_KEY)) ?? undefined;
+            return await apiClient<T>(endpoint, { ...options, token: newAccessToken });
+          } else {
+            await logout();
+          }
+        }
+        throw e;
+      }
+    },
+    [accessToken, refreshAccessToken, logout]
+  );
+
   // トークンがあればユーザー情報取得
   useEffect(() => {
     const fetchUser = async () => {
       if (!accessToken) return;
       try {
-        const userData = await authedApi('/api/users/me/');
+        const userData = await authedApi<UserOut>('/api/users/me/');
         setUser(userData);
       } catch (e) {
         console.error('ユーザー情報の取得に失敗しました:', e);
@@ -101,26 +130,7 @@ export function useAuth() {
       }
     } else {
     }
-  }, [accessToken, loading, router, pathname]);
-
-  // API呼び出しラッパー（自動リフレッシュ）
-  const authedApi = async (endpoint: string, options: any = {}) => {
-    try {
-      return await apiClient(endpoint, { ...options, token: accessToken });
-    } catch (e: any) {
-      if (e.message?.includes('token') || e.message?.includes('expired')) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          // リフレッシュ後の新しいアクセストークンを取得
-          const newAccessToken = await SecureStore.getItemAsync(ACCESS_KEY);
-          return await apiClient(endpoint, { ...options, token: newAccessToken });
-        } else {
-          await logout();
-        }
-      }
-      throw e;
-    }
-  };
+  }, [accessToken, loading, router, pathname, authedApi]);
 
   return { user, accessToken, refreshToken, login, logout, authedApi, loading };
 }
