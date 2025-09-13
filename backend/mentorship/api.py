@@ -5,9 +5,18 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.db import connection, transaction
-from mentorship.schemas import MenteeActionStatus, MenteeSubtreeOut, MentorRequestIn, MentorRequestOut, Message, TopicId, UserNodeOut, UserSchema
+from mentorship.schemas import (
+    MenteeActionStatus,
+    MenteeSubtreeOut,
+    MentorRequestIn,
+    MentorRequestOut,
+    Message,
+    TopicId,
+    UserNodeOut,
+    UserSchema,
+)
 from topics.models import Topic
-from .models import MentorRelationRequest, MentorRelation, ActionLog 
+from .models import MentorRelationRequest, MentorRelation, ActionLog
 
 User = get_user_model()
 
@@ -33,6 +42,7 @@ def _remove_relation(relation: MentorRelation, action: str):
 
     return {"status": action, "mentee_id": mentee.id}
 
+
 def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
     """
     引数
@@ -44,7 +54,8 @@ def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
     - 再起的CTEを用いて指定されたユーザーの配下の弟子全員（子孫）の特定のトピックのレベルを更新します。
     """
     with connection.cursor() as cursor:
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             WITH RECURSIVE subtree AS (
                 SELECT id FROM {user_table} WHERE id = %s -- This is the anchor, but we exclude it below
                 UNION ALL
@@ -56,10 +67,16 @@ def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
             UPDATE topics_usertopic
             SET level = level + %s
             WHERE user_id IN (SELECT id FROM subtree WHERE id != %s) AND topic_id = %s;
-        """, [user.id, level_difference, user.id, topic_id])
+        """,
+            [user.id, level_difference, user.id, topic_id],
+        )
 
 
-@router.post("/request", response={200: MentorRequestOut, 400: Message}, summary="弟子入りリクエストを作成する")
+@router.post(
+    "/request",
+    response={200: MentorRequestOut, 400: Message},
+    summary="弟子入りリクエストを作成する",
+)
 def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     """
     弟子の数が定員に達しているユーザーに対して弟子入りリクエストを送信します。
@@ -68,7 +85,7 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     - 自分自身にリクエストを送ることはできません。
     - 既に師弟関係にある、またはリクエスト中のユーザーには再度リクエストできません。
     """
-    from_user = request.user # Changed to request.user
+    from_user = request.user  # Changed to request.user
     to_user = get_object_or_404(User, id=payload.to_user_id)
 
     # 自分自身へのリクエストを禁止
@@ -78,20 +95,25 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     # 既存の関係やリクエストをチェック
     if MentorRelation.objects.filter(mentee=from_user, mentor=to_user).exists():
         return 400, {"message": "You are already in a mentorship with this user."}
-    if MentorRelationRequest.objects.filter(from_user=from_user, to_user=to_user, status='pending').exists():
+    if MentorRelationRequest.objects.filter(
+        from_user=from_user, to_user=to_user, status="pending"
+    ).exists():
         return 400, {"message": "A pending request to this user already exists."}
 
     # リクエストを作成
     topic = get_object_or_404(Topic, id=payload.topic_id)
     mentor_request = MentorRelationRequest.objects.create(
-        from_user=from_user,
-        to_user=to_user,
-        topic=topic
+        from_user=from_user, to_user=to_user, topic=topic
     )
     return mentor_request
 
+
 # 阿部TODO: リクエストが来る→定員に達しているので、既存の弟子を破門or卒業させる→弟子が新しく入る。の流れを実装する
-@router.post("/requests/{request_id}/approve", response={200: Message, 403: Message, 404: Message}, summary="弟子入りリクエストを承認する")
+@router.post(
+    "/requests/{request_id}/approve",
+    response={200: Message, 403: Message, 404: Message},
+    summary="弟子入りリクエストを承認する",
+)
 @transaction.atomic
 def approve_mentor_request(request: HttpRequest, request_id: int):
     """
@@ -100,19 +122,19 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     - リクエストの宛先（to_user）である本人しか承認できません。
     - 承認されると、リクエストのステータスが `approved` になり、新しい師弟関係が作成されます。
     """
-    mentor_request = get_object_or_404(MentorRelationRequest, id=request_id, status='pending')
+    mentor_request = get_object_or_404(
+        MentorRelationRequest, id=request_id, status="pending"
+    )
 
     # リクエストの宛先本人かチェック
     if request.user.id != mentor_request.to_user.id:
         return 403, {"message": "You do not have permission to perform this action."}
 
     # 師弟関係を作成
-    mentor = mentor_request.to_user
-    mentee = mentor_request.from_user
     MentorRelation.objects.create(
         mentor=mentor_request.to_user,
         mentee=mentor_request.from_user,
-        topic=mentor_request.topic
+        topic=mentor_request.topic,
     )
 
     # リクエストのステータスを更新
@@ -122,14 +144,20 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     return {"message": "Request approved successfully."}
 
 
-@router.post("/requests/{request_id}/reject", response={200: Message, 403: Message, 404: Message}, summary="弟子入りリクエストを拒否する")
+@router.post(
+    "/requests/{request_id}/reject",
+    response={200: Message, 403: Message, 404: Message},
+    summary="弟子入りリクエストを拒否する",
+)
 def reject_mentor_request(request: HttpRequest, request_id: int):
     """
     受け取った弟子入りリクエストを拒否します。
 
     - リクエストの宛先（to_user）である本人しか拒否できません。
     """
-    mentor_request = get_object_or_404(MentorRelationRequest, id=request_id, status='pending')
+    mentor_request = get_object_or_404(
+        MentorRelationRequest, id=request_id, status="pending"
+    )
 
     # リクエストの宛先本人かチェック
     if request.user.id != mentor_request.to_user.id:
@@ -141,7 +169,12 @@ def reject_mentor_request(request: HttpRequest, request_id: int):
 
     return {"message": "Request rejected successfully."}
 
-@router.post("/mentees/{mentee_id}/expel", response={200: MenteeActionStatus, 404: Message}, summary="弟子を破門する")
+
+@router.post(
+    "/mentees/{mentee_id}/expel",
+    response={200: MenteeActionStatus, 404: Message},
+    summary="弟子を破門する",
+)
 def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
     自身の弟子を破門し、師弟関係を解消します。
@@ -149,16 +182,19 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     - 認証が必要です。
     - 指定されたIDのユーザーが、実行者の弟子である必要があります。
     """
-    
+
     mentorship = get_object_or_404(
-        MentorRelation,
-        mentor=request.user,
-        mentee_id=mentee_id,
-        topic_id=data.topic_id)
+        MentorRelation, mentor=request.user, mentee_id=mentee_id, topic_id=data.topic_id
+    )
     return _remove_relation(mentorship, action="expel")
 
+
 # 阿部TODO: 現時点は弟子と同レベルであることを想定しているが、弟子の方が高レベルの場合、delta + 1とし、元師匠より1レベル高くさせる
-@router.post("/mentees/{mentee_id}/graduate", response={200: MenteeActionStatus, 404: Message}, summary="弟子を卒業させる")
+@router.post(
+    "/mentees/{mentee_id}/graduate",
+    response={200: MenteeActionStatus, 404: Message},
+    summary="弟子を卒業させる",
+)
 def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
     自身の弟子を卒業させ、師弟関係を解消します。
@@ -167,12 +203,13 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     - 指定されたIDのユーザーが、実行者の弟子である必要があります。
     """
     mentorship = get_object_or_404(
-        MentorRelation,
-        mentor=request.user,
-        mentee_id=mentee_id,
-        topic_id=data.topic_id)
+        MentorRelation, mentor=request.user, mentee_id=mentee_id, topic_id=data.topic_id
+    )
     mentee = mentorship.mentee
-    delta = request.user.usertopic_set.get(topic_id=data.topic_id).level - mentee.usertopic_set.get(topic_id=data.topic_id).level
+    delta = (
+        request.user.usertopic_set.get(topic_id=data.topic_id).level
+        - mentee.usertopic_set.get(topic_id=data.topic_id).level
+    )
     user_topic = mentee.usertopic_set.get(topic_id=data.topic_id)
     user_topic.level += delta
     user_topic.save()
@@ -180,8 +217,13 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     _update_descendant_levels(mentee, data.topic_id, delta)
     return _remove_relation(mentorship, action="graduate")
 
+
 # ---------予選通過時点で未使用---------------------------------------------------------------------------------
-@router.get("/mentors/{mentor_id}/subtree", response=List[MenteeSubtreeOut], summary="指定されたメンターの弟子ツリーを取得する")
+@router.get(
+    "/mentors/{mentor_id}/subtree",
+    response=List[MenteeSubtreeOut],
+    summary="指定されたメンターの弟子ツリーを取得する",
+)
 def get_mentor_subtree(request: HttpRequest, mentor_id: int):
     """
     指定されたメンターの全ての弟子（サブツリー）を取得します。
@@ -189,24 +231,33 @@ def get_mentor_subtree(request: HttpRequest, mentor_id: int):
     subtree = MentorRelation.objects.get_mentee_subtree(mentor_id)
     return subtree
 
-@router.get("/tree/", response=List[UserNodeOut], summary="全てのユーザーと師弟関係のツリーデータを取得する")
+
+@router.get(
+    "/tree/",
+    response=List[UserNodeOut],
+    summary="全てのユーザーと師弟関係のツリーデータを取得する",
+)
 def get_tree_data(request: HttpRequest):
     """
     全てのユーザーと、それぞれのユーザーのランク、師匠のIDを含むツリーデータを取得します。
     """
     users = User.objects.all()
-    mentor_relations = MentorRelation.objects.all().select_related('mentor', 'mentee')
+    mentor_relations = MentorRelation.objects.all().select_related("mentor", "mentee")
 
     # Create a dictionary to quickly look up mentor_id by mentee_id
-    mentee_to_mentor = {relation.mentee.id: relation.mentor.id for relation in mentor_relations}
+    mentee_to_mentor = {
+        relation.mentee.id: relation.mentor.id for relation in mentor_relations
+    }
 
     data = []
     for user in users:
-        mentor_id = mentee_to_mentor.get(user.id) # Get mentor_id if user is a mentee
+        mentor_id = mentee_to_mentor.get(user.id)  # Get mentor_id if user is a mentee
 
-        data.append(UserNodeOut(
-            user=UserSchema(id=user.id, username=user.username),
-            rank=user.rank,
-            mentor_id=mentor_id
-        ))
+        data.append(
+            UserNodeOut(
+                user=UserSchema(id=user.id, username=user.username),
+                rank=user.rank,
+                mentor_id=mentor_id,
+            )
+        )
     return data

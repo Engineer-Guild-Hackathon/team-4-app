@@ -6,54 +6,170 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('topics', '0001_initial'),
+        ("topics", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ActionLog',
+            name="ActionLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('graduate', 'Graduate'), ('expel', 'Expel')], max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='action_logs', to=settings.AUTH_USER_MODEL)),
-                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='target_logs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[("graduate", "Graduate"), ("expel", "Expel")],
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "actor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="action_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "target",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="target_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='MentorRelationRequest',
+            name="MentorRelationRequest",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('pending', '申請中'), ('approved', '承認済み'), ('rejected', '拒否済み')], default='pending', max_length=10, verbose_name='ステータス')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='作成日時')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新日時')),
-                ('from_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mentor_requests_sent', to=settings.AUTH_USER_MODEL, verbose_name='申請元ユーザー')),
-                ('to_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mentor_requests_received', to=settings.AUTH_USER_MODEL, verbose_name='申請先ユーザー')),
-                ('topic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mentorship_requests', to='topics.topic', verbose_name='トピック')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "申請中"),
+                            ("approved", "承認済み"),
+                            ("rejected", "拒否済み"),
+                        ],
+                        default="pending",
+                        max_length=10,
+                        verbose_name="ステータス",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="作成日時"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="更新日時"),
+                ),
+                (
+                    "from_user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentor_requests_sent",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="申請元ユーザー",
+                    ),
+                ),
+                (
+                    "to_user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentor_requests_received",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="申請先ユーザー",
+                    ),
+                ),
+                (
+                    "topic",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentorship_requests",
+                        to="topics.topic",
+                        verbose_name="トピック",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '師弟関係リクエスト',
-                'verbose_name_plural': '師弟関係リクエスト',
+                "verbose_name": "師弟関係リクエスト",
+                "verbose_name_plural": "師弟関係リクエスト",
             },
         ),
         migrations.CreateModel(
-            name='MentorRelation',
+            name="MentorRelation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='作成日時')),
-                ('mentee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mentorships', to=settings.AUTH_USER_MODEL, verbose_name='弟子')),
-                ('mentor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mentees', to=settings.AUTH_USER_MODEL, verbose_name='師匠')),
-                ('topic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mentorship_relations', to='topics.topic', verbose_name='トピック')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="作成日時"),
+                ),
+                (
+                    "mentee",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentorships",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="弟子",
+                    ),
+                ),
+                (
+                    "mentor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentees",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="師匠",
+                    ),
+                ),
+                (
+                    "topic",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mentorship_relations",
+                        to="topics.topic",
+                        verbose_name="トピック",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '師弟関係',
-                'verbose_name_plural': '師弟関係',
-                'unique_together': {('mentee', 'topic')},
+                "verbose_name": "師弟関係",
+                "verbose_name_plural": "師弟関係",
+                "unique_together": {("mentee", "topic")},
             },
         ),
     ]
