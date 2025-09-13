@@ -1,9 +1,21 @@
 # ハッカソン提出用リポジトリ
 
-このリポジトリはハッカソン提出用の雛形です。以下の項目をすべて埋めてください。
-
+## チーム情報
+- チーム番号: 4
+- チーム名: 29番目の天ぷら
+- プロダクト名: 匠 -takumi-
+- メンバー: 
+   - 淨慶 航太 (jk99k)
+   - 疋田 智佳子 (c-hikita)
+   - 中薗 悠太 (zono-nozo)
+   - 阿部 勝寿 (Masa-eba)
 ---
 
+## デモ/プレゼン資料
+- デモURL: ネイティブアプリのためなし
+- プレゼンURL：https://www.canva.com/design/DAGyeXmhYFI/bC4jgNEk4sv7SIKyjCIbhw/view?utm_content=DAGyeXmhYFI&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=habd0cede2e
+
+---
 ## フロントエンド環境構築
 
 ### 必要なもの
@@ -84,26 +96,19 @@
 
 ---
 
-## フロントエンド・バックエンドの接続について
-
-Expo/React Native（フロント）からDjango（バックエンド）APIに接続する場合、
-**自分のPCや端末が接続しているネットワークのIPアドレス**を `frontend/utils/apiClient.ts:15` の `BASE_URL` の末尾、 `backend/.env` の `DJANGO_ALLOWED_HOSTS` に追加する必要があります。
-（例: `DJANGO_ALLOWED_HOSTS=192.168.**.**,localhost`）
-
-これを設定しないと、スマホ実機や他端末からAPIにアクセスできません。
-
-IPアドレスはネットワーク環境によって変わるため、接続時は必ずご自身のIPを確認し、各設定ファイルに反映してください。
-
----
-
-## チーム情報
-- チーム番号: （ここに記入）
-- チーム名: （ここに記入）
-- プロダクト名: （ここに記入）
-- メンバー: （GitHubアカウントまたは名前を列挙）
-
----
-
-## デモ　/ プレゼン資料
-- デモURL: 
-- プレゼンURL：
+## ネットワーク設定方法
+開発環境でスマートフォン実機など、PC以外の端末からAPIに接続するには、ネットワーク設定が必要です。
+ 
+PCとスマートフォンを同じWi-Fiネットワークに接続した上で、PCのローカルIPアドレスを使ってフロントエンドとバックエンドを連携させます。
+ 
+1. バックエンドの設定
+バックエンドのルートディレクトリ (backend/) に .env ファイルを新規作成し、以下の内容を記述します。
+   ```
+   DJANGO_ALLOWED_HOSTS="<あなたのIPアドレス>,localhost"
+   ```
+ 
+2. フロントエンドの設定
+フロントエンドのルートディレクトリ (frontend/) に .env ファイルを新規作成し、以下の内容を記述します。
+   ```
+   EXPO_PUBLIC_API_URL="http://<あなたのIPアドレス>:8000"
+   ```
