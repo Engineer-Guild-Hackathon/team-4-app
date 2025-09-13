@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db import connection
 from topics.models import Topic
 
 
@@ -46,9 +46,6 @@ class MentorRelationRequest(models.Model):
     class Meta:
         verbose_name = '師弟関係リクエスト'
         verbose_name_plural = '師弟関係リクエスト'
-
-
-from django.db import connection
 
 class MentorRelationManager(models.Manager):
     """師弟関係のカスタムマネージャー"""
