@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
-import { TopicManageView } from './TopicManageView';
+import { UserWithTopicsOut } from '@/types/user';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import { TreeViewer } from './TreeViewer';
 import { TopicCarousel } from './TopicCarousel';
+import { TopicManageView } from './TopicManageView';
+import { TreeViewer } from './TreeViewer';
 
 interface Topic {
   id: string;
@@ -29,7 +30,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
       setLoading(true);
-      const response = await authedApi('/api/topics/me/');
+      const response = await authedApi<UserWithTopicsOut>('/api/topics/me/');
       const fetchedTopics = response.topics || [];
       setTopics(fetchedTopics);
 
