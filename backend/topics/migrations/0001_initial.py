@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -16,39 +15,87 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Topic',
+            name="Topic",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=200, verbose_name='タイトル')),
-                ('description', models.TextField(blank=True, verbose_name='説明')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='作成日時')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新日時')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=200, verbose_name="タイトル")),
+                ("description", models.TextField(blank=True, verbose_name="説明")),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="作成日時"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="更新日時"),
+                ),
             ],
             options={
-                'verbose_name': 'トピック',
-                'verbose_name_plural': 'トピック',
-                'ordering': ['-created_at'],
+                "verbose_name": "トピック",
+                "verbose_name_plural": "トピック",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='UserTopic',
+            name="UserTopic",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('level', models.IntegerField(default=1, verbose_name='レベル')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='参加日時')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新日時')),
-                ('topic', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='topics.topic', verbose_name='トピック')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='ユーザー')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("level", models.IntegerField(default=1, verbose_name="レベル")),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="参加日時"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="更新日時"),
+                ),
+                (
+                    "topic",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="topics.topic",
+                        verbose_name="トピック",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="ユーザー",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'ユーザー-トピック関連',
-                'verbose_name_plural': 'ユーザー-トピック関連',
-                'unique_together': {('user', 'topic')},
+                "verbose_name": "ユーザー-トピック関連",
+                "verbose_name_plural": "ユーザー-トピック関連",
+                "unique_together": {("user", "topic")},
             },
         ),
         migrations.AddField(
-            model_name='topic',
-            name='users',
-            field=models.ManyToManyField(related_name='topics', through='topics.UserTopic', to=settings.AUTH_USER_MODEL, verbose_name='関連ユーザー'),
+            model_name="topic",
+            name="users",
+            field=models.ManyToManyField(
+                related_name="topics",
+                through="topics.UserTopic",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="関連ユーザー",
+            ),
         ),
     ]

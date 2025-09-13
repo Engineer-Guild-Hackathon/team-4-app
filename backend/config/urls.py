@@ -21,19 +21,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from ninja import NinjaAPI
 from ninja_jwt.routers.obtain import obtain_pair_router
-from users.views import router as users_router
+from users.api import router as users_router
+from topics.api import router as topics_router
+from mentorship.api import router as mentorship_router
+from posts.api import router as posts_router
 from .health import health
-from topics.views import router as topics_router
-from mentorship.api import get_mentorship_router
-from posts.views import router as posts_router
 
 
 api = NinjaAPI()
 api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
-api.add_router("/posts", posts_router)
+api.add_router("/posts", posts_router, tags=["Posts"])
 api.add_router("/users", users_router, tags=["Users"])
 api.add_router("/topics", topics_router, tags=["Topics"])
-api.add_router("/mentorship", get_mentorship_router())
+api.add_router("/mentorship", mentorship_router, tags=["Mentorship"])
 
 urlpatterns = [
     path('admin/', admin.site.urls),
