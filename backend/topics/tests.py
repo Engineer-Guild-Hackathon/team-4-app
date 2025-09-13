@@ -1,7 +1,7 @@
 from django.test import TestCase
 from ninja.testing import TestClient
 from .models import Topic
-from .views import router
+from .api import router
 from django.contrib.auth import get_user_model
 from mentorship.models import MentorRelation
 from topics.models import Topic, UserTopic

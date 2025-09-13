@@ -85,3 +85,5 @@ class TreeUserNodeSchema(Schema):
 class TreeResponseSchema(Schema):
     """/tree/ エンドポイントの最終的なレスポンスの形"""
     tree: List[TreeUserNodeSchema]
+    max_level: int
+    min_level: int
