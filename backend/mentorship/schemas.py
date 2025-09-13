@@ -1,14 +1,7 @@
 import uuid
 from ninja import Schema
 
-
-class Message(Schema):
-    """シンプルなメッセージレスポンス用スキーマ"""
-
-    message: str
-
-
-class TopicSchema(Schema):
+class TopicOut(Schema):
     """トピック情報スキーマ"""
 
     id: uuid.UUID
@@ -28,7 +21,7 @@ class MentorRequestIn(Schema):
     topic_id: str
 
 
-class UserSchema(Schema):
+class UserEasyOut(Schema):
     """簡易的なユーザー情報スキーマ"""
 
     id: int
@@ -39,13 +32,13 @@ class MentorRequestOut(Schema):
     """弟子入りリクエストの出力スキーマ"""
 
     id: int
-    from_user: UserSchema
-    to_user: UserSchema
-    topic: TopicSchema
+    from_user: UserEasyOut
+    to_user: UserEasyOut
+    topic: TopicOut
     status: str
 
 
-class MenteeActionStatus(Schema):
+class MenteeActionStatusOut(Schema):
     """弟子に対するアクションのステータスレスポンススキーマ"""
 
     status: str
@@ -69,6 +62,6 @@ class MenteeSubtreeOut(Schema):
 
 
 class UserNodeOut(Schema):
-    user: UserSchema
+    user: UserEasyOut
     rank: int
     mentor_id: int | None = None

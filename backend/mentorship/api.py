@@ -6,15 +6,15 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.db import connection, transaction
 from mentorship.schemas import (
-    MenteeActionStatus,
+    MenteeActionStatusOut,
     MenteeSubtreeOut,
     MentorRequestIn,
     MentorRequestOut,
-    Message,
     TopicId,
     UserNodeOut,
-    UserSchema,
+    UserEasyOut,
 )
+from config.schemas import ErrorOut
 from topics.models import Topic
 from .models import MentorRelationRequest, MentorRelation, ActionLog
 
@@ -74,7 +74,7 @@ def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
 
 @router.post(
     "/request",
-    response={200: MentorRequestOut, 400: Message},
+    response={200: MentorRequestOut, 400: ErrorOut},
     summary="弟子入りリクエストを作成する",
 )
 def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
@@ -111,7 +111,7 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
 # 阿部TODO: リクエストが来る→定員に達しているので、既存の弟子を破門or卒業させる→弟子が新しく入る。の流れを実装する
 @router.post(
     "/requests/{request_id}/approve",
-    response={200: Message, 403: Message, 404: Message},
+    response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     summary="弟子入りリクエストを承認する",
 )
 @transaction.atomic
@@ -146,7 +146,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
 
 @router.post(
     "/requests/{request_id}/reject",
-    response={200: Message, 403: Message, 404: Message},
+    response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     summary="弟子入りリクエストを拒否する",
 )
 def reject_mentor_request(request: HttpRequest, request_id: int):
@@ -172,7 +172,7 @@ def reject_mentor_request(request: HttpRequest, request_id: int):
 
 @router.post(
     "/mentees/{mentee_id}/expel",
-    response={200: MenteeActionStatus, 404: Message},
+    response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を破門する",
 )
 def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
@@ -192,7 +192,7 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
 # 阿部TODO: 現時点は弟子と同レベルであることを想定しているが、弟子の方が高レベルの場合、delta + 1とし、元師匠より1レベル高くさせる
 @router.post(
     "/mentees/{mentee_id}/graduate",
-    response={200: MenteeActionStatus, 404: Message},
+    response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を卒業させる",
 )
 def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
@@ -255,7 +255,7 @@ def get_tree_data(request: HttpRequest):
 
         data.append(
             UserNodeOut(
-                user=UserSchema(id=user.id, username=user.username),
+                user=UserEasyOut(id=user.id, username=user.username),
                 rank=user.rank,
                 mentor_id=mentor_id,
             )
