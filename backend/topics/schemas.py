@@ -5,23 +5,17 @@ from typing import Optional, List
 import uuid
 
 
-def get_UserOut():
-    from users.schemas import UserOut
-
-    return UserOut
-
-
-class TopicCreateSchema(Schema):
+class TopicCreateIn(Schema):
     title: str
     description: Optional[str] = ""
 
 
-class TopicUpdateSchema(Schema):
+class TopicUpdateIn(Schema):
     title: Optional[str] = None
     description: Optional[str] = None
 
 
-class TopicResponseSchema(Schema):
+class TopicOut(Schema):
     id: uuid.UUID
     title: str
     description: str
@@ -29,25 +23,25 @@ class TopicResponseSchema(Schema):
     updated_at: datetime
 
 
-class TopicListResponseSchema(Schema):
-    topics: list[TopicResponseSchema]
+class TopicListOut(Schema):
+    topics: list[TopicOut]
     count: int
 
 
-class UserTopicCreateSchema(Schema):
+class UserTopicCreateIn(Schema):
     """ユーザーをトピックに参加させるスキーマ"""
 
     user_id: int
     level: Optional[int] = 1
 
 
-class UserTopicUpdateSchema(Schema):
+class UserTopicUpdateIn(Schema):
     """ユーザーのトピック参加レベルを更新するスキーマ"""
 
     level: int
 
 
-class UserTopicResponseSchema(Schema):
+class UserTopicOut(Schema):
     """ユーザーとトピックの関連情報スキーマ"""
 
     id: int
@@ -60,6 +54,30 @@ class UserTopicResponseSchema(Schema):
     updated_at: datetime
 
 
+class TreeUserOut(Schema):
+    """ツリー表示で使う、簡潔なユーザー情報"""
+
+    id: int
+    username: str
+
+
+class TreeUserNodeOut(Schema):
+    """TreeViewerコンポーネントが期待するノードの形"""
+
+    user: TreeUserOut
+    rank: int
+    mentor_id: Optional[int] = None
+
+
+class TreeOut(Schema):
+    """/tree/ エンドポイントの最終的なレスポンスの形"""
+
+    tree: List[TreeUserNodeOut]
+    max_level: int
+    min_level: int
+
+
+#--------予選時点未使用-----------------------
 class UserForTreeScructure(Schema):
     user: typing.Any  # 実際の型はUserOutだが循環import回避のためAny
     level: int
@@ -68,35 +86,5 @@ class UserForTreeScructure(Schema):
 
 class TreeStructureOut(Schema):
     users: List[UserForTreeScructure]
-    max_level: int
-    min_level: int
-
-
-class TopicUsersResponseSchema(Schema):
-    """トピックの参加ユーザー一覧スキーマ"""
-
-    users: List[UserTopicResponseSchema]
-    count: int
-
-
-class TreeUserSchema(Schema):
-    """ツリー表示で使う、簡潔なユーザー情報"""
-
-    id: int
-    username: str
-
-
-class TreeUserNodeSchema(Schema):
-    """TreeViewerコンポーネントが期待するノードの形"""
-
-    user: TreeUserSchema
-    rank: int
-    mentor_id: Optional[int] = None
-
-
-class TreeResponseSchema(Schema):
-    """/tree/ エンドポイントの最終的なレスポンスの形"""
-
-    tree: List[TreeUserNodeSchema]
     max_level: int
     min_level: int

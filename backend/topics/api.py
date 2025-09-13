@@ -5,15 +5,15 @@ from django.contrib.auth import get_user_model
 import uuid
 from .models import Topic, UserTopic
 from .schemas import (
-    TopicCreateSchema,
-    TopicUpdateSchema,
-    TopicResponseSchema,
-    TopicListResponseSchema,
+    TopicCreateIn,
+    TopicUpdateIn,
+    TopicOut,
+    TopicListOut,
     TreeStructureOut,
-    UserTopicCreateSchema,
-    UserTopicUpdateSchema,
-    UserTopicResponseSchema,
-    TreeResponseSchema,
+    UserTopicCreateIn,
+    UserTopicUpdateIn,
+    UserTopicOut,
+    TreeOut,
 )
 from mentorship.models import MentorRelation
 
@@ -23,8 +23,8 @@ User = get_user_model()
 router = Router()
 
 
-@router.post("/", response=TopicResponseSchema, auth=JWTAuth())
-def create_topic(request, data: TopicCreateSchema):
+@router.post("/", response=TopicOut, auth=JWTAuth())
+def create_topic(request, data: TopicCreateIn):
     """
     トピックを作成する
     """
@@ -32,7 +32,7 @@ def create_topic(request, data: TopicCreateSchema):
     return topic
 
 
-@router.get("/", response=TopicListResponseSchema)
+@router.get("/", response=TopicListOut)
 def list_topics(request):
     """
     全てのトピックを取得する
@@ -45,7 +45,7 @@ def list_topics(request):
     }
 
 
-@router.get("/me/", response=TopicListResponseSchema, auth=JWTAuth())
+@router.get("/me/", response=TopicListOut, auth=JWTAuth())
 def get_my_topics(request):
     """
     自分が参加しているトピック一覧を取得する
@@ -55,7 +55,7 @@ def get_my_topics(request):
     return {"topics": list(topics), "count": topics.count()}
 
 
-@router.get("/{topic_id}/", response=TopicResponseSchema)
+@router.get("/{topic_id}/", response=TopicOut)
 def get_topic(request, topic_id: uuid.UUID):
     """
     特定のトピックを取得する
@@ -64,8 +64,8 @@ def get_topic(request, topic_id: uuid.UUID):
     return topic
 
 
-@router.put("/{topic_id}/", response=TopicResponseSchema, auth=JWTAuth())
-def update_topic(request, topic_id: uuid.UUID, data: TopicUpdateSchema):
+@router.put("/{topic_id}/", response=TopicOut, auth=JWTAuth())
+def update_topic(request, topic_id: uuid.UUID, data: TopicUpdateIn):
     """
     トピックを更新する
     """
@@ -97,8 +97,8 @@ def delete_topic(request, topic_id: uuid.UUID):
 
 
 # UserTopic関連のエンドポイント
-@router.post("/{topic_id}/users/", response=UserTopicResponseSchema, auth=JWTAuth())
-def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateSchema):
+@router.post("/{topic_id}/users/", response=UserTopicOut, auth=JWTAuth())
+def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateIn):
     """
     ユーザーをトピックに参加させる
     """
@@ -111,7 +111,7 @@ def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateSchema)
 
     user_topic = UserTopic.objects.create(user=user, topic=topic, level=data.level)
 
-    return UserTopicResponseSchema(
+    return UserTopicOut(
         id=user_topic.id,
         user_id=user_topic.user.id,
         username=user_topic.user.username,
@@ -124,10 +124,10 @@ def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateSchema)
 
 
 @router.put(
-    "/{topic_id}/users/{user_id}/", response=UserTopicResponseSchema, auth=JWTAuth()
+    "/{topic_id}/users/{user_id}/", response=UserTopicOut, auth=JWTAuth()
 )
 def update_user_topic_level(
-    request, topic_id: uuid.UUID, user_id: int, data: UserTopicUpdateSchema
+    request, topic_id: uuid.UUID, user_id: int, data: UserTopicUpdateIn
 ):
     """
     ユーザーのトピック参加レベルを更新する
@@ -136,7 +136,7 @@ def update_user_topic_level(
     user_topic.level = data.level
     user_topic.save()
 
-    return UserTopicResponseSchema(
+    return UserTopicOut(
         id=user_topic.id,
         user_id=user_topic.user.id,
         username=user_topic.user.username,
@@ -159,7 +159,7 @@ def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
 
 
 # 阿部TODO: この際に何らかの指定関係を結ぶ場合は、MentorRelationも同時に作成する。引数にmentor_idを追加するのがいいと思う。transaction.atomicデコレータは必須です。
-@router.post("/{topic_id}/me/", response=UserTopicResponseSchema, auth=JWTAuth())
+@router.post("/{topic_id}/me/", response=UserTopicOut, auth=JWTAuth())
 def join_topic(request, topic_id: uuid.UUID):
     """
     現在のユーザーをトピックに参加させる
@@ -177,7 +177,7 @@ def join_topic(request, topic_id: uuid.UUID):
         level=1,  # デフォルトレベル
     )
 
-    return UserTopicResponseSchema(
+    return UserTopicOut(
         id=user_topic.id,
         user_id=user_topic.user.id,
         username=user_topic.user.username,
@@ -189,7 +189,7 @@ def join_topic(request, topic_id: uuid.UUID):
     )
 
 
-@router.get("/{topic_id}/tree/", response=TreeResponseSchema)
+@router.get("/{topic_id}/tree/", response=TreeOut)
 def get_topic_tree(request, topic_id: uuid.UUID):
     """
     指定されたトピックの師弟関係をTreeViewer用の形式で返す

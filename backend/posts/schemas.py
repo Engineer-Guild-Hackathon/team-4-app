@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 from .models import Post
 
-class AuthorSchema(Schema):
+class AuthorOut(Schema):
     id: int
     username: str
 
@@ -15,7 +15,7 @@ class PostOut(Schema):
     id: int
     content: str
     created_at: datetime
-    author: AuthorSchema
+    author: AuthorOut
     media: List[PostMediaOut]
 
     @staticmethod

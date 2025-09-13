@@ -21,10 +21,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from ninja import NinjaAPI
 from ninja_jwt.routers.obtain import obtain_pair_router
-from users.views import router as users_router
+from users.api import router as users_router
 from topics.api import router as topics_router
 from mentorship.api import router as mentorship_router
-from posts.views import router as posts_router
+from posts.api import router as posts_router
 from .health import health
 
 

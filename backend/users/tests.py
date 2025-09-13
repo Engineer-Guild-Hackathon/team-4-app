@@ -3,7 +3,7 @@ from django.test import TestCase
 from ninja.testing import TestClient
 from django.contrib.auth import get_user_model
 from config.urls import api
-from .views import router
+from .api import router
 
 User = get_user_model()
 

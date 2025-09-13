@@ -1,4 +1,4 @@
-from .schemas import UserCreateResponse, UserIn, UserOut, UserWithTopicsSchema
+from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut
 from ninja import Router
 from django.contrib.auth import get_user_model
 from ninja_jwt.authentication import JWTAuth
@@ -22,7 +22,7 @@ def get_user(request, user_id: int):
     return User.objects.get(id=user_id)
 
 
-@router.get("/{user_id}/topics/", response=UserWithTopicsSchema, auth=JWTAuth())
+@router.get("/{user_id}/topics/", response=UserWithTopicsOut, auth=JWTAuth())
 def get_user_with_topics(request, user_id: int):
     user = User.objects.prefetch_related('topics').get(id=user_id)
     return {
@@ -34,7 +34,7 @@ def get_user_with_topics(request, user_id: int):
         "topics": list(user.topics.all())
     }
 
-@router.post("/", response={201: UserCreateResponse})
+@router.post("/", response={201: UserCreateOut})
 def create_user(request, data: UserIn):
     user = User.objects.create_user(
         username=data.username,
@@ -43,7 +43,7 @@ def create_user(request, data: UserIn):
     )
     refresh = RefreshToken.for_user(user)
     access = str(refresh.access_token)
-    return UserCreateResponse(
+    return UserCreateOut(
         access=access,
         refresh=str(refresh),
         user=UserOut(
