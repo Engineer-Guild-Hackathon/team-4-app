@@ -19,3 +19,8 @@ export type TreeOut = {
   max_level: number;
   min_level: number;
 };
+
+export type TopicListOut = {
+  topics: TopicOut[];
+  count: number;
+};

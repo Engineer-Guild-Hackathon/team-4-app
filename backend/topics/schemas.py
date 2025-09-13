@@ -65,7 +65,7 @@ class TreeUserNodeOut(Schema):
     """TreeViewerコンポーネントが期待するノードの形"""
 
     user: TreeUserOut
-    rank: int
+    level: int
     mentor_id: Optional[int] = None
 
 

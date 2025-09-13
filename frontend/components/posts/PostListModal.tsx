@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
-  ActivityIndicator,
   Modal,
   Pressable,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  Alert,
+  View,
 } from 'react-native';
 // import { Video } from 'expo-video';
-import { Link } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
+import { Link } from 'expo-router';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -126,7 +126,12 @@ export default function PostListModal({
   }
 
   return (
-    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
+    <Modal
+      animationType="slide"
+      presentationStyle="pageSheet"
+      visible={visible}
+      onRequestClose={onClose}
+    >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
@@ -162,13 +167,11 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
   },
   modalContent: {
-    height: '80%',
+    height: '100%',
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     padding: 20,
   },
   header: {

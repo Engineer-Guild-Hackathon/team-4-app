@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, PanResponder, Animated } from 'react-native';
+import { TreeUserNodeOut } from '@/types/topic';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, PanResponder, StyleSheet, Text, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
-import { buildTree, TreeNode, UserNode } from './treeUtils';
-import { TreeNodeView } from './TreeNode';
 import { useTreeData } from '../../hooks/useTreeData';
+import { TreeNodeView } from './TreeNode';
+import { buildTree, TreeNode } from './treeUtils';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
@@ -125,7 +126,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 
   useEffect(() => {
     if (Array.isArray(data) && data.length > 0) {
-      const root = buildTree(data as UserNode[]);
+      const root = buildTree(data as TreeUserNodeOut[]);
       setCurrentNode(root);
     }
   }, [data]);

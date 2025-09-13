@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image, Button, Alert } from 'react-native';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { apiClient } from '@/utils/apiClient';
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { UserOut } from '@/types/user';
+import { apiClient } from '@/utils/apiClient';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
 
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
@@ -48,7 +49,7 @@ export default function SelectLevelMentorScreen() {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const res = await authedApi('/api/users/me/');
+        const res = await authedApi<UserOut>('/api/users/me/');
         setUserId(res.id);
       } catch {
         setUserId(null);

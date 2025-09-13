@@ -1,3 +1,5 @@
+import { TreeUserNodeOut } from '@/types/topic';
+
 // components/TreeViewer/treeUtils.ts
 export interface UserNode {
   user: {
@@ -17,12 +19,12 @@ export interface TreeNode {
   mentees: TreeNode[];
 }
 
-export function buildTree(nodes: UserNode[]): TreeNode | null {
+export function buildTree(nodes: TreeUserNodeOut[]): TreeNode | null {
   const map = new Map<number, TreeNode>();
   let root: TreeNode | null = null;
 
   nodes.forEach(n =>
-    map.set(n.user.id, { id: n.user.id, username: n.user.username, level: n.rank, mentees: [] })
+    map.set(n.user.id, { id: n.user.id, username: n.user.username, level: n.level, mentees: [] })
   );
 
   nodes.forEach(n => {

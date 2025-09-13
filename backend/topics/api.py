@@ -212,7 +212,7 @@ def get_topic_tree(request, topic_id: uuid.UUID):
     for ut in user_topics:
         user_node_data = {
             "user": {"id": ut.user.id, "username": ut.user.username},
-            "rank": ut.level,
+            "level": ut.level,
             "mentor_id": mentee_to_mentor_map.get(ut.user.id),
         }
         tree_data.append(user_node_data)

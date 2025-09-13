@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { UserCreateOut } from '@/types/user';
 import { apiClient } from '@/utils/apiClient';
-import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function UserCreateScreen() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function UserCreateScreen() {
     setError('');
     setSuccess('');
     try {
-      const res = await apiClient('/api/users/', {
+      const res = await apiClient<UserCreateOut>('/api/users/', {
         method: 'POST',
         body: { username, email, password },
       });
