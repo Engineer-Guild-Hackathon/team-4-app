@@ -62,13 +62,13 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
       {/* ★ 4. FlatListにrefとcontentContainerStyleを追加 */}
       <FlatList
         ref={flatListRef}
-        data={messages} // 初期表示はpropsから、送信後はstateから
+        data={messages.reverse()} // 初期表示はpropsから、送信後はstateから
         keyExtractor={msg => msg.id.toString()}
         style={styles.messageList}
         contentContainerStyle={styles.messageListContent}
         inverted // invertedはチャットUIの基本
         renderItem={({ item }: { item: ThreadMessageOut }) => (
-          <View style={[styles.messageCard, {transform: [{scaleY: -1}]}]}>
+          <View style={styles.messageCard}>
             <Text style={styles.messageAuthor}>{item.author?.username}</Text>
             <Text style={styles.messageContent}>{item.content}</Text>
             <Text style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</Text>
