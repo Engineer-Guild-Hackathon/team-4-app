@@ -16,16 +16,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
-const VideoPreviewItem = ({ uri, style }: { uri: string, style: any }) => {
+const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
     player.muted = true;
   });
 
   return (
-    <VideoView 
-      player={player} 
-      style={style} 
-      // allowsFullscreen={false} 
+    <VideoView
+      player={player}
+      style={style}
+      // allowsFullscreen={false}
       // allowsPictureInPicture={false}
     />
   );
@@ -139,11 +139,7 @@ export default function CreatePostScreen() {
             );
           } else if (asset.type === 'video') {
             return (
-              <VideoPreviewItem 
-                key={asset.assetId}
-                uri={asset.uri}
-                style={styles.previewImage}
-              />
+              <VideoPreviewItem key={asset.assetId} uri={asset.uri} style={styles.previewImage} />
             );
           }
           return null;

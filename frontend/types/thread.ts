@@ -1,19 +1,19 @@
-import { TopicOut } from "./topic";
-import { UserOut } from "./user";
+import { TopicOut } from './topic';
+import { UserOut } from './user';
 
 export type ThreadOut = {
-    id: number;
-    topic: TopicOut;
-    starter: UserOut;
-    mentor: UserOut;
-    created_at: string;
-    messages: ThreadMessageOut[];
-}
+  id: number;
+  topic: TopicOut;
+  starter: UserOut;
+  mentor: UserOut;
+  created_at: string;
+  messages: ThreadMessageOut[];
+};
 
 export type ThreadMessageOut = {
-    id: number;
-    author: UserOut;
-    content: string;
-    created_at: string;
-    parent_id: number | null;
-}
+  id: number;
+  author: UserOut;
+  content: string;
+  created_at: string;
+  parent_id: number | null;
+};

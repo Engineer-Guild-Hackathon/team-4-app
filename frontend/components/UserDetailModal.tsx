@@ -26,7 +26,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 const videoSource =
   'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
-const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
+const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(videoSource, player => {
     player.loop = true;
     player.play();
@@ -35,11 +35,11 @@ const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
 
   return (
-    <VideoView 
-      player={player} 
-      style={style} 
-      // allowsFullscreen 
-      // allowsPictureInPicture 
+    <VideoView
+      player={player}
+      style={style}
+      // allowsFullscreen
+      // allowsPictureInPicture
     />
   );
 };
@@ -142,13 +142,7 @@ export default function UserDetailModal({
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
           } else if (media.media_type === 'video') {
-            return (
-              <VideoItem 
-                key={index}
-                uri={mediaUrl}
-                style={styles.media}
-              />
-            );
+            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
           }
           return null;
         })}
@@ -169,7 +163,6 @@ export default function UserDetailModal({
       <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
     );
   }
-
 
   const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
     setSelectedTab(e.nativeEvent.position);
@@ -240,7 +233,7 @@ export default function UserDetailModal({
             {content}
           </View>
           {/* 掲示板ページ */}
-          <ThreadView userId={userId} topicId={topicId} />
+          <ThreadView userId={userId!} topicId={topicId!} />
         </PagerView>
         <Pressable style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeButtonText}>閉じる</Text>
