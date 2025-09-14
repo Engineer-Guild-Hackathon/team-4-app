@@ -1,14 +1,14 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import React, { useState } from 'react';
 import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 interface ThreadDetailViewProps {
@@ -50,7 +50,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
             <Text style={styles.backButtonText}>← 戻る</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>スレッド詳細</Text>
+            <Text style={styles.title}>{thread.mentor.username} : {thread.starter.username}</Text>
         </View>
 
         {/* ★ 修正点2: FlatListを直接配置し、invertedプロパティを追加 */}
@@ -96,6 +96,8 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   backButton: {
     marginBottom: 12,
