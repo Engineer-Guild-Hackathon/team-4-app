@@ -4,10 +4,19 @@ from topics.models import Topic
 
 class Post(models.Model):
     """投稿モデル"""
+    content = models.TextField("投稿内容")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name="投稿者")
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='posts', verbose_name="トピック")
 
-    content = models.TextField("投稿内容")
+    source_thread = models.OneToOneField(
+        "threads.Thread",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="source_post",
+        verbose_name="元会話スレッド",
+    )
+
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 

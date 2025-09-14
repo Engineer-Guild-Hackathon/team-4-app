@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'ninja_jwt',
     'mentorship',
     'posts',
-    'corsheaders'
+    'corsheaders',
+    'threads',
 ]
 
 MIDDLEWARE = [
