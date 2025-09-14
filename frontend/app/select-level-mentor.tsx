@@ -1,7 +1,9 @@
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
-import { UserOut } from '@/types/user';
-import { apiClient, authedApiClient } from '@/utils/apiClient';
+import { getPosts } from '@/services/api/post';
+import { joinTopic } from '@/services/api/topic';
+import { getMe } from '@/services/api/user';
+import { PostMediaOut, PostOut } from '@/types/post';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
@@ -25,7 +27,7 @@ export default function SelectLevelMentorScreen() {
   const [level, setLevel] = useState(5);
 
   // post取得
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<PostOut[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,8 +35,8 @@ export default function SelectLevelMentorScreen() {
       setLoading(true);
       try {
         // topicIdで絞り、postsリストで取得
-        const res = await apiClient(`/api/posts/?topic_id=${topicId}`);
-        setPosts(Array.isArray(res) ? res : []);
+        const posts = await getPosts(topicId);
+        setPosts(posts);
       } catch {
         setPosts([]);
       } finally {
@@ -49,8 +51,8 @@ export default function SelectLevelMentorScreen() {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const res = await authedApiClient<UserOut>('/api/users/me/');
-        setUserId(res.id);
+        const me = await getMe();
+        setUserId(me.id);
       } catch {
         setUserId(null);
       }
@@ -62,18 +64,19 @@ export default function SelectLevelMentorScreen() {
   const handleJoin = async () => {
     if (!userId) return;
     try {
-      await authedApiClient(`/api/topics/${topicId}/users/`, {
-        method: 'POST',
-        body: { user_id: userId, level },
-      });
+      await joinTopic(topicId, userId, level);
       Alert.alert('参加完了', 'トピックに参加しました', [
         {
           text: 'OK',
           onPress: () => router.replace('/'),
         },
       ]);
-    } catch (e: any) {
-      Alert.alert('エラー', e?.message || '参加に失敗しました');
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        Alert.alert('エラー', e.message);
+      } else {
+        Alert.alert('エラー', '参加に失敗しました');
+      }
     }
   };
 
@@ -91,7 +94,7 @@ export default function SelectLevelMentorScreen() {
         ) : posts.length > 0 ? (
           <View style={styles.postBox}>
             <View>
-              {posts[0].media?.map((media: any, idx: number) => {
+              {posts[0].media?.map((media: PostMediaOut, idx: number) => {
                 const mediaUrl = media.file.startsWith('http')
                   ? media.file
                   : `${process.env.EXPO_PUBLIC_API_URL}${media.file}`;

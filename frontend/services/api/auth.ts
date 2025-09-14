@@ -1,6 +1,6 @@
-import { ACCESS_KEY, REFRESH_KEY } from "@/hooks/useAuth";
-import { UserCreateOut } from "@/types/user";
-import { apiClient } from "@/utils/apiClient";
+import { ACCESS_KEY, REFRESH_KEY } from '@/constants';
+import { UserCreateOut } from '@/types/user';
+import { apiClient } from '@/utils/apiClient';
 import * as SecureStore from 'expo-secure-store';
 
 export const refreshAccessToken = async (): Promise<boolean> => {

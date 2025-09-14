@@ -1,12 +1,10 @@
 // frontend/hooks/useAuth.ts
+import { ACCESS_KEY, REFRESH_KEY } from '@/constants';
 import { UserCreateOut, UserOut } from '@/types/user';
-import { apiClient, authedApiClient } from '@/utils/apiClient';
+import { authedApiClient } from '@/utils/authedApiClient';
 import { usePathname, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
-
-export const ACCESS_KEY = 'accessToken';
-export const REFRESH_KEY = 'refreshToken';
 
 export function useAuth() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -26,7 +24,7 @@ export function useAuth() {
 
   // ログイン
   const login = async (username: string, password: string) => {
-    const res = await apiClient<UserCreateOut>('/api/token/pair', {
+    const res = await authedApiClient<UserCreateOut>('/api/token/pair', {
       method: 'POST',
       body: { username, password },
     });
@@ -36,7 +34,7 @@ export function useAuth() {
     setRefreshToken(res.refresh);
 
     try {
-      const userData = await apiClient<UserOut>('/api/users/me/', { token: res.access });
+      const userData = await authedApiClient<UserOut>('/api/users/me/', { token: res.access });
       setUser(userData);
       router.replace('/');
     } catch (e) {

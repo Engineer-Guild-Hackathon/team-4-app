@@ -1,7 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
-import { TopicListOut } from '@/types/topic';
-import { UserOut, UserWithTopicsOut } from '@/types/user';
-import { authedApiClient } from '@/utils/apiClient';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic } from '@/services/api/topic';
+import { getMe } from '@/services/api/user';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -43,7 +42,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // 参加トピック一覧を取得
   const fetchMyTopics = useCallback(async () => {
     try {
-      const response = await authedApiClient<UserWithTopicsOut>('/api/topics/me/');
+      const response = await getMyTopics();
       setMyTopics(response.topics || []);
     } catch {
       setMyTopics([]);
@@ -54,7 +53,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const fetchAllTopics = async () => {
     try {
       setJoinLoading(true);
-      const response = await authedApiClient<TopicListOut>('/api/topics/');
+      const response = await getAllTopics();
       setAllTopics(response.topics || []);
     } catch {
       setAllTopics([]);
@@ -73,20 +72,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   }, [accessToken, fetchMyTopics]);
 
   // トピック作成
-  const createTopic = async () => {
+  const handleCreateTopic = async () => {
     if (!newTopicTitle.trim()) {
       Alert.alert('エラー', 'タイトルを入力してください');
       return;
     }
 
     try {
-      await authedApiClient('/api/topics/', {
-        method: 'POST',
-        body: {
-          title: newTopicTitle.trim(),
-          description: newTopicDescription.trim(),
-        },
-      });
+      await createTopic(newTopicTitle.trim(), newTopicDescription.trim());
 
       setNewTopicTitle('');
       setNewTopicDescription('');
@@ -116,7 +109,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   };
 
   // トピックから抜ける
-  const leaveTopic = async (topicId: string) => {
+  const handleLeaveTopic = async (topicId: string) => {
     Alert.alert('確認', 'このトピックから抜けますか？', [
       { text: 'キャンセル', style: 'cancel' },
       {
@@ -125,10 +118,8 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         onPress: async () => {
           try {
             // ユーザーIDを取得（現在のユーザー情報から）
-            const userResponse = await authedApiClient<UserOut>('/api/users/me/');
-            await authedApiClient(`/api/topics/${topicId}/users/${userResponse.id}/`, {
-              method: 'DELETE',
-            });
+            const userResponse = await getMe();
+            await leaveTopic(topicId, userResponse.id);
 
             await fetchMyTopics();
             Alert.alert('成功', 'トピックから抜けました');
@@ -220,7 +211,10 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   <Text style={styles.topicItemTitle}>{topic.title}</Text>
                   <Text style={styles.topicItemDescription}>{topic.description}</Text>
                 </View>
-                <TouchableOpacity style={styles.leaveButton} onPress={() => leaveTopic(topic.id)}>
+                <TouchableOpacity
+                  style={styles.leaveButton}
+                  onPress={() => handleLeaveTopic(topic.id)}
+                >
                   <Text style={styles.leaveButtonText}>抜ける</Text>
                 </TouchableOpacity>
               </View>
@@ -263,7 +257,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               multiline
               numberOfLines={3}
             />
-            <TouchableOpacity style={styles.createButton} onPress={createTopic}>
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateTopic}>
               <Text style={styles.createButtonText}>作成</Text>
             </TouchableOpacity>
           </View>

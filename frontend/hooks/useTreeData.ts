@@ -1,5 +1,5 @@
-import { TreeOut, TreeUserNodeOut } from '@/types/topic';
-import { authedApiClient } from '@/utils/apiClient';
+import { getTopicTree } from '@/services/api/topic';
+import { TreeUserNodeOut } from '@/types/topic';
 import { useEffect, useState } from 'react';
 
 // topicIdを引数として受け取れるように変更
@@ -17,7 +17,7 @@ export const useTreeData = (topicId: string | null) => {
 
       try {
         setLoading(true);
-        const response = await authedApiClient<TreeOut>(`/api/topics/${topicId}/tree/`);
+        const response = await getTopicTree(topicId);
         setData(response.tree || []);
       } catch (error: unknown) {
         if (error instanceof Error) {
