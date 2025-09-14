@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import PostListModal from '../components/posts/PostListModal';
 

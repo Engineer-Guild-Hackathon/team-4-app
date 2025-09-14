@@ -1,12 +1,12 @@
 // frontend/hooks/useAuth.ts
 import { UserCreateOut, UserOut } from '@/types/user';
-import { apiClient } from '@/utils/apiClient';
+import { apiClient, authedApiClient } from '@/utils/apiClient';
 import { usePathname, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 
-const ACCESS_KEY = 'accessToken';
-const REFRESH_KEY = 'refreshToken';
+export const ACCESS_KEY = 'accessToken';
+export const REFRESH_KEY = 'refreshToken';
 
 export function useAuth() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -55,82 +55,35 @@ export function useAuth() {
     router.replace('/login');
   }, [router]);
 
-  // アクセストークンのリフレッシュ
-  const refreshAccessToken = useCallback(async () => {
-    if (!refreshToken) return false;
-    try {
-      const res = await apiClient<UserCreateOut>('/api/token/refresh', {
-        method: 'POST',
-        body: { refresh: refreshToken },
-      });
-      await SecureStore.setItemAsync(ACCESS_KEY, res.access);
-      setAccessToken(res.access);
-      return true;
-    } catch {
-      await logout();
-      return false;
-    }
-  }, [refreshToken, logout]);
-
-  // 初回ロード
+  // 初回ロード時のユーザー情報取得
   useEffect(() => {
-    (async () => {
-      await loadTokens();
-      setLoading(false);
-    })();
-  }, [loadTokens]);
-
-  // API呼び出しラッパー（自動リフレッシュ）
-  const authedApi = useCallback(
-    async <T>(endpoint: string, options: Record<string, unknown> = {}): Promise<T> => {
-      try {
-        return await apiClient<T>(endpoint, { ...options, token: accessToken ?? undefined });
-      } catch (e: unknown) {
-        if (
-          typeof e === 'object' &&
-          e !== null &&
-          'message' in e &&
-          typeof (e as { message?: string }).message === 'string' &&
-          ((e as { message: string }).message.includes('token') ||
-            (e as { message: string }).message.includes('expired'))
-        ) {
-          const refreshed = await refreshAccessToken();
-          if (refreshed) {
-            const newAccessToken = (await SecureStore.getItemAsync(ACCESS_KEY)) ?? undefined;
-            return await apiClient<T>(endpoint, { ...options, token: newAccessToken });
-          } else {
-            await logout();
+    loadTokens();
+    const fetchUser = async () => {
+      const token = await SecureStore.getItemAsync(ACCESS_KEY);
+      if (token) {
+        try {
+          // ★ここでもauthedApiを使う
+          const userData = await authedApiClient<UserOut>('/api/users/me/');
+          setUser(userData);
+        } catch (e) {
+          console.error('ユーザー情報の取得に失敗しました:', e);
+          setUser(null);
+          // 認証が必要なページにいたらログインページに飛ばす
+          if (pathname !== '/login' && pathname !== '/signup') {
+            router.replace('/login');
           }
         }
-        throw e;
+      } else {
+        // 認証不要画面は遷移しない
+        if (pathname !== '/login' && pathname !== '/signup') {
+          router.replace('/login');
+        }
       }
-    },
-    [accessToken, refreshAccessToken, logout]
-  );
-
-  // トークンがあればユーザー情報取得
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!accessToken) return;
-      try {
-        const userData = await authedApi<UserOut>('/api/users/me/');
-        setUser(userData);
-      } catch (e) {
-        console.error('ユーザー情報の取得に失敗しました:', e);
-        setUser(null);
-      }
+      setLoading(false);
     };
 
-    if (accessToken) {
-      fetchUser();
-    } else if (!loading) {
-      // 認証不要画面（/login, /signup）は遷移しない
-      if (pathname !== '/login' && pathname !== '/signup') {
-        router.replace('/login');
-      }
-    } else {
-    }
-  }, [accessToken, loading, router, pathname, authedApi]);
+    fetchUser();
+  }, [router, pathname]);
 
-  return { user, accessToken, refreshToken, login, logout, authedApi, loading };
+  return { user, accessToken, refreshToken, login, logout, loading };
 }

@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { TopicListOut } from '@/types/topic';
 import { UserOut, UserWithTopicsOut } from '@/types/user';
+import { authedApiClient } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -36,24 +37,24 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const { authedApi, accessToken } = useAuth();
+  const { accessToken } = useAuth();
   const router = useRouter();
 
   // 参加トピック一覧を取得
   const fetchMyTopics = useCallback(async () => {
     try {
-      const response = await authedApi<UserWithTopicsOut>('/api/topics/me/');
+      const response = await authedApiClient<UserWithTopicsOut>('/api/topics/me/');
       setMyTopics(response.topics || []);
     } catch {
       setMyTopics([]);
     }
-  }, [authedApi]);
+  }, []);
 
   // 全トピック一覧を取得
   const fetchAllTopics = async () => {
     try {
       setJoinLoading(true);
-      const response = await authedApi<TopicListOut>('/api/topics/');
+      const response = await authedApiClient<TopicListOut>('/api/topics/');
       setAllTopics(response.topics || []);
     } catch {
       setAllTopics([]);
@@ -79,7 +80,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
 
     try {
-      await authedApi('/api/topics/', {
+      await authedApiClient('/api/topics/', {
         method: 'POST',
         body: {
           title: newTopicTitle.trim(),
@@ -124,8 +125,8 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         onPress: async () => {
           try {
             // ユーザーIDを取得（現在のユーザー情報から）
-            const userResponse = await authedApi<UserOut>('/api/users/me/');
-            await authedApi(`/api/topics/${topicId}/users/${userResponse.id}/`, {
+            const userResponse = await authedApiClient<UserOut>('/api/users/me/');
+            await authedApiClient(`/api/topics/${topicId}/users/${userResponse.id}/`, {
               method: 'DELETE',
             });
 

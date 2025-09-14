@@ -1,7 +1,7 @@
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { UserOut } from '@/types/user';
-import { apiClient } from '@/utils/apiClient';
+import { apiClient, authedApiClient } from '@/utils/apiClient';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
@@ -14,7 +14,7 @@ export default function SelectLevelMentorScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const topicId = params.topicId as string;
-  const { accessToken, authedApi } = useAuth();
+  const { accessToken } = useAuth();
 
   // ページタイトル変更
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function SelectLevelMentorScreen() {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const res = await authedApi<UserOut>('/api/users/me/');
+        const res = await authedApiClient<UserOut>('/api/users/me/');
         setUserId(res.id);
       } catch {
         setUserId(null);
@@ -62,7 +62,7 @@ export default function SelectLevelMentorScreen() {
   const handleJoin = async () => {
     if (!userId) return;
     try {
-      await authedApi(`/api/topics/${topicId}/users/`, {
+      await authedApiClient(`/api/topics/${topicId}/users/`, {
         method: 'POST',
         body: { user_id: userId, level },
       });

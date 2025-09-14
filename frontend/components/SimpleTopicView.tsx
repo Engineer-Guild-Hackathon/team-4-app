@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { UserWithTopicsOut } from '@/types/user';
+import { authedApiClient } from '@/utils/apiClient';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
@@ -25,12 +26,12 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const { authedApi, accessToken } = useAuth();
+  const { accessToken } = useAuth();
 
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
       setLoading(true);
-      const response = await authedApi<UserWithTopicsOut>('/api/topics/me/');
+      const response = await authedApiClient<UserWithTopicsOut>('/api/topics/me/');
       const fetchedTopics = response.topics || [];
       setTopics(fetchedTopics);
 

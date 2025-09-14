@@ -1,12 +1,11 @@
 import { TreeOut, TreeUserNodeOut } from '@/types/topic';
+import { authedApiClient } from '@/utils/apiClient';
 import { useEffect, useState } from 'react';
-import { useAuth } from './useAuth';
 
 // topicIdを引数として受け取れるように変更
 export const useTreeData = (topicId: string | null) => {
   const [data, setData] = useState<TreeUserNodeOut[]>([]);
   const [loading, setLoading] = useState(true);
-  const { authedApi } = useAuth();
 
   useEffect(() => {
     const fetchTreeData = async () => {
@@ -18,7 +17,7 @@ export const useTreeData = (topicId: string | null) => {
 
       try {
         setLoading(true);
-        const response = await authedApi<TreeOut>(`/api/topics/${topicId}/tree/`);
+        const response = await authedApiClient<TreeOut>(`/api/topics/${topicId}/tree/`);
         setData(response.tree || []);
       } catch (error: unknown) {
         if (error instanceof Error) {
@@ -30,7 +29,7 @@ export const useTreeData = (topicId: string | null) => {
     };
 
     fetchTreeData();
-  }, [topicId, authedApi]);
+  }, [topicId]);
 
   return { data, loading };
 };
