@@ -3,7 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
-import PostListModal from '../components/posts/PostListModal';
+import UserDetailModal from '../components/UserDetailModal';
 
 export default function HomeScreen() {
   const { accessToken, user, loading: authLoading } = useAuth();
@@ -46,7 +46,7 @@ export default function HomeScreen() {
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
       <SimpleTopicView onUserPress={handleUserPress} />
 
-      <PostListModal
+      <UserDetailModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         topicId={selectedTopicId}
