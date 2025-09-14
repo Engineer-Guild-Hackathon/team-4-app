@@ -42,13 +42,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'topics',
-    'users',
+    'corsheaders',
     'ninja_extra',
     'ninja_jwt',
+    'channels',
+
+    'topics',
+    'users',
     'mentorship',
     'posts',
-    'corsheaders',
     'threads',
 ]
 
@@ -82,6 +84,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database

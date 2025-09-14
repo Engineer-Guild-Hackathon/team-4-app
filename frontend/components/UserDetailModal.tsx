@@ -10,7 +10,9 @@ import {
   Alert,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -176,6 +178,12 @@ export default function UserDetailModal({
       visible={visible}
       onRequestClose={onClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        shouldRasterizeIOS={true}
+        keyboardVerticalOffset={60}
+      >
       <View style={styles.modalContainer}>
         {/* ユーザー情報エリア */}
         <View style={styles.userInfoContainer}>
@@ -235,10 +243,11 @@ export default function UserDetailModal({
           {/* 掲示板ページ */}
           <ThreadView userId={userId!} topicId={topicId!} />
         </PagerView>
-        <Pressable style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>閉じる</Text>
-        </Pressable>
+        <TouchableOpacity style={styles.closeCircleButton} onPress={onClose}>
+          <Text style={styles.closeCircleText}>×</Text>
+        </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -255,7 +264,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    backgroundColor: '#f9fafb',
   },
   userInfoTitle: {
     fontSize: 18,
@@ -320,17 +328,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-  closeButton: {
-    backgroundColor: '#000',
-    color: '#fff',
-    padding: 15,
-    paddingBottom: 40,
-    borderRadius: 8,
+  closeCircleButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#111',
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  closeButtonText: {
+  closeCircleText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 28,
   },
   post: {
     paddingVertical: 15,

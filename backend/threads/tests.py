@@ -14,7 +14,7 @@ class ThreadApiTestCase(TestCase):
 		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
 		msg = ThreadMessage.objects.create(thread=thread, author=self.user, content="delete me")
 		response = self.client.delete(
-			f"/api/threads/threads/{thread.id}/messages/{msg.id}",
+			f"/api/threads/{thread.id}/messages/{msg.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -25,11 +25,12 @@ class ThreadApiTestCase(TestCase):
 		other_user = User.objects.create_user(username="other", password="pass123")
 		msg = ThreadMessage.objects.create(thread=thread, author=other_user, content="not mine")
 		response = self.client.delete(
-			f"/api/threads/threads/{thread.id}/messages/{msg.id}",
+			f"/api/threads/{thread.id}/messages/{msg.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 403)
 		self.assertTrue(ThreadMessage.objects.filter(id=msg.id).exists())
+		
 	def setUp(self):
 		self.user = User.objects.create_user(username="user1", password="pass123")
 		self.mentor = User.objects.create_user(username="mentor1", password="pass123")
@@ -52,7 +53,7 @@ class ThreadApiTestCase(TestCase):
 
 		# 何も指定しない場合（全件）
 		response = self.client.get(
-			"/api/threads/threads",
+			"/api/threads",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -60,7 +61,7 @@ class ThreadApiTestCase(TestCase):
 
 		# mentor_idで絞り込み
 		response = self.client.get(
-			f"/api/threads/threads?mentor_id={self.mentor.id}",
+			f"/api/threads?mentor_id={self.mentor.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -71,7 +72,7 @@ class ThreadApiTestCase(TestCase):
 
 		# topic_idで絞り込み
 		response = self.client.get(
-			f"/api/threads/threads?topic_id={self.topic.id}",
+			f"/api/threads?topic_id={self.topic.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -82,7 +83,7 @@ class ThreadApiTestCase(TestCase):
 
 		# 両方指定（AND条件）
 		response = self.client.get(
-			f"/api/threads/threads?mentor_id={self.mentor.id}&topic_id={self.topic.id}",
+			f"/api/threads?mentor_id={self.mentor.id}&topic_id={self.topic.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -92,11 +93,13 @@ class ThreadApiTestCase(TestCase):
 	def test_create_thread_success(self):
 		payload = {
 			"topic_id": str(self.topic.id),
-			"starter_id": self.user.id,
-			"mentor_id": self.mentor.id
+			"mentor_id": self.mentor.id,
+			"message": {
+				"content": "Hello, this is the first message in the thread.",
+            }
 		}
 		response = self.client.post(
-			"/api/threads/threads",
+			"/api/threads",
 			data=json.dumps(payload),
 			content_type="application/json",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
@@ -107,11 +110,13 @@ class ThreadApiTestCase(TestCase):
 	def test_create_thread_fail_invalid_topic(self):
 		payload = {
 			"topic_id": "00000000-0000-0000-0000-000000000000",
-			"starter_id": self.user.id,
-			"mentor_id": self.mentor.id
+			"mentor_id": self.mentor.id,
+			"message": {
+                "content": "Hello, this is the first message in the thread.",
+            }
 		}
 		response = self.client.post(
-			"/api/threads/threads",
+			"/api/threads",
 			data=json.dumps(payload),
 			content_type="application/json",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
@@ -122,7 +127,7 @@ class ThreadApiTestCase(TestCase):
 		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
 		payload = {"content": "Hello!", "parent_id": None}
 		response = self.client.post(
-			f"/api/threads/threads/{thread.id}/messages",
+			f"/api/threads/{thread.id}/messages",
 			data=json.dumps(payload),
 			content_type="application/json",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
@@ -133,7 +138,7 @@ class ThreadApiTestCase(TestCase):
 	def test_send_message_fail_invalid_thread(self):
 		payload = {"content": "Hello!", "parent_id": None}
 		response = self.client.post(
-			f"/api/threads/threads/999/messages",
+			f"/api/threads/999/messages",
 			data=json.dumps(payload),
 			content_type="application/json",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
@@ -143,7 +148,7 @@ class ThreadApiTestCase(TestCase):
 	def test_delete_thread_success(self):
 		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
 		response = self.client.delete(
-			f"/api/threads/threads/{thread.id}",
+			f"/api/threads/{thread.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 200)
@@ -153,7 +158,7 @@ class ThreadApiTestCase(TestCase):
 		other_user = User.objects.create_user(username="user2", password="pass123")
 		thread = Thread.objects.create(topic=self.topic, starter=other_user, mentor=self.mentor)
 		response = self.client.delete(
-			f"/api/threads/threads/{thread.id}",
+			f"/api/threads/{thread.id}",
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 404)

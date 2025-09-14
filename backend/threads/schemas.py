@@ -20,10 +20,6 @@ class ThreadOut(Schema):
 	created_at: datetime
 	messages: list['ThreadMessageOut'] = []
 
-class ThreadCreateIn(Schema):
-	topic_id: uuid.UUID
-	starter_id: int
-	mentor_id: int
 
 class ThreadMessageOut(Schema):
 	id: int
@@ -35,3 +31,8 @@ class ThreadMessageOut(Schema):
 class ThreadMessageCreateIn(Schema):
 	content: str
 	parent_id: int | None = None
+
+class ThreadCreateIn(Schema):
+	topic_id: uuid.UUID
+	mentor_id: int
+	message: ThreadMessageCreateIn

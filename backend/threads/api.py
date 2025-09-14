@@ -10,7 +10,7 @@ from topics.models import Topic
 User = get_user_model()
 router = Router()
 
-@router.get("/threads", response=list[ThreadOut], auth=JWTAuth())
+@router.get("", response=list[ThreadOut], auth=JWTAuth())
 def list_threads(request, mentor_id: int = None, topic_id: str = None):
 	filters = {}
 	if mentor_id:
@@ -20,20 +20,19 @@ def list_threads(request, mentor_id: int = None, topic_id: str = None):
 	threads = Thread.objects.filter(**filters).select_related("topic", "starter", "mentor").prefetch_related("messages__author")
 	return threads
 
-@router.post("/threads", response={200: ThreadOut, 400: dict}, auth=JWTAuth())
+@router.post("", response={200: ThreadOut, 400: dict}, auth=JWTAuth())
 @transaction.atomic
 def create_thread(request, payload: ThreadCreateIn):
 	topic = get_object_or_404(Topic, id=payload.topic_id)
-	starter = get_object_or_404(User, id=payload.starter_id)
 	mentor = get_object_or_404(User, id=payload.mentor_id)
 	thread = Thread.objects.create(
 		topic=topic,
-		starter=starter,
+		starter=request.user,
 		mentor=mentor,
 	)
 	return thread
 
-@router.delete("/threads/{thread_id}", response={200: dict, 404: dict}, auth=JWTAuth())
+@router.delete("/{thread_id}", response={200: dict, 404: dict}, auth=JWTAuth())
 @transaction.atomic
 def delete_thread(request, thread_id: int):
 	thread = get_object_or_404(Thread, id=thread_id)
@@ -42,7 +41,7 @@ def delete_thread(request, thread_id: int):
 	thread.delete()
 	return {"message": "Thread deleted"}
 
-@router.post("/threads/{thread_id}/messages", response={200: ThreadMessageOut, 400: dict}, auth=JWTAuth())
+@router.post("/{thread_id}/messages", response={200: ThreadMessageOut, 400: dict}, auth=JWTAuth())
 @transaction.atomic
 def send_message(request, thread_id: int, payload: ThreadMessageCreateIn):
 	thread = get_object_or_404(Thread, id=thread_id)
@@ -57,7 +56,7 @@ def send_message(request, thread_id: int, payload: ThreadMessageCreateIn):
 	)
 	return message
 
-@router.delete("/threads/{thread_id}/messages/{message_id}", response={200: dict, 404: dict, 403: dict}, auth=JWTAuth())
+@router.delete("/{thread_id}/messages/{message_id}", response={200: dict, 404: dict, 403: dict}, auth=JWTAuth())
 @transaction.atomic
 def delete_message(request, thread_id: int, message_id: int):
 	thread = get_object_or_404(Thread, id=thread_id)
