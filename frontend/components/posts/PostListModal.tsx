@@ -11,11 +11,33 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-// import { Video } from 'expo-video';
-import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'expo-router';
+import { useEvent } from 'expo';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+
+const videoSource =
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = true;
+    player.play();
+  });
+
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
+  return (
+    <VideoView 
+      player={player} 
+      style={style} 
+      // allowsFullscreen 
+      // allowsPictureInPicture 
+    />
+  );
+};
 
 interface PostListModalProps {
   visible: boolean;
@@ -23,7 +45,7 @@ interface PostListModalProps {
   topicId?: string;
   userId?: number;
   isSelf?: boolean;
-  selfUserId?: number; // ログインしているユーザー自身のID
+  selfUserId?: number;
 }
 
 export default function PostListModal({
@@ -104,6 +126,14 @@ export default function PostListModal({
           const mediaUrl = `${API_BASE_URL}${media.file}`;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
+          } else if (media.media_type === 'video') {
+            return (
+              <VideoItem 
+                key={index}
+                uri={mediaUrl}
+                style={styles.media}
+              />
+            );
           }
           return null;
         })}
