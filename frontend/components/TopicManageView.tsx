@@ -30,12 +30,11 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicDescription, setNewTopicDescription] = useState('');
   const [myTopics, setMyTopics] = useState<Topic[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const { accessToken } = useAuth();
   const router = useRouter();
 
@@ -65,11 +64,21 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // 初期データ取得
   useEffect(() => {
     if (accessToken) {
+      setLoading(true);
       fetchMyTopics();
+      fetchAllTopics();
+      setLoading(false);
     } else {
       setLoading(false);
     }
-  }, [accessToken, fetchMyTopics]);
+  }, [accessToken]);
+
+  // 参加可能なトピックを更新するuseEffect
+  useEffect(() => { 
+      const myTopicIds = myTopics.map(topic => topic.id);
+      setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+  }, [allTopics, myTopics]);
+
 
   // トピック作成
   const handleCreateTopic = async () => {
@@ -77,13 +86,13 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       Alert.alert('エラー', 'タイトルを入力してください');
       return;
     }
-
     try {
       await createTopic(newTopicTitle.trim(), newTopicDescription.trim());
-
       setNewTopicTitle('');
       setNewTopicDescription('');
       await fetchMyTopics();
+      await fetchAllTopics();
+      getAvailableTopics(); 
       Alert.alert('成功', 'トピックを作成しました');
     } catch (error: any) {
       const errorMessage = error?.message || 'トピックの作成に失敗しました';
@@ -99,12 +108,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // 参加可能なトピックを取得（既に参加しているトピックを除外）
   const getAvailableTopics = () => {
     const myTopicIds = myTopics.map(topic => topic.id);
-    return allTopics.filter(topic => !myTopicIds.includes(topic.id));
+    setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+    return availableTopics;
   };
 
   // トピック作成モーダルを開く
   const openCreateModal = async () => {
     setShowCreateModal(true);
+    await fetchMyTopics();
     await fetchAllTopics();
   };
 
@@ -120,8 +131,8 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             // ユーザーIDを取得（現在のユーザー情報から）
             const userResponse = await getMe();
             await leaveTopic(topicId, userResponse.id);
-
             await fetchMyTopics();
+            await fetchAllTopics();
             Alert.alert('成功', 'トピックから抜けました');
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
@@ -169,7 +180,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             </View>
           ) : (
             <>
-              {getAvailableTopics().length === 0 ? (
+              {availableTopics.length === 0 ? (
                 <View style={styles.emptyTopicsContainer}>
                   <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
                   <Text style={styles.emptyTopicsSubText}>
@@ -177,7 +188,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   </Text>
                 </View>
               ) : (
-                getAvailableTopics().map(topic => (
+                availableTopics.map(topic => (
                   <View key={topic.id} style={styles.availableTopicItem}>
                     <View style={styles.availableTopicInfo}>
                       <Text style={styles.availableTopicTitle}>{topic.title}</Text>
