@@ -14,8 +14,22 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/hooks/useAuth';
-// ▼▼▼ 1. インポート文を正しい形に戻す ▼▼▼
-// import { Video } from 'expo-video';
+import { useVideoPlayer, VideoView } from 'expo-video';
+
+const VideoPreviewItem = ({ uri, style }: { uri: string, style: any }) => {
+  const player = useVideoPlayer(uri, player => {
+    player.muted = true;
+  });
+
+  return (
+    <VideoView 
+      player={player} 
+      style={style} 
+      // allowsFullscreen={false} 
+      // allowsPictureInPicture={false}
+    />
+  );
+};
 
 export default function CreatePostScreen() {
   const router = useRouter();
@@ -29,7 +43,6 @@ export default function CreatePostScreen() {
   const topicId = params.topicId as string;
 
   const pickMedia = async () => {
-    // ... (pickMedia関数は変更なし) ...
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('許可が必要です', '投稿するには、写真ライブラリへのアクセスを許可してください。');
@@ -43,12 +56,11 @@ export default function CreatePostScreen() {
     });
 
     if (!result.canceled) {
-      setMediaAssets(result.assets);
+      setMediaAssets([...mediaAssets, ...result.assets]);
     }
   };
 
   const handlePost = async () => {
-    // ... (handlePost関数は変更なし) ...
     if (!content.trim() && mediaAssets.length === 0) {
       Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください。');
       return;
@@ -125,19 +137,15 @@ export default function CreatePostScreen() {
             return (
               <Image key={asset.assetId} source={{ uri: asset.uri }} style={styles.previewImage} />
             );
+          } else if (asset.type === 'video') {
+            return (
+              <VideoPreviewItem 
+                key={asset.assetId}
+                uri={asset.uri}
+                style={styles.previewImage}
+              />
+            );
           }
-          // else if (asset.type === 'video') {
-          //   return (
-          //     <Video
-          //       key={asset.assetId}
-          //       source={{ uri: asset.uri }}
-          //       style={styles.previewImage}
-          //       controls={false}
-          //       muted
-          //       playing={false}
-          //     />
-          //   );
-          // }
           return null;
         })}
       </ScrollView>
