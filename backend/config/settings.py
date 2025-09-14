@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'topics',
     'users',
     'ninja_extra',
@@ -149,3 +150,37 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # MEDIA_URL: ブラウザからファイルにアクセスするためのURL
 MEDIA_URL = '/media/'
+
+# --- Cloudflare R2 Storage Settings ---
+# .envファイルからR2の接続情報を読み込む
+CLOUDFLARE_R2_ACCOUNT_ID = os.environ.get("CLOUDFLARE_R2_ACCOUNT_ID")
+CLOUDFLARE_R2_ACCESS_KEY_ID = os.environ.get("CLOUDFLARE_R2_ACCESS_KEY_ID")
+CLOUDFLARE_R2_SECRET_ACCESS_KEY = os.environ.get("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
+# あなたが指定したバケット名変数を読み込む
+CLOUDFLARE_R2_BUCKET_NAME = os.environ.get("CLOUDFLARE_R2_BUCKET_NAME")
+CLOUDFLARE_R2_CUSTOM_DOMAIN = os.environ.get("CLOUDFLARE_R2_CUSTOM_DOMAIN")
+
+# django-storagesが使用するAWS互換設定
+AWS_ACCESS_KEY_ID = CLOUDFLARE_R2_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = CLOUDFLARE_R2_SECRET_ACCESS_KEY
+AWS_S3_ENDPOINT_URL = f"https://{CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+AWS_S3_CUSTOM_DOMAIN = CLOUDFLARE_R2_CUSTOM_DOMAIN
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_REGION_NAME = 'auto'
+AWS_QUERYSTRING_AUTH = False # 公開バケットの場合はFalse
+
+# Django 4.2以降の新しいストレージ設定
+STORAGES = {
+    # メディアファイル（ユーザーアップロード）の保存先のみを定義
+    "default": {
+        # あなたが指定したクラス名 'Storage' を参照
+        "BACKEND": "config.storages.Storage",
+    },
+    # 静的ファイル用の設定は含めない
+        "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# 開発中はCORSを許可
+CORS_ALLOW_ALL_ORIGINS = True
