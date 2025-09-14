@@ -16,7 +16,13 @@ class Thread(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name="スレッド開始者",
-        related_name="threads",
+        related_name="started_threads",
+    )
+    mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="メンター",
+        related_name="mentored_threads",
     )
     related_post = models.ForeignKey(
         Post,

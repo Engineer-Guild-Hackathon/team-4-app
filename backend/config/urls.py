@@ -25,12 +25,14 @@ from users.api import router as users_router
 from topics.api import router as topics_router
 from mentorship.api import router as mentorship_router
 from posts.api import router as posts_router
+from threads.api import router as threads_router
 from .health import health
 
 
 api = NinjaAPI()
 api.add_router("/token", tags=["Auth"], router=obtain_pair_router)
 api.add_router("/posts", posts_router, tags=["Posts"])
+api.add_router("/threads", threads_router, tags=["Threads"])
 api.add_router("/users", users_router, tags=["Users"])
 api.add_router("/topics", topics_router, tags=["Topics"])
 api.add_router("/mentorship", mentorship_router, tags=["Mentorship"])
