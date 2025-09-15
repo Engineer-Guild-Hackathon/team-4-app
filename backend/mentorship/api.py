@@ -397,6 +397,44 @@ def get_user_level(request: HttpRequest, topic_id: str):
         return 404, {"message": "UserTopic not found for the specified topic."}
 
 @router.get(
+    "/received-requests",
+    summary="受信した師匠選択リクエスト一覧を取得",
+    response={200: list, 400: dict},
+    auth=JWTAuth(),
+)
+def get_received_mentor_requests(request: HttpRequest):
+    """
+    現在のユーザーが受信した師匠選択リクエスト一覧を取得します。
+    """
+    try:
+        requests = MentorRelationRequest.objects.filter(
+            to_user=request.user,
+            status="pending"
+        ).select_related('from_user', 'topic').order_by('-created_at')
+        
+        request_list = []
+        for req in requests:
+            request_list.append({
+                "id": req.id,
+                "from_user": {
+                    "id": req.from_user.id,
+                    "username": req.from_user.username,
+                    "first_name": req.from_user.first_name,
+                    "last_name": req.from_user.last_name,
+                },
+                "topic": {
+                    "id": str(req.topic.id),
+                    "title": req.topic.title,
+                },
+                "created_at": req.created_at,
+                "status": req.status
+            })
+        
+        return request_list
+    except Exception as e:
+        return 400, {"message": f"Error retrieving requests: {str(e)}"}
+
+@router.get(
     "/available-mentors/{topic_id}",
     summary="師匠選択可能なユーザーリストを取得",
     response={200: list[UserEasyOut], 400: dict, 404: dict},

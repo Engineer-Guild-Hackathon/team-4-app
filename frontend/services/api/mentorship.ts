@@ -77,3 +77,40 @@ export const getMentorRequestStatus = async (topicId: string) => {
     throw error;
   }
 };
+
+// 受信した師匠選択リクエスト一覧を取得
+export const getReceivedMentorRequests = async () => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/received-requests`);
+    return res;
+  } catch (error: any) {
+    console.error('受信リクエスト取得エラー:', error);
+    throw error;
+  }
+};
+
+// 師匠選択リクエストを承認
+export const approveMentorRequest = async (requestId: number) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/requests/${requestId}/approve`, {
+      method: 'POST',
+    });
+    return res;
+  } catch (error: any) {
+    console.error('リクエスト承認エラー:', error);
+    throw error;
+  }
+};
+
+// 師匠選択リクエストを拒否
+export const rejectMentorRequest = async (requestId: number) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/requests/${requestId}/reject`, {
+      method: 'POST',
+    });
+    return res;
+  } catch (error: any) {
+    console.error('リクエスト拒否エラー:', error);
+    throw error;
+  }
+};

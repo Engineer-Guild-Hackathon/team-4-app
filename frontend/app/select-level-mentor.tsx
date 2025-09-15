@@ -199,6 +199,12 @@ export default function SelectLevelMentorScreen() {
 
   // 参加ボタン処理
   const handleJoin = async () => {
+    // 師匠選択リクエストが承認済みの場合は、メイン画面に戻る
+    if (requestStatus?.status === 'approved') {
+      router.replace('/');
+      return;
+    }
+    
     // 師匠選択が必要な場合は師匠選択を先に実行
     if (mentorData?.required && selectedMentor) {
       await handleMentorSelection();
@@ -210,7 +216,7 @@ export default function SelectLevelMentorScreen() {
       Alert.alert('参加完了', 'トピックに参加しました', [
         {
           text: 'OK',
-          onPress: () => router.replace('/'),
+          onPress: () => router.replace('/?refresh=true'),
         },
       ]);
     } catch (e: unknown) {

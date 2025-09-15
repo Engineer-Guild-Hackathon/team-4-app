@@ -1,13 +1,15 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+import MentorDashboard from '../components/MentorDashboard';
 
 export default function HomeScreen() {
-  const { accessToken, user, loading: authLoading } = useAuth();
+  const { accessToken, user, loading: authLoading, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
   const router = useRouter();
@@ -49,6 +51,25 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {/* ヘッダー部分 */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>師弟関係アプリ</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.mentorDashboardButton}
+            onPress={() => setMentorDashboardVisible(true)}
+          >
+            <Text style={styles.mentorDashboardButtonText}>師匠ダッシュボード</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={logout}
+          >
+            <Text style={styles.logoutButtonText}>ログアウト</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
       <SimpleTopicView 
         onUserPress={handleUserPress} 
@@ -62,6 +83,11 @@ export default function HomeScreen() {
         userId={selectedUserId}
         selfUserId={user.id}
       />
+
+      <MentorDashboard
+        visible={mentorDashboardVisible}
+        onClose={() => setMentorDashboardVisible(false)}
+      />
     </View>
   );
 }
@@ -70,6 +96,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  mentorDashboardButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  mentorDashboardButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  logoutButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   centered: {
     flex: 1,
