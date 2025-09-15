@@ -32,7 +32,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
     setSending(true);
     try {
       const newMessage = await onSendMessage(content);
-      setMessages(prevMessages => [...prevMessages, newMessage]);
+      setMessages(prevMessages => [...prevMessages, newMessage].sort((a, b) => b.id - a.id));
       setContent('');
       // ★ 3. 送信後、すぐに一番下にスクロールする
       setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 100);
@@ -62,7 +62,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
       {/* ★ 4. FlatListにrefとcontentContainerStyleを追加 */}
       <FlatList
         ref={flatListRef}
-        data={messages.reverse()} // 初期表示はpropsから、送信後はstateから
+        data={messages.sort((a, b) => b.id - a.id)} // 初期表示はpropsから、送信後はstateから
         keyExtractor={msg => msg.id.toString()}
         style={styles.messageList}
         contentContainerStyle={styles.messageListContent}
