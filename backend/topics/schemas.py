@@ -50,6 +50,7 @@ class UserTopicOut(Schema):
     topic_id: uuid.UUID
     topic_title: str
     level: int
+    status: str
     created_at: datetime
     updated_at: datetime
 

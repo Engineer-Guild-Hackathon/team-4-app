@@ -118,6 +118,7 @@ def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateIn):
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )
@@ -143,6 +144,7 @@ def update_user_topic_level(
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )
@@ -184,6 +186,7 @@ def join_topic(request, topic_id: uuid.UUID):
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )

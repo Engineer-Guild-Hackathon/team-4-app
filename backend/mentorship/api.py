@@ -4,7 +4,7 @@ from ninja import Router
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
-from django.db import connection, transaction
+from django.db import connection, transaction, models
 from mentorship.schemas import (
     MenteeActionStatusOut,
     MenteeSubtreeOut,
@@ -15,9 +15,8 @@ from mentorship.schemas import (
     UserEasyOut,
 )
 from config.schemas import ErrorOut
-from topics.models import Topic
+from topics.models import Topic, UserTopic
 from .models import MentorRelationRequest, MentorRelation, ActionLog
-
 User = get_user_model()
 
 router = Router()
@@ -85,23 +84,23 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     - 自分自身にリクエストを送ることはできません。
     - 既に師弟関係にある、またはリクエスト中のユーザーには再度リクエストできません。
     """
-    from_user = request.user  # Changed to request.user
+    from_user = request.user
     to_user = get_object_or_404(User, id=payload.to_user_id)
+    topic = get_object_or_404(Topic, id=payload.topic_id)
 
     # 自分自身へのリクエストを禁止
     if from_user.id == to_user.id:
         return 400, {"message": "You cannot send a mentor request to yourself."}
 
     # 既存の関係やリクエストをチェック
-    if MentorRelation.objects.filter(mentee=from_user, mentor=to_user).exists():
+    if MentorRelation.objects.filter(mentee=from_user, mentor=to_user, topic=topic).exists():
         return 400, {"message": "You are already in a mentorship with this user."}
     if MentorRelationRequest.objects.filter(
-        from_user=from_user, to_user=to_user, status="pending"
+        from_user=from_user, to_user=to_user, topic=topic, status="pending"
     ).exists():
         return 400, {"message": "A pending request to this user already exists."}
 
     # リクエストを作成
-    topic = get_object_or_404(Topic, id=payload.topic_id)
     mentor_request = MentorRelationRequest.objects.create(
         from_user=from_user, to_user=to_user, topic=topic
     )
@@ -182,10 +181,15 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     - 認証が必要です。
     - 指定されたIDのユーザーが、実行者の弟子である必要があります。
     """
-
     mentorship = get_object_or_404(
         MentorRelation, mentor=request.user, mentee_id=mentee_id, topic_id=data.topic_id
     )
+    
+    # UserTopicのstatusをEXPELLEDに更新
+    user_topic = UserTopic.objects.get(user_id=mentee_id, topic_id=data.topic_id)
+    user_topic.status = UserTopic.Status.EXPELLED
+    user_topic.save()
+    
     return _remove_relation(mentorship, action="expel")
 
 
@@ -212,6 +216,8 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     )
     user_topic = mentee.usertopic_set.get(topic_id=data.topic_id)
     user_topic.level += delta
+    # UserTopicのstatusをGRADUATEDに更新
+    user_topic.status = UserTopic.Status.GRADUATED
     user_topic.save()
     # menteeの子孫のUserTopicのlevelを更新
     _update_descendant_levels(mentee, data.topic_id, delta)
@@ -239,20 +245,18 @@ def get_mentor_subtree(request: HttpRequest, mentor_id: int):
 )
 def get_tree_data(request: HttpRequest):
     """
-    全てのユーザーと、それぞれのユーザーのランク、師匠のIDを含むツリーデータを取得します。
+    全てのユーザーと師弟関係のツリーデータを取得する
     """
     users = User.objects.all()
     mentor_relations = MentorRelation.objects.all().select_related("mentor", "mentee")
 
-    # Create a dictionary to quickly look up mentor_id by mentee_id
     mentee_to_mentor = {
         relation.mentee.id: relation.mentor.id for relation in mentor_relations
     }
 
     data = []
     for user in users:
-        mentor_id = mentee_to_mentor.get(user.id)  # Get mentor_id if user is a mentee
-
+        mentor_id = mentee_to_mentor.get(user.id)
         data.append(
             UserNodeOut(
                 user=UserEasyOut(id=user.id, username=user.username),
@@ -260,4 +264,106 @@ def get_tree_data(request: HttpRequest):
                 mentor_id=mentor_id,
             )
         )
+    
     return data
+
+
+@router.post(
+    "/mentor-selection/complete",
+    summary="師匠選択完了",
+)
+def complete_mentor_selection(request: HttpRequest, data: TopicId):
+    """
+    師匠選択完了時にUserTopicのstatusをACTIVEにリセットします。
+    """
+    try:
+        user_topic = UserTopic.objects.get(user=request.user, topic_id=data.topic_id)
+        user_topic.status = UserTopic.Status.ACTIVE
+        user_topic.save()
+        return {"message": "Mentor selection completed successfully"}
+    except UserTopic.DoesNotExist:
+        return 400, {"message": "UserTopic not found."}
+
+@router.get(
+    "/mentor-selection/required/{topic_id}",
+    summary="師匠選択が必要かどうかを判定",
+)
+def check_mentor_selection_required(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックで師匠選択が必要かどうかを判定します。
+    
+    - 師匠がいない AND 最高レベルではない場合、師匠選択が必要
+    """
+    try:
+        user_topic = UserTopic.objects.get(user=request.user, topic_id=topic_id)
+        
+        # 師匠がいるかチェック
+        has_mentor = MentorRelation.objects.filter(
+            mentee=request.user, topic_id=topic_id
+        ).exists()
+        
+        # 最高レベルかチェック
+        max_level = UserTopic.objects.filter(topic_id=topic_id).aggregate(
+            max_level=models.Max('level')
+        )['max_level']
+        
+        is_max_level = user_topic.level == max_level
+        
+        # 師匠選択が必要な条件
+        selection_required = not has_mentor and not is_max_level
+        
+        return {"required": selection_required, "reason": "No mentor or not at max level."}
+    except UserTopic.DoesNotExist:
+        return 400, {"message": "UserTopic not found."}
+@router.get(
+    "/available-mentors/{topic_id}",
+    summary="師匠選択可能なユーザーリストを取得",
+)
+def get_available_mentors(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックで師匠選択可能なユーザーリストを取得します。
+    UserTopicのstatusに基づいて制限を適用します。
+    """
+    try:
+        user_topic = UserTopic.objects.get(user=request.user, topic_id=topic_id)
+        
+        # 基本条件：自分以外のユーザーで、同じトピックに参加している
+        available_users = User.objects.filter(
+            usertopic__topic_id=topic_id
+        ).exclude(id=request.user.id)
+        
+        # UserTopicのstatusに基づく制限を適用
+        if user_topic.status == UserTopic.Status.GRADUATED:
+            # GRADUATEDユーザーは自分のlevel + 1以上の師匠のみ選択可能
+            available_users = available_users.filter(
+                usertopic__topic_id=topic_id,
+                usertopic__level__gt=user_topic.level
+            )
+        elif user_topic.status == UserTopic.Status.EXPELLED:
+            # EXPELLEDユーザーは自分と同レベル以下の師匠のみ選択可能
+            available_users = available_users.filter(
+                usertopic__topic_id=topic_id,
+                usertopic__level__lte=user_topic.level
+            )
+        # ACTIVEユーザーは制限なし
+        
+        # 既に師弟関係にあるユーザーを除外
+        existing_mentors = MentorRelation.objects.filter(
+            mentee=request.user, topic_id=topic_id
+        ).values_list('mentor_id', flat=True)
+        available_users = available_users.exclude(id__in=existing_mentors)
+        
+        # 保留中のリクエストを送信済みユーザーを除外
+        pending_requests = MentorRelationRequest.objects.filter(
+            from_user=request.user, topic_id=topic_id, status="pending"
+        ).values_list('to_user_id', flat=True)
+        available_users = available_users.exclude(id__in=pending_requests)
+        
+        return [
+            UserEasyOut(id=user.id, username=user.username)
+            for user in available_users
+        ]
+        
+    except UserTopic.DoesNotExist:
+        return 400, {"message": "UserTopic not found for the specified topic."}
+

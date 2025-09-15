@@ -1,7 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import { getMyTopics } from '@/services/api/topic';
+import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
@@ -18,14 +19,32 @@ interface Topic {
 interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
+  onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
 }
 
-export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
+export function SimpleTopicView({ 
+  topics: propTopics, 
+  onUserPress, 
+  onMentorSelectionRequired 
+}: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const { accessToken } = useAuth();
+
+  // 師匠選択が必要かチェック
+  const checkMentorSelection = async (topicId: string) => {
+    try {
+      const response = await checkMentorSelectionRequired(topicId);
+      if (response.required) {
+        // 師匠選択が必要な場合、コールバックを呼び出し
+        onMentorSelectionRequired?.(topicId);
+      }
+    } catch (error) {
+      console.error('師匠選択判定エラー:', error);
+    }
+  };
 
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
@@ -63,7 +82,19 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
+    
+    // トピックが選択された時に師匠選択判定を実行
+    if (index > 0 && topics[index - 1]) {
+      checkMentorSelection(topics[index - 1].id);
+    }
   };
+
+  // 初期表示時にも師匠選択判定を実行
+  useEffect(() => {
+    if (topics.length > 0 && currentIndex > 0 && topics[currentIndex - 1]) {
+      checkMentorSelection(topics[currentIndex - 1].id);
+    }
+  }, [topics, currentIndex]);
 
   if (loading) {
     return (
