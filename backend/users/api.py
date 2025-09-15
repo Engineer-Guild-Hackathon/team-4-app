@@ -17,11 +17,13 @@ def list_users(request):
 @router.get("/me/", response=UserOut, auth=JWTAuth())
 def get_current_user(request):
     """現在のユーザー情報を取得する"""
-    return request.user
+    user = get_object_or_404(User.objects.select_related('profile'), id=request.auth.id)
+    return user
     
 @router.get("/{user_id}/", response=UserOut, auth=JWTAuth())
 def get_user(request, user_id: int):
-    return User.objects.get(id=user_id)
+    user = get_object_or_404(User.objects.select_related('profile'), id=user_id)
+    return user
 
 
 @router.get("/{user_id}/topics/", response=UserWithTopicsOut, auth=JWTAuth())
@@ -72,22 +74,3 @@ def delete_user(request, user_id: int):
     user = User.objects.get(id=user_id)
     user.delete()
     return {"success": True}
-
-@router.get("/{user_id}/profile/", response=UserProfileOut)
-def get_user_profile(request, user_id: int):
-    """指定されたユーザーのプロフィール情報を取得する"""
-    user = get_object_or_404(User, id=user_id)
-    
-    avatar_url = None
-    bio_text = ""
-    if hasattr(user, 'profile'):
-        if user.profile.avatar:
-            avatar_url = user.profile.avatar.url
-        bio_text = user.profile.bio or ""
-        
-    return {
-        "id": user.id,
-        "username": user.username,
-        "avatar": avatar_url,
-        "bio": bio_text
-    }

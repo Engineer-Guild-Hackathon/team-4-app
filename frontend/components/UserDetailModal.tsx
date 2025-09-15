@@ -100,7 +100,7 @@ export default function UserDetailModal({
   }, [visible, topicId, userId]);
 
   const fetchProfile = async (id: number) => {
-    const url = `${API_BASE_URL}/api/users/${id}/profile/`;
+    const url = `${API_BASE_URL}/api/users/${id}/`;
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
