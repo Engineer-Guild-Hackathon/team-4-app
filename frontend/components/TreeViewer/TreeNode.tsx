@@ -1,28 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { HierarchyPointNode } from 'd3-hierarchy';
 import { TreeNode } from './treeUtils';
 
 interface Props {
-  node: TreeNode;
-  onPress: (node: TreeNode) => void;
+  node: HierarchyPointNode<TreeNode>;
+  onPress: () => void;
+  isFocused: boolean;
 }
 
 const NODE_RADIUS = 28; // Radius of the circle node
 
 export const TreeNodeView: React.FC<Props> = ({ node, onPress }) => {
   return (
-    <TouchableOpacity onPress={() => onPress(node)} style={styles.touchableWrapper}>
+    <TouchableOpacity onPress={onPress} style={styles.touchableWrapper}>
       <View style={styles.nodeWrapper}>
         <Image
           source={
-            node.avatar
-              ? { uri: node.avatar }
-              : { uri: `https://placehold.co/64x64/e0e0e0/555555?text=${node.username.charAt(0)}` }
+            node.data.avatar
+              ? { uri: node.data.avatar }
+              : { uri: `https://placehold.co/64x64/e0e0e0/555555?text=${node.data.username.charAt(0)}` }
           }
           style={styles.avatar}
         />
-        <Text style={styles.nodeLabel}>{String(node.username ?? '')}</Text>
+        <Text style={styles.nodeLabel}>{String(node.data.username ?? '')}</Text>
       </View>
     </TouchableOpacity>
   );

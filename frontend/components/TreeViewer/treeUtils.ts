@@ -16,8 +16,8 @@ export interface TreeNode {
   username: string;
   avatar?: string;
   level: number;
-  mentor?: TreeNode;
-  mentees: TreeNode[];
+  parent?: TreeNode; // d3-hierarchy adds this, but we can pre-populate mentor as parent
+  children: TreeNode[];
 }
 
 export function buildTree(nodes: TreeUserNodeOut[]): TreeNode | null {
@@ -25,15 +25,15 @@ export function buildTree(nodes: TreeUserNodeOut[]): TreeNode | null {
   let root: TreeNode | null = null;
 
   nodes.forEach(n =>
-    map.set(n.user.id, { id: n.user.id, username: n.user.username, avatar: n.user.avatar, level: n.level, mentees: [] })
+    map.set(n.user.id, { id: n.user.id, username: n.user.username, avatar: n.user.avatar, level: n.level, children: [] })
   );
 
   nodes.forEach(n => {
     const node = map.get(n.user.id)!;
     if (n.mentor_id != null) {
       const mentorNode = map.get(n.mentor_id)!;
-      node.mentor = mentorNode;
-      mentorNode.mentees.push(node);
+      node.parent = mentorNode;
+      mentorNode.children.push(node);
     } else {
       root = node;
     }
