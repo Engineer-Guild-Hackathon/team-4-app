@@ -63,3 +63,5 @@ wikipedia==1.4.0
 
 django-storages==1.14.6
 boto3==1.40.30
+
+pillow==11.3.0
