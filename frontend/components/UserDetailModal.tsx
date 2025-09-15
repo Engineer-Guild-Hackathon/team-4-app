@@ -25,11 +25,8 @@ import ThreadView from './children/ThreadView';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const videoSource =
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
 const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
-  const player = useVideoPlayer(videoSource, player => {
+  const player = useVideoPlayer(uri, player => {
     player.loop = true;
     player.play();
   });
@@ -140,7 +137,7 @@ export default function UserDetailModal({
       )}
       <View>
         {item.media.map((media: PostMediaOut, index: number) => {
-          const mediaUrl = `${API_BASE_URL}${media.file}`;
+          const mediaUrl = media.file;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
           } else if (media.media_type === 'video') {

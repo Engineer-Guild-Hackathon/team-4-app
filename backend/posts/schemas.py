@@ -1,7 +1,7 @@
 from ninja import Schema
 from datetime import datetime
 from typing import List
-from .models import Post
+from .models import Post, PostMedia
 
 class AuthorOut(Schema):
     id: int
@@ -10,6 +10,10 @@ class AuthorOut(Schema):
 class PostMediaOut(Schema):
     media_type: str
     file: str
+
+    @staticmethod
+    def resolve_file(obj: PostMedia) -> str:
+        return obj.file.url
 
 class PostOut(Schema):
     id: int
