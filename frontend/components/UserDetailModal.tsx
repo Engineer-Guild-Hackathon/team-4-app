@@ -25,6 +25,13 @@ import ThreadView from './children/ThreadView';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+interface UserProfile {
+  id: number;
+  username: string;
+  avatar?: string;
+  bio?: string;
+}
+
 const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
     player.loop = true;
@@ -61,6 +68,7 @@ export default function UserDetailModal({
   selfUserId,
 }: UserDetailModalProps) {
   const [posts, setPosts] = useState<PostOut[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { accessToken } = useAuth();
@@ -68,34 +76,61 @@ export default function UserDetailModal({
   const pagerRef = React.useRef<PagerView>(null);
 
   useEffect(() => {
-    if (visible && (topicId || userId)) {
+    if (visible && userId) {
       setLoading(true);
       setError(null);
-      fetchPosts();
+      
+      const fetchAllData = async () => {
+        try {
+          const [profileData, postsData] = await Promise.all([
+            fetchProfile(userId),
+            fetchPosts(topicId, userId)
+          ]);
+          setProfile(profileData);
+          setPosts(postsData);
+        } catch (e: any) {
+          setError(e.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchAllData();
     }
   }, [visible, topicId, userId]);
 
-  const fetchPosts = async () => {
+  const fetchProfile = async (id: number) => {
+    const url = `${API_BASE_URL}/api/users/${id}/profile/`;
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    if (!response.ok) {
+      throw new Error(`プロフィール取得エラー: ${response.status}`);
+    }
+    return await response.json();
+  };
+
+  const fetchPosts = async (tId?: string, uId?: number) => {
     const params = new URLSearchParams();
-    if (topicId) params.append('topic_id', topicId);
-    if (userId) params.append('author_id', String(userId));
+    if (tId) params.append('topic_id', tId);
+    if (uId) params.append('author_id', String(uId));
     const url = `${API_BASE_URL}/api/posts/?${params.toString()}`;
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       if (!response.ok) {
         throw new Error(`APIサーバーからの応答エラー: ${response.status}`);
       }
-      const data = await response.json();
-      setPosts(data);
+      return await response.json();
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
       } else {
         setError('不明なエラーが発生しました');
       }
-    } finally {
-      setLoading(false);
+      return []; // エラー時は空の配列を返す
     }
   };
 
@@ -183,9 +218,27 @@ export default function UserDetailModal({
       >
       <View style={styles.modalContainer}>
         {/* ユーザー情報エリア */}
-        <View style={styles.userInfoContainer}>
-          <Text style={styles.userInfoTitle}>ユーザー情報</Text>
-          <Text style={styles.userInfoText}>ユーザーID: {userId ?? '不明'}</Text>
+        <View style={styles.profileHeader}>
+          {loading ? (
+            <ActivityIndicator />
+          ) : profile ? (
+            <View style={styles.profileContainer}>
+              <Image 
+                source={
+                  profile.avatar 
+                    ? { uri: profile.avatar }
+                    : { uri: `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}` }
+                }
+                style={styles.avatar}
+              />
+              <View style={styles.profileTextContainer}>
+                <Text style={styles.profileUsername}>{profile.username}</Text>
+                <Text style={styles.profileBio} numberOfLines={2}>{profile.bio}</Text>
+              </View>
+            </View>
+          ) : (
+            <Text>プロフィールを読み込めませんでした</Text>
+          )}
         </View>
         {/* タブエリア */}
         <View style={styles.tabContainer}>
@@ -380,4 +433,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    paddingTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  profileTextContainer: {
+    flex: 1,
+  },
+  profileUsername: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  profileBio: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+
 });
