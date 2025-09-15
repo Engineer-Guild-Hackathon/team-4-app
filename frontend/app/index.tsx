@@ -12,6 +12,7 @@ export default function HomeScreen() {
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
+  const [currentTopicId, setCurrentTopicId] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   const params = useLocalSearchParams();
@@ -29,6 +30,11 @@ export default function HomeScreen() {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
     setModalVisible(true);
+  };
+
+  // 現在表示中のトピックIDを更新
+  const handleTopicChange = (topicId: string) => {
+    setCurrentTopicId(topicId);
   };
 
   // 師匠選択が必要な場合の処理
@@ -74,6 +80,7 @@ export default function HomeScreen() {
       <SimpleTopicView 
         onUserPress={handleUserPress} 
         onMentorSelectionRequired={handleMentorSelectionRequired}
+        onTopicChange={handleTopicChange}
       />
 
       <UserDetailModal
@@ -87,6 +94,7 @@ export default function HomeScreen() {
       <MentorDashboard
         visible={mentorDashboardVisible}
         onClose={() => setMentorDashboardVisible(false)}
+        topicId={currentTopicId}
       />
     </View>
   );

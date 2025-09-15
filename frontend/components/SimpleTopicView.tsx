@@ -20,12 +20,14 @@ interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
+  onTopicChange?: (topicId: string) => void; // トピック変更時のコールバック
 }
 
 export function SimpleTopicView({ 
   topics: propTopics, 
   onUserPress, 
-  onMentorSelectionRequired 
+  onMentorSelectionRequired,
+  onTopicChange
 }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
@@ -85,14 +87,20 @@ export function SimpleTopicView({
     
     // トピックが選択された時に師匠選択判定を実行
     if (index > 0 && topics[index - 1]) {
-      checkMentorSelection(topics[index - 1].id);
+      const topicId = topics[index - 1].id;
+      checkMentorSelection(topicId);
+      // 現在のトピックIDを親コンポーネントに通知
+      onTopicChange?.(topicId);
     }
   };
 
   // 初期表示時にも師匠選択判定を実行
   useEffect(() => {
     if (topics.length > 0 && currentIndex > 0 && topics[currentIndex - 1]) {
-      checkMentorSelection(topics[currentIndex - 1].id);
+      const topicId = topics[currentIndex - 1].id;
+      checkMentorSelection(topicId);
+      // 初期表示時にも現在のトピックIDを親コンポーネントに通知
+      onTopicChange?.(topicId);
     }
   }, [topics, currentIndex]);
 

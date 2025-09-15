@@ -77,7 +77,6 @@ class TreeOut(Schema):
     max_level: int
     min_level: int
 
-
 #--------予選時点未使用-----------------------
 class UserForTreeScructure(Schema):
     user: typing.Any  # 実際の型はUserOutだが循環import回避のためAny

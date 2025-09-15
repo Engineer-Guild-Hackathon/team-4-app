@@ -11,13 +11,11 @@ from .schemas import (
     TopicUpdateIn,
     TopicOut,
     TopicListOut,
-    TreeStructureOut,
     UserTopicCreateIn,
     UserTopicUpdateIn,
     UserTopicOut,
     TreeOut,
 )
-from mentorship.models import MentorRelation
 
 
 User = get_user_model()
@@ -261,28 +259,3 @@ def get_topic_tree(request, topic_id: uuid.UUID):
     return {"tree": tree_data, "max_level": max_level, "min_level": min_level}
 
 
-# --------予選時点未使用-----------------------
-@router.get("/{topic_id}/users/", response=TreeStructureOut)
-def get_topic_users(request, topic_id: uuid.UUID):
-    """トピックの参加ユーザー一覧を取得する"""
-    topic = get_object_or_404(Topic, id=topic_id)
-    parent_map = {
-        rel.mentee_id: rel.mentor_id
-        for rel in MentorRelation.objects.filter(topic_id=topic_id)
-    }
-    user_topics = UserTopic.objects.filter(topic=topic).select_related("user")
-    users = []
-    levels = []
-    for ut in user_topics:
-        user_out = {
-            "id": ut.user.id,
-            "username": ut.user.username,
-            "is_active": ut.user.is_active,
-            "is_staff": ut.user.is_staff,
-        }
-        parent_id = parent_map.get(ut.user.id)
-        users.append({"user": user_out, "level": ut.level, "parent_id": parent_id})
-        levels.append(ut.level)
-    max_level = max(levels) if levels else 0
-    min_level = min(levels) if levels else 0
-    return {"users": users, "max_level": max_level, "min_level": min_level}

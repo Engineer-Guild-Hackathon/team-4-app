@@ -114,3 +114,53 @@ export const rejectMentorRequest = async (requestId: number) => {
     throw error;
   }
 };
+
+// 師匠の弟子一覧を取得
+export const getMentees = async (topicId: string) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/mentees/${topicId}`);
+    return res;
+  } catch (error: any) {
+    console.error('弟子一覧取得エラー:', error);
+    throw error;
+  }
+};
+
+// 師匠の定員情報を取得
+export const getMentorCapacity = async (topicId: string) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/capacity/${topicId}`);
+    return res;
+  } catch (error: any) {
+    console.error('定員情報取得エラー:', error);
+    throw error;
+  }
+};
+
+// 弟子を破門
+export const expelMentee = async (menteeId: number, topicId: string) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/mentees/${menteeId}/expel`, {
+      method: 'POST',
+      body: { topic_id: topicId },
+    });
+    return res;
+  } catch (error: any) {
+    console.error('弟子破門エラー:', error);
+    throw error;
+  }
+};
+
+// 弟子を卒業
+export const graduateMentee = async (menteeId: number, topicId: string) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/mentees/${menteeId}/graduate`, {
+      method: 'POST',
+      body: { topic_id: topicId },
+    });
+    return res;
+  } catch (error: any) {
+    console.error('弟子卒業エラー:', error);
+    throw error;
+  }
+};

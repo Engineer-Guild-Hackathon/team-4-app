@@ -13,6 +13,9 @@ import {
   getReceivedMentorRequests,
   approveMentorRequest,
   rejectMentorRequest,
+  getMentees,
+  expelMentee,
+  graduateMentee,
 } from '@/services/api/mentorship';
 
 interface MentorRequest {
@@ -31,14 +34,26 @@ interface MentorRequest {
   status: string;
 }
 
+interface Mentee {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  level: number;
+  created_at: string;
+}
+
 interface MentorDashboardProps {
   visible: boolean;
   onClose: () => void;
+  topicId?: string;
 }
 
-export default function MentorDashboard({ visible, onClose }: MentorDashboardProps) {
+export default function MentorDashboard({ visible, onClose, topicId }: MentorDashboardProps) {
   const { accessToken } = useAuth();
   const [requests, setRequests] = useState<MentorRequest[]>([]);
+  const [mentees, setMentees] = useState<Mentee[]>([]);
+  const [activeTab, setActiveTab] = useState<'requests' | 'mentees'>('requests');
 
   const fetchRequests = async () => {
     try {
@@ -50,11 +65,25 @@ export default function MentorDashboard({ visible, onClose }: MentorDashboardPro
     }
   };
 
+  const fetchMentees = async () => {
+    if (!topicId) return;
+    try {
+      const data = await getMentees(topicId) as Mentee[];
+      setMentees(data);
+    } catch (error) {
+      console.error('弟子一覧取得エラー:', error);
+      Alert.alert('エラー', '弟子一覧の取得に失敗しました');
+    }
+  };
+
   useEffect(() => {
     if (accessToken && visible) {
       fetchRequests();
+      if (topicId) {
+        fetchMentees();
+      }
     }
-  }, [accessToken, visible]);
+  }, [accessToken, visible, topicId]);
 
 
   const handleApprove = async (requestId: number, fromUserName: string) => {
@@ -104,6 +133,57 @@ export default function MentorDashboard({ visible, onClose }: MentorDashboardPro
     );
   };
 
+  const handleExpelMentee = async (menteeId: number, menteeName: string) => {
+    if (!topicId) return;
+    
+    Alert.alert(
+      '破門確認',
+      `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '破門',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await expelMentee(menteeId, topicId);
+              Alert.alert('破門完了', '弟子を破門しました');
+              fetchMentees(); // リストを更新
+            } catch (error) {
+              console.error('破門エラー:', error);
+              Alert.alert('エラー', '破門に失敗しました');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleGraduateMentee = async (menteeId: number, menteeName: string) => {
+    if (!topicId) return;
+    
+    Alert.alert(
+      '卒業確認',
+      `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '卒業',
+          onPress: async () => {
+            try {
+              await graduateMentee(menteeId, topicId);
+              Alert.alert('卒業完了', '弟子を卒業させました');
+              fetchMentees(); // リストを更新
+            } catch (error) {
+              console.error('卒業エラー:', error);
+              Alert.alert('エラー', '卒業に失敗しました');
+            }
+          },
+        },
+      ]
+    );
+  };
+
 
   const renderRequest = ({ item }: { item: MentorRequest }) => (
     <View style={styles.requestCard}>
@@ -134,6 +214,36 @@ export default function MentorDashboard({ visible, onClose }: MentorDashboardPro
     </View>
   );
 
+  const renderMentee = ({ item }: { item: Mentee }) => (
+    <View style={styles.menteeCard}>
+      <View style={styles.menteeHeader}>
+        <Text style={styles.menteeName}>
+          {item.first_name} {item.last_name}
+        </Text>
+        <Text style={styles.menteeUsername}>@{item.username}</Text>
+      </View>
+      
+      <Text style={styles.menteeLevel}>レベル: {item.level}</Text>
+      <Text style={styles.menteeDate}>入門日: {new Date(item.created_at).toLocaleDateString()}</Text>
+      
+      <View style={styles.menteeButtonContainer}>
+        <TouchableOpacity
+          style={[styles.menteeButton, styles.graduateButton]}
+          onPress={() => handleGraduateMentee(item.id, item.username)}
+        >
+          <Text style={styles.graduateButtonText}>卒業</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.menteeButton, styles.expelButton]}
+          onPress={() => handleExpelMentee(item.id, item.username)}
+        >
+          <Text style={styles.expelButtonText}>破門</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
 
   return (
     <Modal
@@ -154,23 +264,64 @@ export default function MentorDashboard({ visible, onClose }: MentorDashboardPro
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.subtitle}>
-            師匠選択リクエスト ({requests.length}件)
-          </Text>
-
-          {requests.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                現在、師匠選択リクエストはありません
+          {/* タブ切り替え */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
+              onPress={() => setActiveTab('requests')}
+            >
+              <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
+                リクエスト ({requests.length})
               </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={requests}
-              renderItem={renderRequest}
-              keyExtractor={(item) => item.id.toString()}
-              showsVerticalScrollIndicator={false}
-            />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'mentees' && styles.activeTab]}
+              onPress={() => setActiveTab('mentees')}
+            >
+              <Text style={[styles.tabText, activeTab === 'mentees' && styles.activeTabText]}>
+                弟子 ({mentees.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* リクエストタブ */}
+          {activeTab === 'requests' && (
+            <>
+              {requests.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    現在、師匠選択リクエストはありません
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={requests}
+                  renderItem={renderRequest}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsVerticalScrollIndicator={false}
+                />
+              )}
+            </>
+          )}
+
+          {/* 弟子タブ */}
+          {activeTab === 'mentees' && (
+            <>
+              {mentees.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    現在、弟子はいません
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={mentees}
+                  renderItem={renderMentee}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsVerticalScrollIndicator={false}
+                />
+              )}
+            </>
           )}
         </View>
       </View>
@@ -285,5 +436,104 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: '600',
+  },
+  // タブ関連のスタイル
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  activeTabText: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  // 弟子関連のスタイル
+  menteeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menteeHeader: {
+    marginBottom: 8,
+  },
+  menteeName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  menteeUsername: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  menteeLevel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  menteeDate: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 12,
+  },
+  menteeButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  menteeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  graduateButton: {
+    backgroundColor: '#4CAF50',
+  },
+  expelButton: {
+    backgroundColor: '#f44336',
+  },
+  graduateButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  expelButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
