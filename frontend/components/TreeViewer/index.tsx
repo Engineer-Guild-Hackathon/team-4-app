@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Dimensions, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import Svg, { G, Line, Path } from 'react-native-svg';
+import Svg, { G, Line } from 'react-native-svg';
 import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
 import { useTreeData } from '../../hooks/useTreeData';
 import { TreeNodeView } from './TreeNode';
@@ -17,9 +17,9 @@ interface TreeViewerProps {
 
 export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
   const { data, loading } = useTreeData(topicId);
-  const [myNodeId, setMyNodeId] = useState<number | null>(null); // Assuming '1' is the user's ID for demo
+  const [myNodeId, setMyNodeId] = useState<number | null>(null); // デモ用に自分のノードIDを管理
 
-  // --- D3 Layout ---
+  // --- D3 レイアウト ---
   const layout = useMemo(() => {
     if (!data || data.length === 0) return null;
 
@@ -45,6 +45,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     const scaleY = (screenHeight - PADDING * 2) / treeHeight;
     const initialScale = Math.min(scaleX, scaleY, 1.0);
 
+    // ノード座標を画面中央にスケーリング
     nodes.forEach(node => {
       const centeredX = node.x - (minX + treeWidth / 2);
       const centeredY = node.y - (minY + treeHeight / 2);
@@ -66,7 +67,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   const layoutBounds = layout?.bounds ?? null;
   const initialScale = layout?.initialScale ?? 1;
 
-  // --- Pan & Zoom State ---
+  // --- ズーム・パン用の共有値 ---
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -86,7 +87,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
   };
 
-  // --- Gesture Handlers ---
+  // --- ジェスチャー処理 ---
   const exploreGesture = Gesture.Simultaneous(
     Gesture.Pinch()
       .onUpdate(e => {
@@ -106,35 +107,13 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
       }),
   );
   const composedGesture = exploreGesture;
-  /*
-  const panAndSwipeGesture = Gesture.Pan() // OLD GESTURE
-    .onBegin(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    })
-    .onEnd(event => {
-      const vx = event.velocityX;
-      const vy = event.velocityY;
-      const SWIPE_THRESHOLD = 300;
 
-      // Check for horizontal swipe
-      if (Math.abs(vx) > Math.abs(vy) && Math.abs(vx) > SWIPE_THRESHOLD) {
-        if (vx > 0) runOnJS(moveToSibling)('prev'); // Right swipe -> previous sibling
-        else runOnJS(moveToSibling)('next'); // Left swipe -> next sibling
-      // Check for vertical swipe
-      } else if (Math.abs(vy) > Math.abs(vx) && Math.abs(vy) > SWIPE_THRESHOLD) {
-        if (vy > 0) runOnJS(moveToParent)(); // Down swipe -> parent
-        else runOnJS(moveToChild)(); // Up swipe -> child
-      }
-    });
-  */
+  // --- ボタン操作 ---
+  const DURATION = 300;
 
-  // --- Button Actions ---
-  const DURATION = 300; // This is for buttons, focusNode has its own.
-
-  const fitToNetwork = (onComplete?: () => void) => {
+  const fitToNetwork = () => {
     if (!rootNode) return;
-    // This logic is duplicated from the useMemo. Consider extracting to a helper.
+
     const nodes = rootNode.descendants();
     if (nodes.length === 0) return;
 
@@ -152,17 +131,13 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     const scaleY = (screenHeight - PADDING * 2) / treeHeight;
     const newScale = Math.min(scaleX, scaleY, 1.0);
 
-    // We just need to reset to the initial centered-and-scaled state.
-    // The coordinates are already calculated in useMemo.
-    // A simple reset to a base scale and zero translation works because
-    // the nodes were pre-centered to the screen dimensions.
+    // 初期スケールと中央揃えにリセット
     scale.value = withTiming(newScale, { duration: DURATION });
-    translateX.value = withTiming(0, { duration: DURATION }, () => {
-      // if (onComplete) runOnJS(onComplete)(); // onComplete removed
-    });
+    translateX.value = withTiming(0, { duration: DURATION });
     translateY.value = withTiming(0, { duration: DURATION });
   };
-  // --- Animated Style ---
+
+  // --- アニメーションスタイル ---
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -171,28 +146,27 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     ],
   }));
 
-  // --- Auto-Fit on Load ---
+  // --- 初期表示時に全体をフィット ---
   useEffect(() => {
     if (rootNode) {
       fitToNetwork();
     }
   }, [rootNode]);
 
-  // --- Node Tap Handler ---
+  // --- ノードタップ処理 ---
   const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
-    // zoomToNode(node, scale.value); // Removed zoom-on-tap
     onNodePress(node.data.id);
   };
 
-  // --- Render ---
+  // --- レンダリング ---
   if (loading) {
     return (
-      <View style={styles.center}><Text style={styles.text}>Loading...</Text></View>
+      <View style={styles.center}><Text style={styles.text}>読み込み中...</Text></View>
     );
   }
   if (!rootNode) {
     return (
-      <View style={styles.center}><Text style={styles.text}>No data to display.</Text></View>
+      <View style={styles.center}><Text style={styles.text}>表示できるデータがありません。</Text></View>
     );
   }
 
@@ -257,7 +231,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 12,
   },
-
   controlButton: {
     backgroundColor: '#fff',
     width: 48,
