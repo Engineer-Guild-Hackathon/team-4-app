@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from .models import Thread, ThreadMessage
 from .schemas import ThreadOut, ThreadCreateIn, ThreadMessageOut, ThreadMessageCreateIn
 from topics.models import Topic
+from mentorship.models import MentorRelation
 
 User = get_user_model()
 router = Router()
@@ -25,6 +26,9 @@ def list_threads(request, mentor_id: int = None, topic_id: str = None):
 def create_thread(request, payload: ThreadCreateIn):
 	topic = get_object_or_404(Topic, id=payload.topic_id)
 	mentor = get_object_or_404(User, id=payload.mentor_id)
+	mentorship = MentorRelation.objects.filter(mentor=mentor, mentee=request.user, topic=topic).first()
+	if not mentorship:
+		return 403, {"message": "You do not have permission to create a thread with this mentor on the selected topic."}
 	thread = Thread.objects.create(
 		topic=topic,
 		starter=request.user,
