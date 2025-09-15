@@ -196,26 +196,31 @@ def get_topic_tree(request, topic_id: uuid.UUID):
     """
     topic = get_object_or_404(Topic, id=topic_id)
 
-    # 1. このトピックに参加している全ユーザーとそのレベルを取得
-    user_topics = UserTopic.objects.filter(topic=topic).select_related("user")
+    user_topics = UserTopic.objects.filter(topic=topic).select_related("user", "user__profile")
 
-    # 2. このトピックの師弟関係を全て取得
     mentorships = MentorRelation.objects.filter(topic=topic)
-    # 弟子のIDをキー、師匠のIDを値とする辞書を作成（高速な検索のため）
     mentee_to_mentor_map = {m.mentee_id: m.mentor_id for m in mentorships}
 
-    # 3. TreeViewerが期待する UserNode のリスト形式に変換
     tree_data = []
-    levels = [ut.level for ut in user_topics]
-    max_level = max(levels) if levels else 0
-    min_level = min(levels) if levels else 0
     for ut in user_topics:
+        avatar_url = None
+        if hasattr(ut.user, 'profile') and ut.user.profile.avatar:
+            avatar_url = ut.user.profile.avatar.url
+
         user_node_data = {
-            "user": {"id": ut.user.id, "username": ut.user.username},
+            "user": {
+                "id": ut.user.id,
+                "username": ut.user.username,
+                "avatar": avatar_url
+            },
             "level": ut.level,
             "mentor_id": mentee_to_mentor_map.get(ut.user.id),
         }
         tree_data.append(user_node_data)
+        
+    levels = [ut.level for ut in user_topics]
+    max_level = max(levels) if levels else 0
+    min_level = min(levels) if levels else 0
 
     return {"tree": tree_data, "max_level": max_level, "min_level": min_level}
 

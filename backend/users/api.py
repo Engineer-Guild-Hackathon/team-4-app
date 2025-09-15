@@ -1,6 +1,7 @@
 from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut
 from ninja import Router
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
 
@@ -15,11 +16,13 @@ def list_users(request):
 @router.get("/me/", response=UserOut, auth=JWTAuth())
 def get_current_user(request):
     """現在のユーザー情報を取得する"""
-    return request.user
+    user = get_object_or_404(User.objects.select_related('profile'), id=request.auth.id)
+    return user
     
 @router.get("/{user_id}/", response=UserOut, auth=JWTAuth())
 def get_user(request, user_id: int):
-    return User.objects.get(id=user_id)
+    user = get_object_or_404(User.objects.select_related('profile'), id=user_id)
+    return user
 
 
 @router.get("/{user_id}/topics/", response=UserWithTopicsOut, auth=JWTAuth())

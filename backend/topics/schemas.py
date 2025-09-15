@@ -59,6 +59,7 @@ class TreeUserOut(Schema):
 
     id: int
     username: str
+    avatar: Optional[str] = None
 
 
 class TreeUserNodeOut(Schema):
