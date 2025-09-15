@@ -53,8 +53,9 @@ def send_message(request, thread_id: int, payload: ThreadMessageCreateIn):
 	thread = get_object_or_404(Thread, id=thread_id)
 	mentorship = MentorRelation.objects.filter(
 		topic=thread.topic,
-		mentor=thread.mentor, mentee=request.user
-	).first()
+	).filter(
+		(Q(mentor=thread.mentor, mentee=request.user) | Q(mentor=request.user, mentee=thread.starter))
+    ).first()
 	if not mentorship:
 		return 403, {"message": "You do not have permission to send a message in this thread."}
 	parent = None

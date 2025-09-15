@@ -31,6 +31,7 @@ class ThreadApiTestCase(TestCase):
 		)
 		self.assertEqual(response.status_code, 200)
 		self.assertTrue(ThreadMessage.objects.filter(thread=thread, author=self.mentor, content="From mentor!").exists())
+		
 	def test_create_thread_fail_no_mentorship(self):
 		# 師弟関係がない状態でスレッド作成
 		payload = {
