@@ -14,6 +14,7 @@ export interface UserNode {
 export interface TreeNode {
   id: number;
   username: string;
+  avatar?: string;
   level: number;
   mentor?: TreeNode;
   mentees: TreeNode[];
@@ -24,7 +25,7 @@ export function buildTree(nodes: TreeUserNodeOut[]): TreeNode | null {
   let root: TreeNode | null = null;
 
   nodes.forEach(n =>
-    map.set(n.user.id, { id: n.user.id, username: n.user.username, level: n.level, mentees: [] })
+    map.set(n.user.id, { id: n.user.id, username: n.user.username, avatar: n.user.avatar, level: n.level, mentees: [] })
   );
 
   nodes.forEach(n => {
