@@ -6,6 +6,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   runOnJS,
+  withSequence,
+  Easing,
 } from 'react-native-reanimated';
 import Svg, { G, Line, Path } from 'react-native-svg';
 import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
@@ -26,47 +28,51 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   const [myNodeId, setMyNodeId] = useState<number | null>(null); // Assuming '1' is the user's ID for demo
 
   // --- D3 Layout ---
-  const rootNode = useMemo(() => {
+  const layout = useMemo(() => {
     if (!data || data.length === 0) return null;
+
     const hierarchyData = buildTree(data);
     if (!hierarchyData) return null;
 
     const treeLayout = tree<D3TreeNode>().nodeSize([120, 150]);
     const root = treeLayout(hierarchy(hierarchyData));
-
-    // --- Find "my" node ---
-    // This is a placeholder. You should replace this with your actual logic
-    // to identify the current user's node.
-    const currentUserNode = root.find(node => node.data.id === 1);
-    if (currentUserNode) setMyNodeId(currentUserNode.data.id);
-
-    // Fit and center tree on screen
     const nodes = root.descendants();
-    if (nodes.length > 0) {
-      const xCoords = nodes.map(n => n.x);
-      const yCoords = nodes.map(n => n.y);
-      const minX = Math.min(...xCoords);
-      const maxX = Math.max(...xCoords);
-      const maxY = Math.max(...yCoords);
 
-      const PADDING = 80;
-      const treeWidth = maxX - minX;
-      const treeHeight = maxY;
+    const xCoords = nodes.map(n => n.x);
+    const yCoords = nodes.map(n => n.y);
+    const minX = Math.min(...xCoords);
+    const maxX = Math.max(...xCoords);
+    const minY = Math.min(...yCoords);
+    const maxY = Math.max(...yCoords);
 
-      const scaleX = (screenWidth - PADDING * 2) / treeWidth;
-      const scaleY = (screenHeight - PADDING * 2) / treeHeight;
-      const newScale = Math.min(scaleX, scaleY, 1.0);
+    const PADDING = 80;
+    const treeWidth = maxX - minX;
+    const treeHeight = maxY - minY;
 
-      nodes.forEach(node => {
-        const centeredX = node.x - (minX + treeWidth / 2);
-        const centeredY = node.y - treeHeight / 2;
-        node.x = centeredX * newScale + screenWidth / 2;
-        node.y = centeredY * newScale + screenHeight / 2;
-      });
-    }
+    const scaleX = (screenWidth - PADDING * 2) / treeWidth;
+    const scaleY = (screenHeight - PADDING * 2) / treeHeight;
+    const initialScale = Math.min(scaleX, scaleY, 1.0);
 
-    return root;
+    nodes.forEach(node => {
+      const centeredX = node.x - (minX + treeWidth / 2);
+      const centeredY = node.y - (minY + treeHeight / 2);
+      node.x = centeredX * initialScale + screenWidth / 2;
+      node.y = centeredY * initialScale + screenHeight / 2;
+    });
+
+    const currentUserNode = root.find(node => node.data.id === 1);
+
+    return {
+      root,
+      bounds: { minX, maxX, minY, maxY },
+      initialScale,
+      currentUserId: currentUserNode?.data.id ?? null,
+    };
   }, [data]);
+
+  const rootNode = layout?.root ?? null;
+  const layoutBounds = layout?.bounds ?? null;
+  const initialScale = layout?.initialScale ?? 1;
 
   // --- Pan & Zoom State ---
   const scale = useSharedValue(1);
@@ -83,49 +89,99 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   // --- Gesture Handlers ---
   const moveToParent = () => {
     const node = findNodeById(focusedNodeId);
-    if (node?.parent) focusNode(node.parent);
+    if (node?.parent) {
+      focusNode(node.parent); 
+    } else {
+      bounceBack('down');
+    }
   };
 
   const moveToChild = () => {
     const node = findNodeById(focusedNodeId);
-    if (node?.children?.length) focusNode(node.children[0]);
+    if (node?.children?.length) {
+      focusNode(node.children[0]);
+    } else {
+      bounceBack('up');
+    }
   };
 
   const moveToSibling = (direction: 'next' | 'prev') => {
     const node = findNodeById(focusedNodeId);
     const siblings = node?.parent?.children;
-    if (node && siblings) {
+    if (node && siblings && siblings.length > 1) {
       const index = siblings.indexOf(node);
       const targetIndex = direction === 'next' ? index + 1 : index - 1;
       if (targetIndex >= 0 && targetIndex < siblings.length) {
         focusNode(siblings[targetIndex]);
+      } else {
+        bounceBack(direction === 'next' ? 'left' : 'right');
       }
     }
   };
 
-  const pinchGesture = Gesture.Pinch()
-    .onBegin(() => {
-      savedScale.value = scale.value;
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    })
-    .onUpdate(event => {
-      const newScale = Math.max(0.3, Math.min(savedScale.value * event.scale, 4.0));
-      scale.value = newScale;
+  const bounceBack = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const bounceDistance = 20;
+    const originalX = translateX.value;
+    const originalY = translateY.value;
 
-      // Calculate the pivot point in the coordinate system of the content
-      const focalX = event.focalX;
-      const focalY = event.focalY;
+    let deltaX = 0;
+    let deltaY = 0;
 
-      // The point in the content that is under the focal point
-      const contentPivotX = (focalX - translateX.value) / scale.value;
-      const contentPivotY = (focalY - translateY.value) / scale.value;
+    if (direction === 'left') deltaX = bounceDistance; // Swipe right, move content right
+    if (direction === 'right') deltaX = -bounceDistance; // Swipe left, move content left
+    if (direction === 'up') deltaY = bounceDistance; // Swipe down, move content down
+    if (direction === 'down') deltaY = -bounceDistance; // Swipe up, move content up
 
-      // We want the content pivot point to stay under the focal point after scaling.
-      // focal = newTranslate + contentPivot * newScale
-      translateX.value = focalX - contentPivotX * newScale;
-      translateY.value = focalY - contentPivotY * newScale;
-    });
+    if (deltaX !== 0) {
+      translateX.value = withSequence(
+        withTiming(originalX + deltaX, {
+          duration: 150,
+          easing: Easing.out(Easing.quad),
+        }),
+        withTiming(originalX, { duration: 250, easing: Easing.inOut(Easing.quad) }),
+      );
+    }
+    if (deltaY !== 0) {
+      translateY.value = withSequence(
+        withTiming(originalY + deltaY, {
+          duration: 150,
+          easing: Easing.out(Easing.quad),
+        }),
+        withTiming(originalY, { duration: 250, easing: Easing.inOut(Easing.quad) }),
+      );
+    }
+  };
+
+  const clampTranslate = () => {
+    const nodes = rootNode?.descendants();
+    if (!nodes || nodes.length === 0) return;
+
+    const scaledX = nodes.map(n => n.x * scale.value);
+    const scaledY = nodes.map(n => n.y * scale.value);
+
+    const minX = Math.min(...scaledX);
+    const maxX = Math.max(...scaledX);
+    const minY = Math.min(...scaledY);
+    const maxY = Math.max(...scaledY);
+
+    const maxTranslateX = screenWidth - minX;
+    const minTranslateX = -maxX;
+    const maxTranslateY = screenHeight - minY;
+    const minTranslateY = -maxY;
+
+    translateX.value = Math.max(minTranslateX, Math.min(translateX.value, maxTranslateX));
+    translateY.value = Math.max(minTranslateY, Math.min(translateY.value, maxTranslateY));
+  };
+
+  const zoom = (factor: number) => {
+    const newScale = Math.max(0.3, Math.min(scale.value * factor, 4.0));
+    scale.value = withTiming(newScale, { duration: DURATION });
+  };
+
+
+
+  const zoomIn = () => zoom(1.5);
+  const zoomOut = () => zoom(1 / 1.5);
 
   const panAndSwipeGesture = Gesture.Pan()
     .onBegin(() => {
@@ -148,7 +204,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
       }
     });
 
-  const composedGesture = Gesture.Simultaneous(pinchGesture, panAndSwipeGesture);
+  const composedGesture = Gesture.Simultaneous(panAndSwipeGesture);
 
   // --- Button Actions ---
   const DURATION = 300; // This is for buttons, focusNode has its own.
@@ -209,19 +265,24 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     }
   }, [rootNode, myNodeId]);
 
-  // --- Focus on Node ---
-  const focusNode = (node?: HierarchyPointNode<D3TreeNode>) => {
+  const focusNode = (
+    node?: HierarchyPointNode<D3TreeNode>,
+    targetScale?: number
+  ) => {
     if (!node) return;
 
-    // Only responsible for animating the view and setting focus state
     setFocusedNodeId(node.data.id);
 
-    const targetScale = scale.value; // Keep current zoom level
+    const scaleToUse = targetScale ?? scale.value;
     const contentX = node.x;
     const contentY = node.y;
 
-    const targetTranslateX = screenWidth / 2 - contentX * targetScale;
-    const targetTranslateY = screenHeight / 2 - contentY * targetScale;
+    const targetTranslateX = screenWidth / 2 - contentX * scaleToUse;
+    const targetTranslateY = screenHeight / 2 - contentY * scaleToUse;
+
+    if (targetScale !== undefined && targetScale !== scale.value) {
+      scale.value = withTiming(scaleToUse, { duration: DURATION });
+    }
 
     translateX.value = withTiming(targetTranslateX, { duration: DURATION });
     translateY.value = withTiming(targetTranslateY, { duration: DURATION });
@@ -260,12 +321,18 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
             <Path fill="#fff" d="M3 11H1v10h10v-2H3v-8zm2-8h8V1H5v2zm16 0h-2v2h2v8h2V3a2 2 0 0 0-2-2zm-2 18h2v-8h-2v8zM13 5h-2v14h2V5z" />
           </Svg>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
+          <Text style={{ color: '#fff', fontSize: 18 }}>＋</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
+          <Text style={{ color: '#fff', fontSize: 18 }}>－</Text>
+        </TouchableOpacity>
         {myNodeId !== null && (
           <TouchableOpacity style={styles.controlButton} onPress={focusOnMe}>
             <Svg width={24} height={24} viewBox="0 0 24 24">
               <Path fill="#fff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0 1 12.28 0C16.43 19.18 14.03 20 12 20z" />
             </Svg>
-          </TouchableOpacity>
+        </TouchableOpacity>
         )}
       </View>
 
@@ -307,12 +374,13 @@ const styles = StyleSheet.create({
   text: { color: '#fff' },
   controlsContainer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 120, 
     right: 20,
     zIndex: 10,
     flexDirection: 'column',
     gap: 12,
   },
+
   controlButton: {
     backgroundColor: 'rgba(40, 40, 40, 0.8)',
     width: 48,
