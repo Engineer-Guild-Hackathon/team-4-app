@@ -1,8 +1,10 @@
 from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut
 from ninja import Router
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
+from .schemas import UserProfileOut
 
 User = get_user_model()
 
@@ -70,3 +72,22 @@ def delete_user(request, user_id: int):
     user = User.objects.get(id=user_id)
     user.delete()
     return {"success": True}
+
+@router.get("/{user_id}/profile/", response=UserProfileOut)
+def get_user_profile(request, user_id: int):
+    """指定されたユーザーのプロフィール情報を取得する"""
+    user = get_object_or_404(User, id=user_id)
+    
+    avatar_url = None
+    bio_text = ""
+    if hasattr(user, 'profile'):
+        if user.profile.avatar:
+            avatar_url = user.profile.avatar.url
+        bio_text = user.profile.bio or ""
+        
+    return {
+        "id": user.id,
+        "username": user.username,
+        "avatar": avatar_url,
+        "bio": bio_text
+    }

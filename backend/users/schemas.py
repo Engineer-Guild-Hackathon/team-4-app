@@ -1,6 +1,6 @@
 from ninja import Schema, ModelSchema
 from django.contrib.auth import get_user_model
-from typing import List
+from typing import List, Optional
 from topics.schemas import TopicOut
 
 User = get_user_model()
@@ -26,3 +26,9 @@ class UserIn(Schema):
     username: str
     email: str
     password: str
+
+class UserProfileOut(Schema):
+    id: int
+    username: str
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
