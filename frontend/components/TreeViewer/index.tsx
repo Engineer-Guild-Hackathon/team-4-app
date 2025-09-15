@@ -202,16 +202,14 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={() => fitToNetwork()}>
-          <Svg width={24} height={24} viewBox="0 0 24 24">
-            <Path fill="#fff" d="M3 11H1v10h10v-2H3v-8zm2-8h8V1H5v2zm16 0h-2v2h2v8h2V3a2 2 0 0 0-2-2zm-2 18h2v-8h-2v8zM13 5h-2v14h2V5z" />
-          </Svg>
+        <TouchableOpacity style={styles.controlButton} onPress={() => fitToNetwork()} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>⛶</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>＋</Text>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>＋</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>－</Text>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomOut} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>－</Text>
         </TouchableOpacity>
       </View>
 
@@ -226,7 +224,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
                   y1={link.source.y}
                   x2={link.target.x}
                   y2={link.target.y}
-                  stroke="#888"
+                  stroke="#6b7280"
                   strokeWidth={1.5}
                 />
               ))}
@@ -247,10 +245,10 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1e1e1e' },
+  container: { flex: 1, backgroundColor: '#fff' },
   flex: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1e1e1e' },
-  text: { color: '#fff' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  text: { color: '#1f2937' },
   controlsContainer: {
     position: 'absolute',
     bottom: 120, 
@@ -261,13 +259,19 @@ const styles = StyleSheet.create({
   },
 
   controlButton: {
-    backgroundColor: 'rgba(40, 40, 40, 0.8)',
+    backgroundColor: '#fff',
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+  controlButtonText: { color: '#374151', fontSize: 20, fontWeight: 'bold' },
 });
