@@ -1,5 +1,4 @@
 import { TreeUserNodeOut } from '@/types/topic';
-import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, PanResponder, StyleSheet, Text, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
@@ -52,14 +51,9 @@ const safeNumber = (val: Animated.Value | number | undefined | null, fallback: n
 interface TreeViewerProps {
   topicId: string | null; // 表示するトピックのID
   onNodePress: (userId: number) => void;
-  onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
 }
 
-export const TreeViewer: React.FC<TreeViewerProps> = ({ 
-  topicId, 
-  onNodePress, 
-  onMentorSelectionRequired 
-}) => {
+export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
   const { data, loading } = useTreeData(topicId);
   const [currentNode, setCurrentNode] = useState<TreeNode | null>(null);
   const [nodesWithPositions, setNodesWithPositions] = useState<
@@ -78,19 +72,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({
   const targetNodePositionsRef = useRef<Map<number, { node: TreeNode; x: number; y: number }>>(
     new Map()
   );
-
-  // 師匠選択が必要かチェック
-  const checkMentorSelection = async (topicId: string) => {
-    try {
-      const response = await checkMentorSelectionRequired(topicId);
-      if (response.required) {
-        // 師匠選択が必要な場合、コールバックを呼び出し
-        onMentorSelectionRequired?.(topicId);
-      }
-    } catch (error) {
-      console.error('師匠選択判定エラー:', error);
-    }
-  };
 
   // -----------------------
   // Node Count Overlay Helper
@@ -143,16 +124,12 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({
     currentNodeRef.current = currentNode;
   }, [currentNode]);
 
-  // データが読み込まれた時に師匠選択判定を実行
   useEffect(() => {
-    if (Array.isArray(data) && data.length > 0 && topicId) {
+    if (Array.isArray(data) && data.length > 0) {
       const root = buildTree(data as TreeUserNodeOut[]);
       setCurrentNode(root);
-      
-      // 師匠選択判定を実行
-      checkMentorSelection(topicId);
     }
-  }, [data, topicId]);
+  }, [data]);
 
   useEffect(() => {
     if (!currentNode) return;

@@ -36,7 +36,7 @@ export function SimpleTopicView({
   // 師匠選択が必要かチェック
   const checkMentorSelection = async (topicId: string) => {
     try {
-      const response = await checkMentorSelectionRequired(topicId);
+      const response = await checkMentorSelectionRequired(topicId) as { required: boolean };
       if (response.required) {
         // 師匠選択が必要な場合、コールバックを呼び出し
         onMentorSelectionRequired?.(topicId);
@@ -131,7 +131,6 @@ export function SimpleTopicView({
                   onNodePress={userId => {
                     onUserPress(topic.id, userId);
                   }}
-                  onMentorSelectionRequired={onMentorSelectionRequired}
                 />
               </View>
               <View style={styles.descriptionContainer} pointerEvents="box-none">

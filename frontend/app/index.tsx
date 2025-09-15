@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
@@ -10,6 +10,7 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
+  const router = useRouter();
 
   const params = useLocalSearchParams();
 
@@ -28,6 +29,11 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
+  // 師匠選択が必要な場合の処理
+  const handleMentorSelectionRequired = (topicId: string) => {
+    router.push(`/select-level-mentor?topicId=${topicId}`);
+  };
+
   // 認証情報を読み込み中の表示
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
@@ -44,7 +50,10 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
-      <SimpleTopicView onUserPress={handleUserPress} />
+      <SimpleTopicView 
+        onUserPress={handleUserPress} 
+        onMentorSelectionRequired={handleMentorSelectionRequired}
+      />
 
       <UserDetailModal
         visible={modalVisible}
