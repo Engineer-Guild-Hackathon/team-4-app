@@ -131,6 +131,7 @@ export function SimpleTopicView({
                   onNodePress={userId => {
                     onUserPress(topic.id, userId);
                   }}
+                  onMentorSelectionRequired={onMentorSelectionRequired}
                 />
               </View>
               <View style={styles.descriptionContainer} pointerEvents="box-none">
