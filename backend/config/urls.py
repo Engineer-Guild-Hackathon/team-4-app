@@ -26,6 +26,7 @@ from topics.api import router as topics_router
 from mentorship.api import router as mentorship_router
 from posts.api import router as posts_router
 from threads.api import router as threads_router
+from reports.api import router as reports_router
 from .health import health
 
 
@@ -36,11 +37,14 @@ api.add_router("/threads", threads_router, tags=["Threads"])
 api.add_router("/users", users_router, tags=["Users"])
 api.add_router("/topics", topics_router, tags=["Topics"])
 api.add_router("/mentorship", mentorship_router, tags=["Mentorship"])
+api.add_router("/reports", reports_router, tags=["Reports"])
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', api.urls),
     path('health/', health),
+
 ]
 
 if settings.DEBUG:

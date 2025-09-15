@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'mentorship',
     'posts',
     'threads',
+    'reports',
 
     'storages',
 ]
