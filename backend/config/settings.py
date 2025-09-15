@@ -167,7 +167,7 @@ AWS_S3_ENDPOINT_URL = f"https://{CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.
 AWS_S3_CUSTOM_DOMAIN = CLOUDFLARE_R2_CUSTOM_DOMAIN
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_REGION_NAME = 'auto'
-AWS_QUERYSTRING_AUTH = False # 公開バケットの場合はFalse
+AWS_QUERYSTRING_AUTH = True # 公開バケットの場合はFalse
 
 # Django 4.2以降の新しいストレージ設定
 STORAGES = {
