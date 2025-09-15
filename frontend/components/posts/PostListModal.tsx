@@ -18,11 +18,8 @@ import { useEvent } from 'expo';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const videoSource =
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
 const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
-  const player = useVideoPlayer(videoSource, player => {
+  const player = useVideoPlayer(uri, player => {
     player.loop = true;
     player.play();
   });
@@ -123,7 +120,10 @@ export default function PostListModal({
       )}
       <View>
         {item.media.map((media: any, index: number) => {
-          const mediaUrl = `${API_BASE_URL}${media.file}`;
+          const mediaUrl = media.file;
+          
+          console.log(`投稿ID:${item.id} のメディアURL:`, mediaUrl);
+
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
           } else if (media.media_type === 'video') {
