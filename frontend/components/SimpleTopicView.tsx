@@ -64,6 +64,18 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
   };
+  
+  const [isPagerScrollEnabled, setIsPagerScrollEnabled] = useState(true);
+  
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setIsPagerScrollEnabled(false);
+      }, 136);
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]); 
 
   if (loading) {
     return (
@@ -77,15 +89,22 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
+
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
         <PagerView
+
           ref={pagerRef}
           style={{ flex: 1 }}
-          scrollEnabled={false}
+          scrollEnabled={isPagerScrollEnabled}
           initialPage={currentIndex}
-          onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
+          onPageSelected={e => {
+            setCurrentIndex(e.nativeEvent.position)
+            if (!isPagerScrollEnabled) {
+              return;
+            }
+          }}
           key={topics.length + 1}
         >
           {/* 作成ページを一番左 */}
