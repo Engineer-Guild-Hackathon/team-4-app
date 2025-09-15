@@ -2,6 +2,7 @@
 import json
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from mentorship.models import MentorRelation
 from topics.models import Topic
 from posts.models import Post
 from threads.models import Thread, ThreadMessage
@@ -10,6 +11,54 @@ from ninja_jwt.tokens import RefreshToken
 User = get_user_model()
 
 class ThreadApiTestCase(TestCase):
+	def test_send_message_success_by_mentor(self):
+		# 師弟関係を作成
+		MentorRelation.objects.create(
+			mentor=self.mentor,
+			mentee=self.user,
+			topic=self.topic
+		)
+		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
+		# 師匠でログイン
+		refresh = RefreshToken.for_user(self.mentor)
+		mentor_token = str(refresh.access_token)
+		payload = {"content": "From mentor!", "parent_id": None}
+		response = self.client.post(
+			f"/api/threads/{thread.id}/messages",
+			data=json.dumps(payload),
+			content_type="application/json",
+			HTTP_AUTHORIZATION=f"Bearer {mentor_token}"
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(ThreadMessage.objects.filter(thread=thread, author=self.mentor, content="From mentor!").exists())
+	def test_create_thread_fail_no_mentorship(self):
+		# 師弟関係がない状態でスレッド作成
+		payload = {
+			"topic_id": str(self.topic.id),
+			"mentor_id": self.mentor.id,
+			"message": {"content": "Hello"}
+		}
+		response = self.client.post(
+			"/api/threads",
+			data=json.dumps(payload),
+			content_type="application/json",
+			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+		)
+		self.assertEqual(response.status_code, 403)
+		self.assertFalse(Thread.objects.filter(starter=self.user, mentor=self.mentor, topic=self.topic).exists())
+
+	def test_send_message_fail_no_mentorship(self):
+		# 師弟関係がない状態でメッセージ送信
+		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
+		payload = {"content": "Hello!", "parent_id": None}
+		response = self.client.post(
+			f"/api/threads/{thread.id}/messages",
+			data=json.dumps(payload),
+			content_type="application/json",
+			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+		)
+		self.assertEqual(response.status_code, 403)
+		self.assertFalse(ThreadMessage.objects.filter(thread=thread, author=self.user, content="Hello!").exists())
 	def test_delete_message_success(self):
 		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
 		msg = ThreadMessage.objects.create(thread=thread, author=self.user, content="delete me")
@@ -91,6 +140,11 @@ class ThreadApiTestCase(TestCase):
 		self.assertEqual(ids, [t1.id])
 
 	def test_create_thread_success(self):
+		MentorRelation.objects.create(
+			mentor=self.mentor,
+			mentee=self.user,
+			topic=self.topic
+		)
 		payload = {
 			"topic_id": str(self.topic.id),
 			"mentor_id": self.mentor.id,
@@ -125,6 +179,11 @@ class ThreadApiTestCase(TestCase):
 
 	def test_send_message_success(self):
 		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
+		MentorRelation.objects.create(
+            mentor=self.mentor,
+            mentee=self.user,
+            topic=self.topic
+		)
 		payload = {"content": "Hello!", "parent_id": None}
 		response = self.client.post(
 			f"/api/threads/{thread.id}/messages",
