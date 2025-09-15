@@ -2,9 +2,10 @@ from ninja import Router
 from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import transaction, models
 import uuid
 from .models import Topic, UserTopic
+from mentorship.models import MentorRelation
 from .schemas import (
     TopicCreateIn,
     TopicUpdateIn,
@@ -152,11 +153,29 @@ def update_user_topic_level(
 
 
 @router.delete("/{topic_id}/users/{user_id}/", auth=JWTAuth())
+@transaction.atomic
 def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
     """
     ユーザーをトピックから退出させる
+    師弟関係も同時に削除する
     """
     user_topic = get_object_or_404(UserTopic, topic_id=topic_id, user_id=user_id)
+    user = user_topic.user
+    
+    # 師弟関係を削除
+    MentorRelation.objects.filter(
+        models.Q(mentor=user, topic_id=topic_id) | 
+        models.Q(mentee=user, topic_id=topic_id)
+    ).delete()
+    
+    # 承認待ちのリクエストも削除（送信したリクエストと受信したリクエストの両方）
+    from mentorship.models import MentorRelationRequest
+    MentorRelationRequest.objects.filter(
+        models.Q(from_user=user, topic_id=topic_id) | 
+        models.Q(to_user=user, topic_id=topic_id)
+    ).delete()
+    
+    # UserTopicを削除
     user_topic.delete()
     return {"message": "ユーザーをトピックから退出させました"}
 

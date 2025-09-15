@@ -14,12 +14,31 @@ class MentorAPITestCase(TestCase):
         self.user2 = User.objects.create_user(username="user2", password="pass123")
         self.user3 = User.objects.create_user(username="user3", password="pass123")
         self.user4 = User.objects.create_user(username="user4", password="pass123")
+        self.user5 = User.objects.create_user(username="user5", password="pass123")
         self.superuser = User.objects.create_superuser(
             username="superuser", password="pass123"
         )
         self.topic = Topic.objects.create(
             title="Test Topic", description="Description for test topic"
         )
+        
+        # UserTopicを作成（定員テスト用）
+        self.user1_topic = UserTopic.objects.create(
+            user=self.user1, topic=self.topic, level=5, mentee_capacity=3
+        )
+        self.user2_topic = UserTopic.objects.create(
+            user=self.user2, topic=self.topic, level=4, mentee_capacity=3
+        )
+        self.user3_topic = UserTopic.objects.create(
+            user=self.user3, topic=self.topic, level=3, mentee_capacity=3
+        )
+        self.user4_topic = UserTopic.objects.create(
+            user=self.user4, topic=self.topic, level=2, mentee_capacity=3
+        )
+        self.user5_topic = UserTopic.objects.create(
+            user=self.user5, topic=self.topic, level=1, mentee_capacity=3
+        )
+        
         self.client.login(username="user1", password="pass123")
 
     def test_create_mentor_request_success(self):
@@ -395,3 +414,225 @@ class MentorAPITestCase(TestCase):
         )
         
         self.assertEqual(response.status_code, 404)
+
+
+class MentorCapacityTestCase(TestCase):
+    """定員制システムのテストケース"""
+    
+    def setUp(self):
+        """Set up test users and a topic for capacity tests."""
+        self.mentor = User.objects.create_user(username="mentor", password="pass123")
+        self.mentee1 = User.objects.create_user(username="mentee1", password="pass123")
+        self.mentee2 = User.objects.create_user(username="mentee2", password="pass123")
+        self.mentee3 = User.objects.create_user(username="mentee3", password="pass123")
+        self.mentee4 = User.objects.create_user(username="mentee4", password="pass123")
+        
+        self.topic = Topic.objects.create(
+            title="Capacity Test Topic", description="Description for capacity test"
+        )
+        
+        # 師匠のUserTopic（定員3）
+        self.mentor_topic = UserTopic.objects.create(
+            user=self.mentor, topic=self.topic, level=5, mentee_capacity=3
+        )
+        
+        # 弟子たちのUserTopic
+        self.mentee1_topic = UserTopic.objects.create(
+            user=self.mentee1, topic=self.topic, level=4, mentee_capacity=3
+        )
+        self.mentee2_topic = UserTopic.objects.create(
+            user=self.mentee2, topic=self.topic, level=3, mentee_capacity=3
+        )
+        self.mentee3_topic = UserTopic.objects.create(
+            user=self.mentee3, topic=self.topic, level=2, mentee_capacity=3
+        )
+        self.mentee4_topic = UserTopic.objects.create(
+            user=self.mentee4, topic=self.topic, level=1, mentee_capacity=3
+        )
+
+    def test_capacity_within_limit_direct_mentorship(self):
+        """定員内の場合：直接師弟関係が作成される"""
+        headers = get_jwt_auth_headers(self.mentee1)
+        
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.mentor.id, "topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "approved")
+        
+        # 師弟関係が直接作成されているかチェック
+        self.assertTrue(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee1, topic=self.topic
+            ).exists()
+        )
+        
+        # 承認済みリクエストが作成されている
+        self.assertTrue(
+            MentorRelationRequest.objects.filter(
+                from_user=self.mentee1, to_user=self.mentor, topic=self.topic, status="approved"
+            ).exists()
+        )
+
+    def test_capacity_exceeded_requires_approval(self):
+        """定員超過の場合：承認制でリクエストが作成される"""
+        # 定員いっぱいまで師弟関係を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee3, topic=self.topic)
+        
+        headers = get_jwt_auth_headers(self.mentee4)
+        
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.mentor.id, "topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        # リクエストオブジェクトが返される
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["status"], "pending")
+        
+        # 師弟関係は作成されていない
+        self.assertFalse(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee4, topic=self.topic
+            ).exists()
+        )
+        
+        # リクエストが作成されている
+        self.assertTrue(
+            MentorRelationRequest.objects.filter(
+                from_user=self.mentee4, to_user=self.mentor, topic=self.topic, status="pending"
+            ).exists()
+        )
+
+    def test_approve_with_mentee_selection_expel(self):
+        """定員超過時の承認：弟子を破門して新しい弟子を受け入れる"""
+        # 定員いっぱいまで師弟関係を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee3, topic=self.topic)
+        
+        # 新しい弟子からのリクエストを作成
+        request = MentorRelationRequest.objects.create(
+            from_user=self.mentee4, to_user=self.mentor, topic=self.topic, status="pending"
+        )
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # 弟子選択付きで承認（mentee1を破門）
+        response = self.client.post(
+            f"/api/mentorship/requests/{request.id}/approve-with-selection",
+            {"mentee_id": self.mentee1.id, "action": "expel"},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # 新しい師弟関係が作成されている
+        self.assertTrue(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee4, topic=self.topic
+            ).exists()
+        )
+        
+        # 破門された弟子との関係は削除されている
+        self.assertFalse(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee1, topic=self.topic
+            ).exists()
+        )
+        
+        # 破門された弟子のステータスがEXPELLEDになっている
+        self.mentee1_topic.refresh_from_db()
+        self.assertEqual(self.mentee1_topic.status, UserTopic.Status.EXPELLED)
+
+    def test_approve_with_mentee_selection_graduate(self):
+        """定員超過時の承認：弟子を卒業して新しい弟子を受け入れる"""
+        # 定員いっぱいまで師弟関係を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee3, topic=self.topic)
+        
+        # 新しい弟子からのリクエストを作成
+        request = MentorRelationRequest.objects.create(
+            from_user=self.mentee4, to_user=self.mentor, topic=self.topic, status="pending"
+        )
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # 弟子選択付きで承認（mentee1を卒業）
+        response = self.client.post(
+            f"/api/mentorship/requests/{request.id}/approve-with-selection",
+            {"mentee_id": self.mentee1.id, "action": "graduate"},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # 新しい師弟関係が作成されている
+        self.assertTrue(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee4, topic=self.topic
+            ).exists()
+        )
+        
+        # 卒業された弟子との関係は削除されている
+        self.assertFalse(
+            MentorRelation.objects.filter(
+                mentor=self.mentor, mentee=self.mentee1, topic=self.topic
+            ).exists()
+        )
+        
+        # 卒業された弟子のステータスがGRADUATEDになっている
+        self.mentee1_topic.refresh_from_db()
+        self.assertEqual(self.mentee1_topic.status, UserTopic.Status.GRADUATED)
+        
+        # 卒業された弟子のレベルが上がっている
+        self.assertEqual(self.mentee1_topic.level, 5)  # 師匠と同じレベル
+
+    def test_get_mentor_capacity(self):
+        """師匠の定員情報取得テスト"""
+        # 2人の弟子を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        response = self.client.get(f"/api/mentorship/capacity/{self.topic.id}", headers=headers)
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["current_count"], 2)
+        self.assertEqual(data["capacity"], 3)
+        self.assertTrue(data["is_within_capacity"])
+        self.assertEqual(data["remaining_slots"], 1)
+
+    def test_get_mentees_list(self):
+        """師匠の弟子一覧取得テスト"""
+        # 弟子関係を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        response = self.client.get(f"/api/mentorship/mentees/{self.topic.id}", headers=headers)
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        
+        # 弟子の情報が正しく返されているかチェック
+        mentee_ids = [mentee["id"] for mentee in data]
+        self.assertIn(self.mentee1.id, mentee_ids)
+        self.assertIn(self.mentee2.id, mentee_ids)

@@ -14,6 +14,8 @@ from mentorship.schemas import (
     TopicId,
     UserNodeOut,
     UserEasyOut,
+    MenteeSelectionIn,
+    MenteeInfoOut,
 )
 from config.schemas import ErrorOut
 from topics.models import Topic, UserTopic
@@ -41,6 +43,34 @@ def _remove_relation(relation: MentorRelation, action: str):
     ActionLog.objects.create(actor=mentor, target=mentee, action=action)
 
     return {"status": action, "mentee_id": mentee.id}
+
+
+def _check_mentor_capacity(mentor_user, topic_id: uuid.UUID):
+    """
+    師匠の弟子定員をチェックする
+    
+    引数:
+    - mentor_user: 師匠のユーザーオブジェクト
+    - topic_id: トピックのUUID
+    
+    戻り値:
+    - (is_within_capacity: bool, current_count: int, capacity: int)
+    """
+    try:
+        mentor_user_topic = UserTopic.objects.get(user=mentor_user, topic_id=topic_id)
+        capacity = mentor_user_topic.mentee_capacity
+        
+        # 現在の弟子数をカウント（アクティブな師弟関係のみ）
+        current_count = MentorRelation.objects.filter(
+            mentor=mentor_user, topic_id=topic_id
+        ).count()
+        
+        is_within_capacity = current_count < capacity
+        return is_within_capacity, current_count, capacity
+        
+    except UserTopic.DoesNotExist:
+        # UserTopicが存在しない場合は定員0として扱う
+        return False, 0, 0
 
 
 def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
@@ -78,9 +108,11 @@ def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
     summary="弟子入りリクエストを作成する",
     auth=JWTAuth(),
 )
+@transaction.atomic
 def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     """
-    弟子の数が定員に達しているユーザーに対して弟子入りリクエストを送信します。
+    弟子入りリクエストを作成します。定員内の場合は直接師弟関係を作成し、
+    定員超過の場合は承認制でリクエストを作成します。
 
     - 認証が必要です。
     - 自分自身にリクエストを送ることはできません。
@@ -102,24 +134,53 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     ).exists():
         return 400, {"message": "A pending request to this user already exists."}
 
-    # リクエストを作成
-    mentor_request = MentorRelationRequest.objects.create(
-        from_user=from_user, to_user=to_user, topic=topic
-    )
-    return mentor_request
+    # 師匠の定員をチェック
+    is_within_capacity, current_count, capacity = _check_mentor_capacity(to_user, payload.topic_id)
+    
+    if is_within_capacity:
+        # 定員内の場合：直接師弟関係を作成（無条件）
+        MentorRelation.objects.create(
+            mentor=to_user,
+            mentee=from_user,
+            topic=topic,
+        )
+        
+        # 弟子のUserTopicのstatusをACTIVEにリセット
+        try:
+            mentee_user_topic = UserTopic.objects.get(
+                user=from_user, 
+                topic=topic
+            )
+            mentee_user_topic.status = UserTopic.Status.ACTIVE
+            mentee_user_topic.save()
+        except UserTopic.DoesNotExist:
+            pass
+        
+        # 定員内の場合は承認済みリクエストとして記録
+        mentor_request = MentorRelationRequest.objects.create(
+            from_user=from_user, to_user=to_user, topic=topic, status="approved"
+        )
+        return mentor_request
+    else:
+        # 定員超過の場合：承認制でリクエストを作成
+        mentor_request = MentorRelationRequest.objects.create(
+            from_user=from_user, to_user=to_user, topic=topic
+        )
+        return mentor_request
 
 
-# 阿部TODO: リクエストが来る→定員に達しているので、既存の弟子を破門or卒業させる→弟子が新しく入る。の流れを実装する
+# completed 阿部TODO: リクエストが来る→定員に達しているので、既存の弟子を破門or卒業させる→弟子が新しく入る。の流れを実装する
 @router.post(
     "/requests/{request_id}/approve",
     response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
-    summary="弟子入りリクエストを承認する",
+    summary="弟子入りリクエストを承認する（定員内の場合）",
     auth=JWTAuth(),
 )
 @transaction.atomic
 def approve_mentor_request(request: HttpRequest, request_id: int):
     """
     受け取った弟子入りリクエストを承認します。
+    定員内の場合のみ使用してください。定員超過の場合は別のAPIを使用してください。
 
     - リクエストの宛先（to_user）である本人しか承認できません。
     - 承認されると、リクエストのステータスが `approved` になり、新しい師弟関係が作成されます。
@@ -133,7 +194,15 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     if request.user.id != mentor_request.to_user.id:
         return 403, {"message": "You do not have permission to perform this action."}
 
-    # 師弟関係を作成
+    # 定員をチェック
+    is_within_capacity, current_count, capacity = _check_mentor_capacity(
+        mentor_request.to_user, mentor_request.topic.id
+    )
+    
+    if not is_within_capacity:
+        return 400, {"message": "Capacity exceeded. Use the approve-with-selection API instead."}
+
+    # 新しい師弟関係を作成
     MentorRelation.objects.create(
         mentor=mentor_request.to_user,
         mentee=mentor_request.from_user,
@@ -156,6 +225,115 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     mentor_request.save()
 
     return {"message": "Request approved successfully."}
+
+
+@router.post(
+    "/requests/{request_id}/approve-with-selection",
+    response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut, 400: ErrorOut},
+    summary="弟子入りリクエストを承認する（定員超過時、弟子選択付き）",
+    auth=JWTAuth(),
+)
+@transaction.atomic
+def approve_mentor_request_with_selection(request: HttpRequest, request_id: int, selection: MenteeSelectionIn):
+    """
+    受け取った弟子入りリクエストを承認し、定員超過の場合は指定された弟子を破門または卒業させます。
+
+    - リクエストの宛先（to_user）である本人しか承認できません。
+    - 定員超過の場合は、指定された弟子を破門または卒業させて新しい弟子を受け入れます。
+    - 師弟関係が成立した時点で、弟子のUserTopicのstatusをACTIVEにリセットします。
+    """
+    mentor_request = get_object_or_404(
+        MentorRelationRequest, id=request_id, status="pending"
+    )
+
+    # リクエストの宛先本人かチェック
+    if request.user.id != mentor_request.to_user.id:
+        return 403, {"message": "You do not have permission to perform this action."}
+
+    # 定員をチェック
+    is_within_capacity, current_count, capacity = _check_mentor_capacity(
+        mentor_request.to_user, mentor_request.topic.id
+    )
+    
+    if not is_within_capacity:
+        # 定員超過の場合：指定された弟子を破門または卒業
+        mentee_relation = get_object_or_404(
+            MentorRelation,
+            mentor=mentor_request.to_user,
+            mentee_id=selection.mentee_id,
+            topic=mentor_request.topic
+        )
+        
+        if selection.action == "expel":
+            # 弟子を破門
+            mentee = mentee_relation.mentee
+            mentor_level = request.user.usertopic_set.get(topic_id=mentor_request.topic.id).level
+            mentee_level = mentee.usertopic_set.get(topic_id=mentor_request.topic.id).level
+            level_difference = mentor_level - mentee_level
+            
+            # 破門された弟子のUserTopicのstatusをEXPELLEDに更新
+            try:
+                expelled_user_topic = UserTopic.objects.get(
+                    user=mentee,
+                    topic=mentor_request.topic
+                )
+                expelled_user_topic.status = UserTopic.Status.EXPELLED
+                expelled_user_topic.save()
+            except UserTopic.DoesNotExist:
+                pass
+            
+            # 子孫のレベルを調整（負の値でレベルダウン）
+            _update_descendant_levels(mentee, mentor_request.topic.id, -level_difference)
+            
+            _remove_relation(mentee_relation, action="expel")
+                
+        elif selection.action == "graduate":
+            # 弟子を卒業
+            mentee = mentee_relation.mentee
+            mentor_level = request.user.usertopic_set.get(topic_id=mentor_request.topic.id).level
+            mentee_level = mentee.usertopic_set.get(topic_id=mentor_request.topic.id).level
+            
+            # 弟子のレベルが師匠より高い場合は、師匠より1レベル高くする
+            if mentee_level >= mentor_level:
+                delta = 1
+            else:
+                delta = mentor_level - mentee_level
+            
+            user_topic = mentee.usertopic_set.get(topic_id=mentor_request.topic.id)
+            user_topic.level += delta
+            user_topic.status = UserTopic.Status.GRADUATED
+            user_topic.save()
+            
+            # menteeの子孫のUserTopicのlevelを更新
+            _update_descendant_levels(mentee, mentor_request.topic.id, delta)
+            
+            _remove_relation(mentee_relation, action="graduate")
+        else:
+            return 400, {"message": "Invalid action. Must be 'expel' or 'graduate'."}
+
+    # 新しい師弟関係を作成
+    MentorRelation.objects.create(
+        mentor=mentor_request.to_user,
+        mentee=mentor_request.from_user,
+        topic=mentor_request.topic,
+    )
+
+    # 弟子のUserTopicのstatusをACTIVEにリセット（師匠選択完了）
+    try:
+        mentee_user_topic = UserTopic.objects.get(
+            user=mentor_request.from_user, 
+            topic=mentor_request.topic
+        )
+        mentee_user_topic.status = UserTopic.Status.ACTIVE
+        mentee_user_topic.save()
+    except UserTopic.DoesNotExist:
+        pass  # UserTopicが存在しない場合はスキップ
+
+    # リクエストのステータスを更新
+    mentor_request.status = MentorRelationRequest.Status.APPROVED
+    mentor_request.save()
+
+    return {"message": "Request approved successfully with mentee selection."}
 
 
 @router.post(
@@ -207,10 +385,19 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     user_topic.status = UserTopic.Status.EXPELLED
     user_topic.save()
     
+    # 破門された弟子の子孫のレベルを調整（レベルダウン）
+    mentee = mentorship.mentee
+    mentor_level = request.user.usertopic_set.get(topic_id=data.topic_id).level
+    mentee_level = mentee.usertopic_set.get(topic_id=data.topic_id).level
+    level_difference = mentor_level - mentee_level
+    
+    # 子孫のレベルを調整（負の値でレベルダウン）
+    _update_descendant_levels(mentee, data.topic_id, -level_difference)
+    
     return _remove_relation(mentorship, action="expel")
 
 
-# 阿部TODO: 現時点は弟子と同レベルであることを想定しているが、弟子の方が高レベルの場合、delta + 1とし、元師匠より1レベル高くさせる
+# completed 阿部TODO: 現時点は弟子と同レベルであることを想定しているが、弟子の方が高レベルの場合、delta + 1とし、元師匠より1レベル高くさせる
 @router.post(
     "/mentees/{mentee_id}/graduate",
     response={200: MenteeActionStatusOut, 404: ErrorOut},
@@ -228,10 +415,15 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
         MentorRelation, mentor=request.user, mentee_id=mentee_id, topic_id=data.topic_id
     )
     mentee = mentorship.mentee
-    delta = (
-        request.user.usertopic_set.get(topic_id=data.topic_id).level
-        - mentee.usertopic_set.get(topic_id=data.topic_id).level
-    )
+    mentor_level = request.user.usertopic_set.get(topic_id=data.topic_id).level
+    mentee_level = mentee.usertopic_set.get(topic_id=data.topic_id).level
+    
+    # 弟子のレベルが師匠より高い場合は、師匠より1レベル高くする
+    if mentee_level >= mentor_level:
+        delta = 1
+    else:
+        delta = mentor_level - mentee_level
+    
     user_topic = mentee.usertopic_set.get(topic_id=data.topic_id)
     user_topic.level += delta
     # UserTopicのstatusをGRADUATEDに更新
@@ -241,8 +433,6 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     _update_descendant_levels(mentee, data.topic_id, delta)
     return _remove_relation(mentorship, action="graduate")
 
-
-# ---------予選通過時点で未使用---------------------------------------------------------------------------------
 @router.get(
     "/mentors/{mentor_id}/subtree",
     response=List[MenteeSubtreeOut],
@@ -487,4 +677,69 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
         
     except UserTopic.DoesNotExist:
         return 404, {"message": "UserTopic not found for the specified topic."}
+
+
+@router.get(
+    "/mentees/{topic_id}",
+    summary="師匠の弟子一覧を取得",
+    response={200: list[MenteeInfoOut], 400: dict, 404: dict},
+    auth=JWTAuth(),
+)
+def get_mentees(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックでの師匠の弟子一覧を取得します。
+    """
+    try:
+        # 師匠の弟子関係を取得
+        mentee_relations = MentorRelation.objects.filter(
+            mentor=request.user, topic_id=topic_id
+        ).select_related('mentee')
+        
+        mentee_list = []
+        for relation in mentee_relations:
+            mentee = relation.mentee
+            try:
+                user_topic = UserTopic.objects.get(user=mentee, topic_id=topic_id)
+                mentee_list.append(MenteeInfoOut(
+                    id=mentee.id,
+                    username=mentee.username,
+                    first_name=mentee.first_name or "",
+                    last_name=mentee.last_name or "",
+                    level=user_topic.level,
+                    created_at=relation.created_at.isoformat()
+                ))
+            except UserTopic.DoesNotExist:
+                # UserTopicが存在しない弟子はスキップ
+                continue
+        
+        return mentee_list
+        
+    except Exception as e:
+        return 400, {"message": f"Error retrieving mentees: {str(e)}"}
+
+
+@router.get(
+    "/capacity/{topic_id}",
+    summary="師匠の定員情報を取得",
+    response={200: dict, 400: dict, 404: dict},
+    auth=JWTAuth(),
+)
+def get_mentor_capacity(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックでの師匠の定員情報を取得します。
+    """
+    try:
+        is_within_capacity, current_count, capacity = _check_mentor_capacity(
+            request.user, topic_id
+        )
+        
+        return {
+            "current_count": current_count,
+            "capacity": capacity,
+            "is_within_capacity": is_within_capacity,
+            "remaining_slots": max(0, capacity - current_count)
+        }
+        
+    except Exception as e:
+        return 400, {"message": f"Error retrieving capacity: {str(e)}"}
 

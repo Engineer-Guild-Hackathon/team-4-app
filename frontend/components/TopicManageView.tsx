@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic } from '@/services/api/topic';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -90,9 +90,26 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
   };
 
-  // トピックに参加する（画面遷移）
-  const handleJoinTopic = (topicId: string) => {
-    router.push({ pathname: '/select-level-mentor', params: { topicId } });
+  // トピックに参加する
+  const handleJoinTopic = async (topicId: string) => {
+    try {
+      // 直接トピックに参加（レベル1で参加）
+      await joinTopic(topicId, 1);
+      await fetchMyTopics();
+      await fetchAllTopics();
+      Alert.alert('参加完了', 'トピックに参加しました', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // 参加後に師匠選択が必要かチェック
+            router.push({ pathname: '/select-level-mentor', params: { topicId } });
+          },
+        },
+      ]);
+    } catch (error: any) {
+      const errorMessage = error.message || '参加に失敗しました';
+      Alert.alert('エラー', errorMessage);
+    }
   };
 
   // トピック作成モーダルを開く
@@ -114,7 +131,15 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             await leaveTopic(topicId, userResponse.id);
             await fetchMyTopics();
             await fetchAllTopics();
-            Alert.alert('成功', 'トピックから抜けました');
+            Alert.alert('成功', 'トピックから抜けました', [
+              {
+                text: 'OK',
+                onPress: () => {
+                  // 画面全体をリロードも兼ねてメインへ遷移
+                  router.replace('/');
+                },
+              },
+            ]);
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
           }

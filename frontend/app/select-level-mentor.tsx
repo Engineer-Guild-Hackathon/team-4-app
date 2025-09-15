@@ -1,7 +1,7 @@
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { getPosts } from '@/services/api/post';
-import { joinTopic } from '@/services/api/topic';
+import { joinTopic, leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { 
   checkMentorSelectionRequired, 
@@ -33,7 +33,10 @@ export default function SelectLevelMentorScreen() {
 
   // ページタイトル変更
   useEffect(() => {
-    navigation.setOptions?.({ title: 'レベル・師匠選択' });
+    navigation.setOptions?.({ 
+      title: 'レベル・師匠選択',
+      headerBackTitle: 'ホーム' // 「index」を「ホーム」に変更
+    });
   }, [navigation]);
 
   // プログレスバーの値
@@ -93,6 +96,10 @@ export default function SelectLevelMentorScreen() {
         setLevel(userLevelResponse.level); // 現在のレベルをセット
       } catch (error) {
         console.error('ユーザーレベル取得エラー:', error);
+        // エラーの場合はデフォルト値を設定
+        setUserLevel(1);
+        setUserStatus('active');
+        setLevel(1);
       }
     };
     
@@ -119,6 +126,8 @@ export default function SelectLevelMentorScreen() {
         }
       } catch (error) {
         console.error('師匠選択データ取得エラー:', error);
+        // エラーの場合は師匠選択不要として扱う
+        setMentorData({ required: false, mentors: [] });
       }
     };
     
@@ -137,6 +146,8 @@ export default function SelectLevelMentorScreen() {
         setRequestStatus(statusResponse);
       } catch (error) {
         console.error('リクエスト状態取得エラー:', error);
+        // エラーの場合はリクエストなしとして扱う
+        setRequestStatus({ status: 'none', message: '' });
       }
     };
     
@@ -147,7 +158,7 @@ export default function SelectLevelMentorScreen() {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // topicIdで絞り、postsリストで取得
+        // topicIdで絞り、postsリストで取得（userIdは指定しない）
         const posts = await getPosts(topicId);
         setPosts(posts);
       } catch {
@@ -183,18 +194,71 @@ export default function SelectLevelMentorScreen() {
 
     try {
       // 師匠選択リクエストを作成
-      await createMentorRequest(selectedMentor.id, topicId);
+      const response = await createMentorRequest(selectedMentor.id, topicId) as {
+        message?: string;
+        id?: number;
+        from_user?: any;
+        to_user?: any;
+        topic?: any;
+        status?: string;
+      };
       
-      Alert.alert('リクエスト送信完了', '師匠選択リクエストを送信しました。師匠の承認をお待ちください。', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/'),
-        },
-      ]);
+      // レスポンスの内容に応じてメッセージを変更
+      if (response.status === 'approved') {
+        // 定員内の場合：無条件で師弟関係成立
+        // 師匠選択が必要な状態を解除
+        setMentorData({ required: false, mentors: [] });
+        // 承認メッセージは表示しない（定員内の場合は承認不要）
+        setRequestStatus({ status: 'none', message: '' });
+        
+        Alert.alert('参加完了', '師匠選択が完了しました。トピックに参加しました。', [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/'),
+          },
+        ]);
+      } else {
+        // 定員超過の場合：承認待ち
+        // リクエスト状態を更新
+        setRequestStatus({ 
+          status: 'pending', 
+          to_username: selectedMentor.username,
+          message: '師匠の承認をお待ちください' 
+        });
+        
+        Alert.alert('リクエスト送信完了', '師匠選択リクエストを送信しました。師匠の承認をお待ちください。', [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/'),
+          },
+        ]);
+      }
     } catch (error) {
       console.error('師匠選択エラー:', error);
       Alert.alert('エラー', '師匠選択に失敗しました');
     }
+  };
+
+  // 戻るボタン処理（参加を取り消す）
+  const handleBack = async () => {
+    Alert.alert('確認', '参加を取り消して戻りますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '戻る',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // ユーザーIDを取得してトピックから退出
+            const userResponse = await getMe();
+            await leaveTopic(topicId, userResponse.id);
+            router.replace('/');
+          } catch (error) {
+            console.error('参加取り消しエラー:', error);
+            Alert.alert('エラー', '参加の取り消しに失敗しました');
+          }
+        },
+      },
+    ]);
   };
 
   // 参加ボタン処理
@@ -205,18 +269,24 @@ export default function SelectLevelMentorScreen() {
       return;
     }
     
-    // 師匠選択が必要な場合は師匠選択を先に実行
-    if (mentorData?.required && selectedMentor) {
+    // 師匠選択が必要な場合
+    if (mentorData?.required) {
+      if (!selectedMentor) {
+        Alert.alert('エラー', '師匠を選択してください');
+        return;
+      }
+      // 師匠選択を実行（handleMentorSelection内で適切な遷移が行われる）
       await handleMentorSelection();
       return;
     }
     
+    // 師匠選択が不要な場合（直接参加）
     try {
       await joinTopic(topicId, level, selectedMentor?.id);
       Alert.alert('参加完了', 'トピックに参加しました', [
         {
           text: 'OK',
-          onPress: () => router.replace('/?refresh=true'),
+          onPress: () => router.replace('/'),
         },
       ]);
     } catch (e: unknown) {
@@ -230,6 +300,15 @@ export default function SelectLevelMentorScreen() {
 
   return (
     <View style={styles.container}>
+      {/* 左上に戻るボタン - 承認済みでない場合のみ表示 */}
+      {requestStatus?.status !== 'approved' && (
+        <View style={styles.backButtonContainer}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Text style={styles.backButtonText}>← 戻る</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       {/* 右側レベル選択UI */}
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector 
@@ -247,12 +326,11 @@ export default function SelectLevelMentorScreen() {
         ) : (
           <>
             {/* 師匠選択リクエストの状態表示 */}
-            {requestStatus && requestStatus.status !== 'none' && (
+            {requestStatus && requestStatus.status !== 'none' && requestStatus.status !== 'approved' && (
               <View style={styles.requestStatusContainer}>
                 <Text style={styles.requestStatusTitle}>師匠選択リクエストの状態</Text>
                 <Text style={styles.requestStatusMessage}>
                   {requestStatus.status === 'pending' && `@${requestStatus.to_username} へのリクエストが保留中です`}
-                  {requestStatus.status === 'approved' && `@${requestStatus.to_username} がリクエストを承認しました！`}
                   {requestStatus.status === 'rejected' && `@${requestStatus.to_username} がリクエストを拒否しました`}
                 </Text>
               </View>
@@ -309,35 +387,39 @@ export default function SelectLevelMentorScreen() {
           </>
         )}
       </View>
-      {/* 下中央にOKボタン */}
-      <View style={styles.bottomButtonContainer}>
-        <View
-          style={{
-            backgroundColor: '#000',
-            borderRadius: 32,
-            shadowColor: '#000',
-            shadowOpacity: 0.3,
-            shadowOffset: { width: 0, height: 4 },
-            shadowRadius: 8,
-            elevation: 4,
-            paddingVertical: 14,
-            paddingHorizontal: 48,
-            minWidth: 180,
-          }}
-        >
-          <Text
+      {/* 下中央にOKボタン - 適切な条件でのみ表示 */}
+      {(mentorData?.required === false || 
+        (mentorData?.required === true && selectedMentor) || 
+        requestStatus?.status === 'approved') && (
+        <View style={styles.bottomButtonContainer}>
+          <View
             style={{
-              color: '#fff',
-              fontSize: 18,
-              fontWeight: 'bold',
-              textAlign: 'center',
+              backgroundColor: '#000',
+              borderRadius: 32,
+              shadowColor: '#000',
+              shadowOpacity: 0.3,
+              shadowOffset: { width: 0, height: 4 },
+              shadowRadius: 8,
+              elevation: 4,
+              paddingVertical: 14,
+              paddingHorizontal: 48,
+              minWidth: 180,
             }}
-            onPress={handleJoin}
           >
-            OK
-          </Text>
+            <Text
+              style={{
+                color: '#fff',
+                fontSize: 18,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+              onPress={handleJoin}
+            >
+              {requestStatus?.status === 'approved' ? '戻る' : '参加'}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -347,6 +429,25 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: '#fff',
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  backButton: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
   },
   rightBarContainer: {
     position: 'absolute',
