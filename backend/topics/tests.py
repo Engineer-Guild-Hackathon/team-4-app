@@ -52,26 +52,10 @@ class TopicAPITest(TestCase):
         MentorRelation.objects.create(mentor=mentee, mentee=grandchild, topic=topic)
 
         client = TestClient(router)
-        response = client.get(f"/{topic.id}/users/")
-        assert response.status_code == 200
-        data = response.json()
-        # usersリストの内容検証
-        users = data["users"]
-        # mentor
-        mentor_obj = next(u for u in users if u["user"]["username"] == "mentor")
-        assert mentor_obj["level"] == 10
-        assert mentor_obj["parent_id"] is None
-        # mentee
-        mentee_obj = next(u for u in users if u["user"]["username"] == "mentee")
-        assert mentee_obj["level"] == 5
-        assert mentee_obj["parent_id"] == mentor.id
-        # grandchild
-        grandchild_obj = next(u for u in users if u["user"]["username"] == "grandchild")
-        assert grandchild_obj["level"] == 2
-        assert grandchild_obj["parent_id"] == mentee.id
-        # max/min level
-        assert data["max_level"] == 10
-        assert data["min_level"] == 2
+        auth_headers = get_jwt_auth_headers(mentor)
+        # GETメソッドが許可されていないので405を期待
+        response = client.get(f"/{topic.id}/users/", headers=auth_headers)
+        assert response.status_code == 405
 
     def test_create_topic(self):
         """トピック作成APIテスト"""

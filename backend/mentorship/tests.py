@@ -38,17 +38,17 @@ class MentorAPITestCase(TestCase):
         self.user5_topic = UserTopic.objects.create(
             user=self.user5, topic=self.topic, level=1, mentee_capacity=3
         )
-        
-        self.client.login(username="user1", password="pass123")
 
     def test_create_mentor_request_success(self):
         """
         Test: 弟子入りリクエスト作成（成功）
         """
+        headers = get_jwt_auth_headers(self.user1)
         response = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
@@ -61,10 +61,12 @@ class MentorAPITestCase(TestCase):
         """
         Test: 自分自身への弟子入りリクエスト（失敗）
         """
+        headers = get_jwt_auth_headers(self.user1)
         response = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user1.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -79,10 +81,12 @@ class MentorAPITestCase(TestCase):
         MentorRelationRequest.objects.create(
             from_user=self.user1, to_user=self.user2, topic=self.topic
         )
+        headers = get_jwt_auth_headers(self.user1)
         response = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -97,8 +101,11 @@ class MentorAPITestCase(TestCase):
         mr = MentorRelationRequest.objects.create(
             from_user=self.user1, to_user=self.user2, topic=self.topic
         )
-        self.client.login(username="user2", password="pass123")  # 受信者としてログイン
-        response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
+        headers = get_jwt_auth_headers(self.user2)  # 受信者として認証
+        response = self.client.post(
+            f"/api/mentorship/requests/{mr.id}/approve",
+            headers=headers
+        )
 
         self.assertEqual(response.status_code, 200)
         mr.refresh_from_db()
@@ -116,8 +123,12 @@ class MentorAPITestCase(TestCase):
         mr = MentorRelationRequest.objects.create(
             from_user=self.user1, to_user=self.user2, topic=self.topic
         )
-        # user1がログインしていますが、受信者ではありません
-        response = self.client.post(f"/api/mentorship/requests/{mr.id}/approve")
+        # user1が認証されていますが、受信者ではありません
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.post(
+            f"/api/mentorship/requests/{mr.id}/approve",
+            headers=headers
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_reject_mentor_request_success(self):
@@ -127,8 +138,11 @@ class MentorAPITestCase(TestCase):
         mr = MentorRelationRequest.objects.create(
             from_user=self.user1, to_user=self.user2, topic=self.topic
         )
-        self.client.login(username="user2", password="pass123")  # 受信者としてログイン
-        response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
+        headers = get_jwt_auth_headers(self.user2)  # 受信者として認証
+        response = self.client.post(
+            f"/api/mentorship/requests/{mr.id}/reject",
+            headers=headers
+        )
 
         self.assertEqual(response.status_code, 200)
         mr.refresh_from_db()
@@ -141,8 +155,12 @@ class MentorAPITestCase(TestCase):
         mr = MentorRelationRequest.objects.create(
             from_user=self.user1, to_user=self.user2, topic=self.topic
         )
-        # user1がログインしていますが、受信者ではありません
-        response = self.client.post(f"/api/mentorship/requests/{mr.id}/reject")
+        # user1が認証されていますが、受信者ではありません
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.post(
+            f"/api/mentorship/requests/{mr.id}/reject",
+            headers=headers
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_create_multiple_requests_to_different_mentors_succeeds(self):
@@ -150,18 +168,21 @@ class MentorAPITestCase(TestCase):
         Test: 異なるメンターへ複数のリクエストを作成（成功）
         """
         topic2 = Topic.objects.create(title="Test Topic 2")
+        headers = get_jwt_auth_headers(self.user1)
 
         # Request 1: user1 -> user2 with self.topic
         response1 = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         # Request 2: user1 -> user3 with topic2
         response2 = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user3.id, "topic_id": str(topic2.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response1.status_code, 200)
         self.assertEqual(response2.status_code, 200)
@@ -177,10 +198,12 @@ class MentorAPITestCase(TestCase):
         MentorRelation.objects.create(
             mentor=self.user2, mentee=self.user1, topic=self.topic
         )
+        headers = get_jwt_auth_headers(self.user1)
         response = self.client.post(
             "/api/mentorship/request",
             {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -204,18 +227,21 @@ class MentorAPITestCase(TestCase):
         mentor_level = 10
         mentee_level = 5
         grandchild_level = 2
-        UserTopic.objects.create(user=self.user2, topic=self.topic, level=mentor_level)
-        UserTopic.objects.create(user=self.user1, topic=self.topic, level=mentee_level)
-        UserTopic.objects.create(
-            user=self.user3, topic=self.topic, level=grandchild_level
-        )
+        # 既存のUserTopicを更新
+        self.user2_topic.level = mentor_level
+        self.user2_topic.save()
+        self.user1_topic.level = mentee_level
+        self.user1_topic.save()
+        self.user3_topic.level = grandchild_level
+        self.user3_topic.save()
 
         # Action: user2 graduates user1
-        self.client.login(username="user2", password="pass123")
+        headers = get_jwt_auth_headers(self.user2)
         response = self.client.post(
             f"/api/mentorship/mentees/{self.user1.id}/graduate",
             {"topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
 
         # Assertions
@@ -252,12 +278,13 @@ class MentorAPITestCase(TestCase):
             mentor=self.user2, mentee=self.user1, topic=self.topic
         )
 
-        # 別のユーザー（師匠ではない）としてログイン
-        self.client.login(username="user3", password="pass123")
+        # 別のユーザー（師匠ではない）として認証
+        headers = get_jwt_auth_headers(self.user3)
         response = self.client.post(
             f"/api/mentorship/mentees/{self.user1.id}/graduate",
             {"topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
         self.assertEqual(response.status_code, 404)
 
@@ -269,12 +296,13 @@ class MentorAPITestCase(TestCase):
             mentor=self.user2, mentee=self.user1, topic=self.topic
         )
 
-        self.client.login(username="user2", password="pass123")
+        headers = get_jwt_auth_headers(self.user2)
 
         response = self.client.post(
             f"/api/mentorship/mentees/{self.user1.id}/expel",
             {"topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
 
         self.assertEqual(response.status_code, 200)
@@ -300,12 +328,13 @@ class MentorAPITestCase(TestCase):
             mentor=self.user2, mentee=self.user1, topic=self.topic
         )
 
-        self.client.login(username="user3", password="pass123")
+        headers = get_jwt_auth_headers(self.user3)
 
         response = self.client.post(
             f"/api/mentorship/mentees/{self.user1.id}/expel",
             {"topic_id": str(self.topic.id)},
             content_type="application/json",
+            headers=headers,
         )
 
         self.assertEqual(response.status_code, 404)
@@ -327,8 +356,9 @@ class MentorAPITestCase(TestCase):
         """
         Test: 師匠選択判定（成功）
         """
-        # UserTopicを作成
-        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
+        # 既存のUserTopicのレベルを更新
+        self.user1_topic.level = 1
+        self.user1_topic.save()
         
         headers = get_jwt_auth_headers(self.user1)
         response = self.client.get(
@@ -343,9 +373,11 @@ class MentorAPITestCase(TestCase):
         """
         Test: 師匠がいる場合の師匠選択判定（false）
         """
-        # UserTopicを作成
-        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
-        UserTopic.objects.create(user=self.user2, topic=self.topic, level=2)
+        # 既存のUserTopicのレベルを更新
+        self.user1_topic.level = 1
+        self.user1_topic.save()
+        self.user2_topic.level = 2
+        self.user2_topic.save()
         
         # 師弟関係を作成
         MentorRelation.objects.create(
@@ -366,9 +398,11 @@ class MentorAPITestCase(TestCase):
         """
         Test: 最高レベルの場合の師匠選択判定（false）
         """
-        # UserTopicを作成（最高レベル）
-        UserTopic.objects.create(user=self.user1, topic=self.topic, level=3)
-        UserTopic.objects.create(user=self.user2, topic=self.topic, level=1)
+        # 既存のUserTopicのレベルを更新（最高レベル）
+        self.user1_topic.level = 3
+        self.user1_topic.save()
+        self.user2_topic.level = 1
+        self.user2_topic.save()
         
         headers = get_jwt_auth_headers(self.user1)
         response = self.client.get(
@@ -384,9 +418,11 @@ class MentorAPITestCase(TestCase):
         """
         Test: 保留中のリクエストがある場合の師匠選択判定（false）
         """
-        # UserTopicを作成
-        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
-        UserTopic.objects.create(user=self.user2, topic=self.topic, level=2)
+        # 既存のUserTopicのレベルを更新
+        self.user1_topic.level = 1
+        self.user1_topic.save()
+        self.user2_topic.level = 2
+        self.user2_topic.save()
         
         # 保留中の師匠選択リクエストを作成
         MentorRelationRequest.objects.create(
@@ -407,9 +443,12 @@ class MentorAPITestCase(TestCase):
         """
         Test: UserTopicが存在しない場合の師匠選択判定（エラー）
         """
+        # 新しいトピックを作成（UserTopicが存在しない）
+        new_topic = Topic.objects.create(title="New Topic", description="No UserTopic")
+        
         headers = get_jwt_auth_headers(self.user1)
         response = self.client.get(
-            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            f"/api/mentorship/mentor-selection/required/{new_topic.id}",
             headers=headers
         )
         
