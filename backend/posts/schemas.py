@@ -11,6 +11,10 @@ class PostMediaOut(Schema):
     media_type: str
     file: str
 
+    @staticmethod
+    def resolve_file(obj: PostMedia) -> str:
+        return obj.file.url
+
 class PostOut(Schema):
     id: int
     content: str
