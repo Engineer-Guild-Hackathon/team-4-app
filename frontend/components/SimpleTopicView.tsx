@@ -71,12 +71,11 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     if (!loading) {
       const timer = setTimeout(() => {
         setIsPagerScrollEnabled(false);
-      }, 136); // TreeViewerの描画が完了するのを待つための僅かな遅延
+      }, 136);
 
       return () => clearTimeout(timer);
     }
-  }, [loading]); // loading stateが変更されたときに実行
-  // ★★★ ここまで追加 ★★★
+  }, [loading]); 
 
   if (loading) {
     return (
