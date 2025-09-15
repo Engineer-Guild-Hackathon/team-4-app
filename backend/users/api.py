@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
-from .schemas import UserProfileOut
 
 User = get_user_model()
 
