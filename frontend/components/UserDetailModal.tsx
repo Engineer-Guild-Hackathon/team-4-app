@@ -1,25 +1,35 @@
+import { useAuth } from '@/hooks/useAuth';
+import { PostMediaOut, PostOut } from '@/types/post';
+import { useEvent } from 'expo';
+import * as Haptics from 'expo-haptics';
+import { Link } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { useAuth } from '@/hooks/useAuth';
-import { Link } from 'expo-router';
-import { useEvent } from 'expo';
+import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
+import PagerView from 'react-native-pager-view';
+import ThreadView from './children/ThreadView';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
-  const player = useVideoPlayer(uri, player => {
+const videoSource =
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
+  const player = useVideoPlayer(videoSource, player => {
     player.loop = true;
     player.play();
   });
@@ -27,16 +37,16 @@ const VideoItem = ({ uri, style }: { uri: string, style: any }) => {
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
 
   return (
-    <VideoView 
-      player={player} 
-      style={style} 
-      // allowsFullscreen 
-      // allowsPictureInPicture 
+    <VideoView
+      player={player}
+      style={style}
+      // allowsFullscreen
+      // allowsPictureInPicture
     />
   );
 };
 
-interface PostListModalProps {
+interface UserDetailModalProps {
   visible: boolean;
   onClose: () => void;
   topicId?: string;
@@ -45,18 +55,20 @@ interface PostListModalProps {
   selfUserId?: number;
 }
 
-export default function PostListModal({
+export default function UserDetailModal({
   visible,
   onClose,
   topicId,
   userId,
   isSelf,
   selfUserId,
-}: PostListModalProps) {
-  const [posts, setPosts] = useState<any[]>([]);
+}: UserDetailModalProps) {
+  const [posts, setPosts] = useState<PostOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { accessToken } = useAuth();
+  const [selectedTab, setSelectedTab] = useState(0); // 0: 投稿, 1: 掲示板
+  const pagerRef = React.useRef<PagerView>(null);
 
   useEffect(() => {
     if (visible && (topicId || userId)) {
@@ -79,8 +91,12 @@ export default function PostListModal({
       }
       const data = await response.json();
       setPosts(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('不明なエラーが発生しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -103,15 +119,19 @@ export default function PostListModal({
               throw new Error(errorData.detail || '削除に失敗しました。');
             }
             fetchPosts();
-          } catch (e: any) {
-            Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+            } else {
+              Alert.alert('エラー', '削除中に不明なエラーが発生しました。');
+            }
           }
         },
       },
     ]);
   };
 
-  const renderPost = ({ item }: { item: any }) => (
+  const renderPost = ({ item }: { item: PostOut }) => (
     <View style={styles.post}>
       {Number(selfUserId) === Number(item.author?.id) && (
         <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
@@ -119,21 +139,12 @@ export default function PostListModal({
         </TouchableOpacity>
       )}
       <View>
-        {item.media.map((media: any, index: number) => {
-          const mediaUrl = media.file;
-          
-          console.log(`投稿ID:${item.id} のメディアURL:`, mediaUrl);
-
+        {item.media.map((media: PostMediaOut, index: number) => {
+          const mediaUrl = `${API_BASE_URL}${media.file}`;
           if (media.media_type === 'image') {
             return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
           } else if (media.media_type === 'video') {
-            return (
-              <VideoItem 
-                key={index}
-                uri={mediaUrl}
-                style={styles.media}
-              />
-            );
+            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
           }
           return null;
         })}
@@ -155,6 +166,11 @@ export default function PostListModal({
     );
   }
 
+  const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
+    setSelectedTab(e.nativeEvent.position);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -162,32 +178,76 @@ export default function PostListModal({
       visible={visible}
       onRequestClose={onClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        shouldRasterizeIOS={true}
+        keyboardVerticalOffset={60}
+      >
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.modalTitle}>投稿一覧</Text>
-            {Number(selfUserId) === Number(userId) && (
-              <Link
-                href={{
-                  pathname: '/create-post',
-                  params: { topicId: topicId },
-                }}
-                asChild
-              >
-                <Pressable style={styles.createButton} onPress={onClose}>
-                  <Text style={styles.createButtonText}>投稿する</Text>
-                </Pressable>
-              </Link>
-            )}
-          </View>
-
-          {content}
-
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>閉じる</Text>
-          </Pressable>
+        {/* ユーザー情報エリア */}
+        <View style={styles.userInfoContainer}>
+          <Text style={styles.userInfoTitle}>ユーザー情報</Text>
+          <Text style={styles.userInfoText}>ユーザーID: {userId ?? '不明'}</Text>
         </View>
+        {/* タブエリア */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 0 && styles.tabActive]}
+            onPress={() => {
+              setSelectedTab(0);
+              pagerRef.current?.setPage(0);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+          >
+            <Text style={[styles.tabText, selectedTab === 0 && styles.tabTextActive]}>投稿</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 1 && styles.tabActive]}
+            onPress={() => {
+              setSelectedTab(1);
+              pagerRef.current?.setPage(1);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+          >
+            <Text style={[styles.tabText, selectedTab === 1 && styles.tabTextActive]}>掲示板</Text>
+          </TouchableOpacity>
+        </View>
+        {/* PageViewエリア */}
+        <PagerView
+          style={styles.pagerView}
+          initialPage={0}
+          ref={pagerRef}
+          onPageSelected={handlePageSelected}
+        >
+          {/* 投稿一覧ページ */}
+          <View key="1" style={styles.pageContainer}>
+            <View style={styles.header}>
+              <Text style={styles.modalTitle}>投稿一覧</Text>
+              {Number(selfUserId) === Number(userId) && (
+                <Link
+                  href={{
+                    pathname: '/create-post',
+                    params: { topicId: topicId },
+                  }}
+                  asChild
+                >
+                  <Pressable style={styles.createButton} onPress={onClose}>
+                    <Text style={styles.createButtonText}>投稿する</Text>
+                  </Pressable>
+                </Link>
+              )}
+            </View>
+            {content}
+          </View>
+          {/* 掲示板ページ */}
+          <ThreadView userId={userId!} topicId={topicId!} />
+        </PagerView>
+        <TouchableOpacity style={styles.closeCircleButton} onPress={onClose}>
+          <Text style={styles.closeCircleText}>×</Text>
+        </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -196,12 +256,55 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'transparent',
-  },
-  modalContent: {
-    height: '100%',
     backgroundColor: 'white',
+    paddingTop: 40,
+  },
+  userInfoContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  userInfoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#374151',
+  },
+  userInfoText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    backgroundColor: '#f3f4f6',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#3b82f6',
+    backgroundColor: '#fff',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: 'bold',
+  },
+  tabTextActive: {
+    color: '#3b82f6',
+  },
+  pagerView: {
+    flex: 1,
+  },
+  pageContainer: {
+    flex: 1,
     padding: 20,
   },
   header: {
@@ -225,15 +328,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-  closeButton: {
-    backgroundColor: '#ccc',
-    padding: 15,
-    borderRadius: 8,
+  closeCircleButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#111',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  closeButtonText: {
-    fontSize: 16,
+  closeCircleText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 28,
   },
   post: {
     paddingVertical: 15,

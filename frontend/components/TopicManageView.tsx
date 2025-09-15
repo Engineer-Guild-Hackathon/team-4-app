@@ -30,12 +30,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicDescription, setNewTopicDescription] = useState('');
   const [myTopics, setMyTopics] = useState<Topic[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [joinLoading, setJoinLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const { accessToken } = useAuth();
   const router = useRouter();
 
@@ -52,13 +49,10 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // 全トピック一覧を取得
   const fetchAllTopics = async () => {
     try {
-      setJoinLoading(true);
       const response = await getAllTopics();
       setAllTopics(response.topics || []);
     } catch {
       setAllTopics([]);
-    } finally {
-      setJoinLoading(false);
     }
   };
 
@@ -66,10 +60,16 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   useEffect(() => {
     if (accessToken) {
       fetchMyTopics();
-    } else {
-      setLoading(false);
+      fetchAllTopics();
     }
-  }, [accessToken, fetchMyTopics]);
+  }, [accessToken]);
+
+  // 参加可能なトピックを更新するuseEffect
+  useEffect(() => { 
+      const myTopicIds = myTopics.map(topic => topic.id);
+      setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+  }, [allTopics, myTopics]);
+
 
   // トピック作成
   const handleCreateTopic = async () => {
@@ -77,13 +77,12 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       Alert.alert('エラー', 'タイトルを入力してください');
       return;
     }
-
     try {
       await createTopic(newTopicTitle.trim(), newTopicDescription.trim());
-
       setNewTopicTitle('');
       setNewTopicDescription('');
       await fetchMyTopics();
+      await fetchAllTopics();
       Alert.alert('成功', 'トピックを作成しました');
     } catch (error: any) {
       const errorMessage = error?.message || 'トピックの作成に失敗しました';
@@ -96,16 +95,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     router.push({ pathname: '/select-level-mentor', params: { topicId } });
   };
 
-  // 参加可能なトピックを取得（既に参加しているトピックを除外）
-  const getAvailableTopics = () => {
-    const myTopicIds = myTopics.map(topic => topic.id);
-    return allTopics.filter(topic => !myTopicIds.includes(topic.id));
-  };
-
   // トピック作成モーダルを開く
-  const openCreateModal = async () => {
+  const openCreateModal = () => {
     setShowCreateModal(true);
-    await fetchAllTopics();
   };
 
   // トピックから抜ける
@@ -120,8 +112,8 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             // ユーザーIDを取得（現在のユーザー情報から）
             const userResponse = await getMe();
             await leaveTopic(topicId, userResponse.id);
-
             await fetchMyTopics();
+            await fetchAllTopics();
             Alert.alert('成功', 'トピックから抜けました');
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
@@ -130,16 +122,6 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       },
     ]);
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>読み込み中...</Text>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -163,36 +145,28 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         {/* トピック参加 */}
         <Text style={styles.sectionTitle}>参加可能なトピック</Text>
         <ScrollView style={styles.joinSection}>
-          {joinLoading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>読み込み中...</Text>
+          {availableTopics.length === 0 ? (
+            <View style={styles.emptyTopicsContainer}>
+              <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
+              <Text style={styles.emptyTopicsSubText}>
+                新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
+              </Text>
             </View>
           ) : (
-            <>
-              {getAvailableTopics().length === 0 ? (
-                <View style={styles.emptyTopicsContainer}>
-                  <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
-                  <Text style={styles.emptyTopicsSubText}>
-                    新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
-                  </Text>
+            availableTopics.map(topic => (
+              <View key={topic.id} style={styles.availableTopicItem}>
+                <View style={styles.availableTopicInfo}>
+                  <Text style={styles.availableTopicTitle}>{topic.title}</Text>
+                  <Text style={styles.availableTopicDescription}>{topic.description}</Text>
                 </View>
-              ) : (
-                getAvailableTopics().map(topic => (
-                  <View key={topic.id} style={styles.availableTopicItem}>
-                    <View style={styles.availableTopicInfo}>
-                      <Text style={styles.availableTopicTitle}>{topic.title}</Text>
-                      <Text style={styles.availableTopicDescription}>{topic.description}</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.joinTopicButton}
-                      onPress={() => handleJoinTopic(topic.id)}
-                    >
-                      <Text style={styles.joinTopicButtonText}>参加</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-            </>
+                <TouchableOpacity
+                  style={styles.joinTopicButton}
+                  onPress={() => handleJoinTopic(topic.id)}
+                >
+                  <Text style={styles.joinTopicButtonText}>参加</Text>
+                </TouchableOpacity>
+              </View>
+            ))
           )}
         </ScrollView>
 
@@ -347,14 +321,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   topicItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-  },
-  emptyTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f9fafb',
