@@ -12,5 +12,4 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     既存のユーザーが更新された場合は、プロフィールも保存する。
     """
     if created:
-        UserProfile.objects.create(user=instance)
-    instance.profile.save()
+        UserProfile.objects.get_or_create(user=instance)

@@ -10,8 +10,12 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'プロフィール'
 
-class CustomUserAdmin(UserAdmin):
-    inlines = (UserProfileInline,)
+class CustomUserAdmin(UserAdmin):    
+    def get_inlines(self, request, obj=None):
+        if obj:
+            return (UserProfileInline,)
+        else:
+            return ()
 
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
