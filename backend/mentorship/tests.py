@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from mentorship.models import MentorRelationRequest, MentorRelation, ActionLog
 from topics.models import Topic, UserTopic
+from users.testutils import get_jwt_auth_headers
 
 User = get_user_model()
 
@@ -288,4 +289,109 @@ class MentorAPITestCase(TestCase):
             content_type="application/json",
         )
 
+        self.assertEqual(response.status_code, 404)
+
+    def test_mentor_selection_required_unauthorized_fails(self):
+        """
+        Test: 認証されていないユーザーによる師匠選択判定（失敗）
+        """
+        # ログアウトして認証なしでアクセス
+        self.client.logout()
+        
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}"
+        )
+        
+        self.assertEqual(response.status_code, 401)
+
+    def test_mentor_selection_required_success(self):
+        """
+        Test: 師匠選択判定（成功）
+        """
+        # UserTopicを作成
+        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("required", response.json())
+
+    def test_mentor_selection_required_with_mentor_false(self):
+        """
+        Test: 師匠がいる場合の師匠選択判定（false）
+        """
+        # UserTopicを作成
+        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
+        UserTopic.objects.create(user=self.user2, topic=self.topic, level=2)
+        
+        # 師弟関係を作成
+        MentorRelation.objects.create(
+            mentor=self.user2, mentee=self.user1, topic=self.topic
+        )
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data["required"])
+
+    def test_mentor_selection_required_max_level_false(self):
+        """
+        Test: 最高レベルの場合の師匠選択判定（false）
+        """
+        # UserTopicを作成（最高レベル）
+        UserTopic.objects.create(user=self.user1, topic=self.topic, level=3)
+        UserTopic.objects.create(user=self.user2, topic=self.topic, level=1)
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data["required"])
+
+    def test_mentor_selection_required_pending_request_false(self):
+        """
+        Test: 保留中のリクエストがある場合の師匠選択判定（false）
+        """
+        # UserTopicを作成
+        UserTopic.objects.create(user=self.user1, topic=self.topic, level=1)
+        UserTopic.objects.create(user=self.user2, topic=self.topic, level=2)
+        
+        # 保留中の師匠選択リクエストを作成
+        MentorRelationRequest.objects.create(
+            from_user=self.user1, to_user=self.user2, topic=self.topic, status="pending"
+        )
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data["required"])
+
+    def test_mentor_selection_required_user_topic_not_found(self):
+        """
+        Test: UserTopicが存在しない場合の師匠選択判定（エラー）
+        """
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/mentor-selection/required/{self.topic.id}",
+            headers=headers
+        )
+        
         self.assertEqual(response.status_code, 404)

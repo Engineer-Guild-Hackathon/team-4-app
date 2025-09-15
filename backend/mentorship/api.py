@@ -1,6 +1,7 @@
 import uuid
 from typing import List
 from ninja import Router
+from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
@@ -75,6 +76,7 @@ def _update_descendant_levels(user, topic_id: uuid.UUID, level_difference: int):
     "/request",
     response={200: MentorRequestOut, 400: ErrorOut},
     summary="弟子入りリクエストを作成する",
+    auth=JWTAuth(),
 )
 def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     """
@@ -112,6 +114,7 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     "/requests/{request_id}/approve",
     response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     summary="弟子入りリクエストを承認する",
+    auth=JWTAuth(),
 )
 @transaction.atomic
 def approve_mentor_request(request: HttpRequest, request_id: int):
@@ -120,6 +123,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
 
     - リクエストの宛先（to_user）である本人しか承認できません。
     - 承認されると、リクエストのステータスが `approved` になり、新しい師弟関係が作成されます。
+    - 師弟関係が成立した時点で、弟子のUserTopicのstatusをACTIVEにリセットします。
     """
     mentor_request = get_object_or_404(
         MentorRelationRequest, id=request_id, status="pending"
@@ -136,6 +140,17 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
         topic=mentor_request.topic,
     )
 
+    # 弟子のUserTopicのstatusをACTIVEにリセット（師匠選択完了）
+    try:
+        mentee_user_topic = UserTopic.objects.get(
+            user=mentor_request.from_user, 
+            topic=mentor_request.topic
+        )
+        mentee_user_topic.status = UserTopic.Status.ACTIVE
+        mentee_user_topic.save()
+    except UserTopic.DoesNotExist:
+        pass  # UserTopicが存在しない場合はスキップ
+
     # リクエストのステータスを更新
     mentor_request.status = MentorRelationRequest.Status.APPROVED
     mentor_request.save()
@@ -147,6 +162,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     "/requests/{request_id}/reject",
     response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     summary="弟子入りリクエストを拒否する",
+    auth=JWTAuth(),
 )
 def reject_mentor_request(request: HttpRequest, request_id: int):
     """
@@ -173,6 +189,7 @@ def reject_mentor_request(request: HttpRequest, request_id: int):
     "/mentees/{mentee_id}/expel",
     response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を破門する",
+    auth=JWTAuth(),
 )
 def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
@@ -198,6 +215,7 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     "/mentees/{mentee_id}/graduate",
     response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を卒業させる",
+    auth=JWTAuth(),
 )
 def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
@@ -229,6 +247,7 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     "/mentors/{mentor_id}/subtree",
     response=List[MenteeSubtreeOut],
     summary="指定されたメンターの弟子ツリーを取得する",
+    auth=JWTAuth(),
 )
 def get_mentor_subtree(request: HttpRequest, mentor_id: int):
     """
@@ -242,6 +261,7 @@ def get_mentor_subtree(request: HttpRequest, mentor_id: int):
     "/tree/",
     response=List[UserNodeOut],
     summary="全てのユーザーと師弟関係のツリーデータを取得する",
+    auth=JWTAuth(),
 )
 def get_tree_data(request: HttpRequest):
     """
@@ -271,6 +291,7 @@ def get_tree_data(request: HttpRequest):
 @router.post(
     "/mentor-selection/complete",
     summary="師匠選択完了",
+    auth=JWTAuth(),
 )
 def complete_mentor_selection(request: HttpRequest, data: TopicId):
     """
@@ -287,12 +308,14 @@ def complete_mentor_selection(request: HttpRequest, data: TopicId):
 @router.get(
     "/mentor-selection/required/{topic_id}",
     summary="師匠選択が必要かどうかを判定",
+    response={200: dict, 400: dict, 404: dict},
+    auth=JWTAuth(),
 )
 def check_mentor_selection_required(request: HttpRequest, topic_id: str):
     """
     指定されたトピックで師匠選択が必要かどうかを判定します。
     
-    - 師匠がいない AND 最高レベルではない場合、師匠選択が必要
+    - 師匠がいない AND 最高レベルではない AND 保留中のリクエストがない場合、師匠選択が必要
     """
     try:
         user_topic = UserTopic.objects.get(user=request.user, topic_id=topic_id)
@@ -300,6 +323,11 @@ def check_mentor_selection_required(request: HttpRequest, topic_id: str):
         # 師匠がいるかチェック
         has_mentor = MentorRelation.objects.filter(
             mentee=request.user, topic_id=topic_id
+        ).exists()
+        
+        # 保留中の師匠選択リクエストがあるかチェック
+        has_pending_request = MentorRelationRequest.objects.filter(
+            from_user=request.user, topic_id=topic_id, status="pending"
         ).exists()
         
         # 最高レベルかチェック
@@ -310,14 +338,69 @@ def check_mentor_selection_required(request: HttpRequest, topic_id: str):
         is_max_level = user_topic.level == max_level
         
         # 師匠選択が必要な条件
-        selection_required = not has_mentor and not is_max_level
+        # 師匠がいない AND 最高レベルではない AND 保留中のリクエストがない
+        selection_required = not has_mentor and not is_max_level and not has_pending_request
         
-        return {"required": selection_required, "reason": "No mentor or not at max level."}
+        return {
+            "required": selection_required, 
+            "reason": "No mentor or not at max level or no pending request.",
+            "user_status": user_topic.status
+        }
     except UserTopic.DoesNotExist:
-        return 400, {"message": "UserTopic not found."}
+        return 404, {"message": "UserTopic not found."}
+@router.get(
+    "/mentor-request-status/{topic_id}",
+    summary="師匠選択リクエストの状態を取得",
+    response={200: dict, 400: dict},
+    auth=JWTAuth(),
+)
+def get_mentor_request_status(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックでの師匠選択リクエストの状態を取得します。
+    """
+    try:
+        # 最新の師匠選択リクエストを取得
+        latest_request = MentorRelationRequest.objects.filter(
+            from_user=request.user, topic_id=topic_id
+        ).order_by('-created_at').first()
+        
+        if not latest_request:
+            return {"status": "none", "message": "No mentor request found"}
+        
+        return {
+            "status": latest_request.status,
+            "to_user_id": latest_request.to_user.id,
+            "to_username": latest_request.to_user.username,
+            "created_at": latest_request.created_at,
+            "message": f"Request to {latest_request.to_user.username} is {latest_request.status}"
+        }
+    except Exception as e:
+        return 400, {"message": f"Error retrieving request status: {str(e)}"}
+
+@router.get(
+    "/user-level/{topic_id}",
+    summary="指定されたトピックでのユーザーの現在レベルを取得",
+    response={200: dict, 404: dict},
+    auth=JWTAuth(),
+)
+def get_user_level(request: HttpRequest, topic_id: str):
+    """
+    指定されたトピックでのユーザーの現在レベルを取得します。
+    """
+    try:
+        user_topic = UserTopic.objects.get(user=request.user, topic_id=topic_id)
+        return {
+            "level": user_topic.level,
+            "status": user_topic.status
+        }
+    except UserTopic.DoesNotExist:
+        return 404, {"message": "UserTopic not found for the specified topic."}
+
 @router.get(
     "/available-mentors/{topic_id}",
     summary="師匠選択可能なユーザーリストを取得",
+    response={200: list[UserEasyOut], 400: dict, 404: dict},
+    auth=JWTAuth(),
 )
 def get_available_mentors(request: HttpRequest, topic_id: str):
     """
@@ -365,5 +448,5 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
         ]
         
     except UserTopic.DoesNotExist:
-        return 400, {"message": "UserTopic not found for the specified topic."}
+        return 404, {"message": "UserTopic not found for the specified topic."}
 

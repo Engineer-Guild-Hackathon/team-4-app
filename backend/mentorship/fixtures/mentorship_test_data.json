@@ -1,0 +1,158 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 100,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$test$test",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "mentor_user",
+      "first_name": "師匠",
+      "last_name": "太郎",
+      "email": "mentor@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-09-15T00:00:00.000Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 101,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$test$test",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "mentee_user",
+      "first_name": "弟子",
+      "last_name": "花子",
+      "email": "mentee@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-09-15T00:00:00.000Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 102,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$test$test",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "senior_mentor",
+      "first_name": "上級師匠",
+      "last_name": "次郎",
+      "email": "senior@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-09-15T00:00:00.000Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "topics.topic",
+    "pk": 200,
+    "fields": {
+      "title": "Pythonプログラミング",
+      "description": "Pythonの基礎から応用まで学ぶトピック",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "topics.topic",
+    "pk": 201,
+    "fields": {
+      "title": "JavaScript開発",
+      "description": "フロントエンド開発の基礎を学ぶトピック",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "topics.usertopic",
+    "pk": 300,
+    "fields": {
+      "user": 100,
+      "topic": 200,
+      "level": 3,
+      "status": "active",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "topics.usertopic",
+    "pk": 301,
+    "fields": {
+      "user": 101,
+      "topic": 200,
+      "level": 1,
+      "status": "active",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "topics.usertopic",
+    "pk": 302,
+    "fields": {
+      "user": 102,
+      "topic": 200,
+      "level": 3,
+      "status": "active",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "topics.usertopic",
+    "pk": 303,
+    "fields": {
+      "user": 100,
+      "topic": 201,
+      "level": 2,
+      "status": "active",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "mentorship.mentorrelation",
+    "pk": 400,
+    "fields": {
+      "mentor": 100,
+      "mentee": 101,
+      "topic": 200,
+      "created_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "mentorship.mentorrelationrequest",
+    "pk": 500,
+    "fields": {
+      "from_user": 101,
+      "to_user": 102,
+      "topic": 200,
+      "status": "pending",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "mentorship.mentorrelationrequest",
+    "pk": 501,
+    "fields": {
+      "from_user": 101,
+      "to_user": 100,
+      "topic": 201,
+      "status": "approved",
+      "created_at": "2025-09-15T00:00:00.000Z",
+      "updated_at": "2025-09-15T00:00:00.000Z"
+    }
+  }
+]
