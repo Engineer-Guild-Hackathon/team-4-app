@@ -39,6 +39,7 @@ export default function CreatePostScreen() {
   const [content, setContent] = useState('');
   const [mediaAssets, setMediaAssets] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPickingMedia, setIsPickingMedia] = useState(false);
 
   const topicId = params.topicId as string;
 
@@ -49,14 +50,24 @@ export default function CreatePostScreen() {
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
+    setIsPickingMedia(true);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsMultipleSelection: true,
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setMediaAssets([...mediaAssets, ...result.assets]);
+      if (!result.canceled) {
+        setMediaAssets(result.assets);
+      }
+    } catch (error: any) {
+      Alert.alert(
+        'メディアの読み込みに失敗しました',
+        '選択されたメディアの処理中にエラーが発生しました。別のファイルを選択するか、デバイスにダウンロードしてから再度お試しください。'
+      );
+    } finally {
+      setIsPickingMedia(false);
     }
   };
 
@@ -129,7 +140,11 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <Button title="画像・動画を選択" onPress={pickMedia} />
+      <Button 
+        title={isPickingMedia ? "メディアを読み込み中..." : "画像・動画を選択"}
+        onPress={pickMedia} 
+        disabled={isPickingMedia}
+      />
 
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset => {
