@@ -1,14 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Dimensions, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  runOnJS,
-  withSequence,
-  Easing,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Svg, { G, Line, Path } from 'react-native-svg';
 import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
 import { useTreeData } from '../../hooks/useTreeData';
@@ -24,7 +17,6 @@ interface TreeViewerProps {
 
 export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
   const { data, loading } = useTreeData(topicId);
-  const [focusedNodeId, setFocusedNodeId] = useState<number | null>(null);
   const [myNodeId, setMyNodeId] = useState<number | null>(null); // Assuming '1' is the user's ID for demo
 
   // --- D3 Layout ---
@@ -86,104 +78,36 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     return id !== null ? rootNode?.find(node => node.data.id === id) : undefined;
   };
 
+  const zoomIn = () => {
+    scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
+  };
+
+  const zoomOut = () => {
+    scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
+  };
+
   // --- Gesture Handlers ---
-  const moveToParent = () => {
-    const node = findNodeById(focusedNodeId);
-    if (node?.parent) {
-      focusNode(node.parent); 
-    } else {
-      bounceBack('down');
-    }
-  };
-
-  const moveToChild = () => {
-    const node = findNodeById(focusedNodeId);
-    if (node?.children?.length) {
-      focusNode(node.children[0]);
-    } else {
-      bounceBack('up');
-    }
-  };
-
-  const moveToSibling = (direction: 'next' | 'prev') => {
-    const node = findNodeById(focusedNodeId);
-    const siblings = node?.parent?.children;
-    if (node && siblings && siblings.length > 1) {
-      const index = siblings.indexOf(node);
-      const targetIndex = direction === 'next' ? index + 1 : index - 1;
-      if (targetIndex >= 0 && targetIndex < siblings.length) {
-        focusNode(siblings[targetIndex]);
-      } else {
-        bounceBack(direction === 'next' ? 'left' : 'right');
-      }
-    }
-  };
-
-  const bounceBack = (direction: 'up' | 'down' | 'left' | 'right') => {
-    const bounceDistance = 20;
-    const originalX = translateX.value;
-    const originalY = translateY.value;
-
-    let deltaX = 0;
-    let deltaY = 0;
-
-    if (direction === 'left') deltaX = bounceDistance; // Swipe right, move content right
-    if (direction === 'right') deltaX = -bounceDistance; // Swipe left, move content left
-    if (direction === 'up') deltaY = bounceDistance; // Swipe down, move content down
-    if (direction === 'down') deltaY = -bounceDistance; // Swipe up, move content up
-
-    if (deltaX !== 0) {
-      translateX.value = withSequence(
-        withTiming(originalX + deltaX, {
-          duration: 150,
-          easing: Easing.out(Easing.quad),
-        }),
-        withTiming(originalX, { duration: 250, easing: Easing.inOut(Easing.quad) }),
-      );
-    }
-    if (deltaY !== 0) {
-      translateY.value = withSequence(
-        withTiming(originalY + deltaY, {
-          duration: 150,
-          easing: Easing.out(Easing.quad),
-        }),
-        withTiming(originalY, { duration: 250, easing: Easing.inOut(Easing.quad) }),
-      );
-    }
-  };
-
-  const clampTranslate = () => {
-    const nodes = rootNode?.descendants();
-    if (!nodes || nodes.length === 0) return;
-
-    const scaledX = nodes.map(n => n.x * scale.value);
-    const scaledY = nodes.map(n => n.y * scale.value);
-
-    const minX = Math.min(...scaledX);
-    const maxX = Math.max(...scaledX);
-    const minY = Math.min(...scaledY);
-    const maxY = Math.max(...scaledY);
-
-    const maxTranslateX = screenWidth - minX;
-    const minTranslateX = -maxX;
-    const maxTranslateY = screenHeight - minY;
-    const minTranslateY = -maxY;
-
-    translateX.value = Math.max(minTranslateX, Math.min(translateX.value, maxTranslateX));
-    translateY.value = Math.max(minTranslateY, Math.min(translateY.value, maxTranslateY));
-  };
-
-  const zoom = (factor: number) => {
-    const newScale = Math.max(0.3, Math.min(scale.value * factor, 4.0));
-    scale.value = withTiming(newScale, { duration: DURATION });
-  };
-
-
-
-  const zoomIn = () => zoom(1.5);
-  const zoomOut = () => zoom(1 / 1.5);
-
-  const panAndSwipeGesture = Gesture.Pan()
+  const exploreGesture = Gesture.Simultaneous(
+    Gesture.Pinch()
+      .onUpdate(e => {
+        scale.value = Math.max(0.3, Math.min(e.scale * savedScale.value, 4.0));
+      })
+      .onEnd(() => {
+        savedScale.value = scale.value;
+      }),
+    Gesture.Pan()
+      .onUpdate(e => {
+        translateX.value = savedTranslateX.value + e.translationX;
+        translateY.value = savedTranslateY.value + e.translationY;
+      })
+      .onBegin(() => {
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      }),
+  );
+  const composedGesture = exploreGesture;
+  /*
+  const panAndSwipeGesture = Gesture.Pan() // OLD GESTURE
     .onBegin(() => {
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
@@ -203,13 +127,12 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
         else runOnJS(moveToChild)(); // Up swipe -> child
       }
     });
-
-  const composedGesture = Gesture.Simultaneous(panAndSwipeGesture);
+  */
 
   // --- Button Actions ---
   const DURATION = 300; // This is for buttons, focusNode has its own.
 
-  const fitToNetwork = () => {
+  const fitToNetwork = (onComplete?: () => void) => {
     if (!rootNode) return;
     // This logic is duplicated from the useMemo. Consider extracting to a helper.
     const nodes = rootNode.descendants();
@@ -234,17 +157,11 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     // A simple reset to a base scale and zero translation works because
     // the nodes were pre-centered to the screen dimensions.
     scale.value = withTiming(newScale, { duration: DURATION });
-    translateX.value = withTiming(0, { duration: DURATION });
+    translateX.value = withTiming(0, { duration: DURATION }, () => {
+      // if (onComplete) runOnJS(onComplete)(); // onComplete removed
+    });
     translateY.value = withTiming(0, { duration: DURATION });
   };
-
-  const focusOnMe = () => {
-    const meNode = findNodeById(myNodeId);
-    if (meNode) {
-      focusNode(meNode);
-    }
-  };
-
   // --- Animated Style ---
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -256,45 +173,14 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 
   // --- Auto-Fit on Load ---
   useEffect(() => {
-    if (rootNode && myNodeId) {
-      const meNode = findNodeById(myNodeId);
-      if (meNode) focusNode(meNode);
-    } else {
-      // Reset state if data is cleared
-      setFocusedNodeId(null);
+    if (rootNode) {
+      fitToNetwork();
     }
-  }, [rootNode, myNodeId]);
-
-  const focusNode = (
-    node?: HierarchyPointNode<D3TreeNode>,
-    targetScale?: number
-  ) => {
-    if (!node) return;
-
-    setFocusedNodeId(node.data.id);
-
-    const scaleToUse = targetScale ?? scale.value;
-    const contentX = node.x;
-    const contentY = node.y;
-
-    const targetTranslateX = screenWidth / 2 - contentX * scaleToUse;
-    const targetTranslateY = screenHeight / 2 - contentY * scaleToUse;
-
-    if (targetScale !== undefined && targetScale !== scale.value) {
-      scale.value = withTiming(scaleToUse, { duration: DURATION });
-    }
-
-    translateX.value = withTiming(targetTranslateX, { duration: DURATION });
-    translateY.value = withTiming(targetTranslateY, { duration: DURATION });
-  };
+  }, [rootNode]);
 
   // --- Node Tap Handler ---
   const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
-    // Focus the node if it's not already focused
-    if (focusedNodeId !== node.data.id) {
-      focusNode(node);
-    }
-    // Always trigger the press action on tap
+    // zoomToNode(node, scale.value); // Removed zoom-on-tap
     onNodePress(node.data.id);
   };
 
@@ -316,7 +202,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork}>
+        <TouchableOpacity style={styles.controlButton} onPress={() => fitToNetwork()}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
             <Path fill="#fff" d="M3 11H1v10h10v-2H3v-8zm2-8h8V1H5v2zm16 0h-2v2h2v8h2V3a2 2 0 0 0-2-2zm-2 18h2v-8h-2v8zM13 5h-2v14h2V5z" />
           </Svg>
@@ -327,13 +213,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
         <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
           <Text style={{ color: '#fff', fontSize: 18 }}>－</Text>
         </TouchableOpacity>
-        {myNodeId !== null && (
-          <TouchableOpacity style={styles.controlButton} onPress={focusOnMe}>
-            <Svg width={24} height={24} viewBox="0 0 24 24">
-              <Path fill="#fff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0 1 12.28 0C16.43 19.18 14.03 20 12 20z" />
-            </Svg>
-        </TouchableOpacity>
-        )}
       </View>
 
       <GestureDetector gesture={composedGesture}>
@@ -356,7 +235,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
                   key={node.data.id}
                   node={node}
                   onPress={() => handleNodeTap(node)}
-                  isFocused={focusedNodeId === node.data.id}
+                  isFocused={false}
                 />
               ))}
             </G>
