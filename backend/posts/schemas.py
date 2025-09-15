@@ -1,7 +1,7 @@
 from ninja import Schema
 from datetime import datetime
 from typing import List
-from .models import Post
+from .models import Post, PostMedia
 
 class AuthorOut(Schema):
     id: int
