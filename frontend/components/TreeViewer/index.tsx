@@ -132,10 +132,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     })
-    .onUpdate(event => {
-      translateX.value = savedTranslateX.value + event.translationX;
-      translateY.value = savedTranslateY.value + event.translationY;
-    })
     .onEnd(event => {
       const vx = event.velocityX;
       const vy = event.velocityY;
@@ -143,12 +139,12 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 
       // Check for horizontal swipe
       if (Math.abs(vx) > Math.abs(vy) && Math.abs(vx) > SWIPE_THRESHOLD) {
-        if (vx > 0) runOnJS(moveToSibling)('next');
-        else runOnJS(moveToSibling)('prev');
+        if (vx > 0) runOnJS(moveToSibling)('prev'); // Right swipe -> previous sibling
+        else runOnJS(moveToSibling)('next'); // Left swipe -> next sibling
       // Check for vertical swipe
       } else if (Math.abs(vy) > Math.abs(vx) && Math.abs(vy) > SWIPE_THRESHOLD) {
-        if (vy > 0) runOnJS(moveToChild)();
-        else runOnJS(moveToParent)();
+        if (vy > 0) runOnJS(moveToParent)(); // Down swipe -> parent
+        else runOnJS(moveToChild)(); // Up swipe -> child
       }
     });
 
@@ -156,26 +152,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 
   // --- Button Actions ---
   const DURATION = 300; // This is for buttons, focusNode has its own.
-
-  const zoom = (factor: number) => {
-    const oldScale = scale.value;
-    const newScale = Math.max(0.3, Math.min(oldScale * factor, 4.0));
-
-    // Pivot around the center of the screen for button zoom
-    const pivotX = screenWidth / 2;
-    const pivotY = screenHeight / 2;
-
-    const newTranslateX = pivotX - (pivotX - translateX.value) * (newScale / oldScale);
-    const newTranslateY = pivotY - (pivotY - translateY.value) * (newScale / oldScale);
-
-    scale.value = withTiming(newScale, { duration: DURATION });
-    translateX.value = withTiming(newTranslateX, { duration: DURATION });
-    translateY.value = withTiming(newTranslateY, { duration: DURATION });
-  };
-
-
-  const zoomIn = () => zoom(1.5);
-  const zoomOut = () => zoom(1 / 1.5);
 
   const fitToNetwork = () => {
     if (!rootNode) return;
@@ -224,32 +200,40 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
 
   // --- Auto-Fit on Load ---
   useEffect(() => {
-    if (rootNode) {
-      // On initial load, focus the root node
-      focusNode(rootNode);
-      // Or if you prefer to show the whole tree:
-      // fitToNetwork();
-      // setFocusedNodeId(rootNode.data.id);
-      // onNodePress(rootNode.data.id);
+    if (rootNode && myNodeId) {
+      const meNode = findNodeById(myNodeId);
+      if (meNode) focusNode(meNode);
     } else {
       // Reset state if data is cleared
       setFocusedNodeId(null);
     }
-  }, [rootNode, scale, translateX, translateY, savedScale, savedTranslateX, savedTranslateY]);
+  }, [rootNode, myNodeId]);
 
   // --- Focus on Node ---
   const focusNode = (node?: HierarchyPointNode<D3TreeNode>) => {
     if (!node) return;
+
+    // Only responsible for animating the view and setting focus state
     setFocusedNodeId(node.data.id);
-    const targetScale = 1.0; // Focus at a 1:1 scale
 
-    const targetX = screenWidth / 2 - node.x * targetScale;
-    const targetY = screenHeight / 2 - node.y * targetScale;
+    const targetScale = scale.value; // Keep current zoom level
+    const contentX = node.x;
+    const contentY = node.y;
 
-    scale.value = withTiming(targetScale, { duration: DURATION });
-    translateX.value = withTiming(targetX, { duration: DURATION });
-    translateY.value = withTiming(targetY, { duration: DURATION });
+    const targetTranslateX = screenWidth / 2 - contentX * targetScale;
+    const targetTranslateY = screenHeight / 2 - contentY * targetScale;
 
+    translateX.value = withTiming(targetTranslateX, { duration: DURATION });
+    translateY.value = withTiming(targetTranslateY, { duration: DURATION });
+  };
+
+  // --- Node Tap Handler ---
+  const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
+    // Focus the node if it's not already focused
+    if (focusedNodeId !== node.data.id) {
+      focusNode(node);
+    }
+    // Always trigger the press action on tap
     onNodePress(node.data.id);
   };
 
@@ -271,16 +255,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
-          <Svg width={24} height={24} viewBox="0 0 24 24">
-            <Path fill="#fff" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-          </Svg>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
-          <Svg width={24} height={24} viewBox="0 0 24 24">
-            <Path fill="#fff" d="M19 13H5v-2h14v2z" />
-          </Svg>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
             <Path fill="#fff" d="M3 11H1v10h10v-2H3v-8zm2-8h8V1H5v2zm16 0h-2v2h2v8h2V3a2 2 0 0 0-2-2zm-2 18h2v-8h-2v8zM13 5h-2v14h2V5z" />
@@ -314,7 +288,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
                 <TreeNodeView
                   key={node.data.id}
                   node={node}
-                  onPress={() => focusNode(node)}
+                  onPress={() => handleNodeTap(node)}
                   isFocused={focusedNodeId === node.data.id}
                 />
               ))}
