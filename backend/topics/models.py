@@ -43,7 +43,7 @@ class UserTopic(models.Model):
     )
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="トピック")
     level = models.IntegerField(default=1, verbose_name="レベル")
-    mentee_capacity = models.IntegerField(default=3, verbose_name="弟子定員")
+    mentee_capacity = models.IntegerField(default=5, verbose_name="弟子定員")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="参加日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
     status = models.CharField(

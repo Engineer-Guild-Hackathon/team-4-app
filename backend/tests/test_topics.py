@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from topics.models import Topic, UserTopic
+from ninja_jwt.tokens import RefreshToken
 import uuid
 import json
 
@@ -23,6 +24,12 @@ class TopicsTests(TestCase):
         UserTopic.objects.create(user=self.user1, topic=self.topic, level=5)
         UserTopic.objects.create(user=self.user2, topic=self.topic, level=3)
         UserTopic.objects.create(user=self.user3, topic=self.topic, level=7)
+
+    def get_auth_headers(self, user):
+        """JWT認証ヘッダーを生成する"""
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        return {"Authorization": f"Bearer {access_token}"}
 
     def test_get_topic_level_info_with_users(self):
         """参加者がいる場合のレベル情報取得テスト"""
@@ -101,3 +108,108 @@ class TopicsTests(TestCase):
         # 参加者がいない場合は1がデフォルトレベル
         expected_default_level = 1 if data['user_count'] == 0 else data['min_level'] - 1
         self.assertEqual(expected_default_level, 1)
+
+    def test_update_mentee_capacity_success(self):
+        """弟子定員更新の成功テスト"""
+        # 新しいトピックを作成してテスト
+        test_topic = Topic.objects.create(title='テストトピック2', description='弟子定員テスト用')
+        user_topic = UserTopic.objects.create(user=self.user1, topic=test_topic, level=5)
+        
+        # 弟子定員を10人に更新
+        headers = self.get_auth_headers(self.user1)
+        response = self.client.patch(
+            f"/api/topics/{test_topic.id}/me/mentee-capacity/",
+            data={"mentee_capacity": 10},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertEqual(data['level'], 5)
+        
+        # データベースで確認
+        user_topic.refresh_from_db()
+        self.assertEqual(user_topic.mentee_capacity, 10)
+
+    def test_update_mentee_capacity_invalid_range(self):
+        """弟子定員更新の範囲外テスト"""
+        # 新しいトピックを作成してテスト
+        test_topic = Topic.objects.create(title='テストトピック3', description='範囲テスト用')
+        UserTopic.objects.create(user=self.user1, topic=test_topic, level=5)
+        
+        headers = self.get_auth_headers(self.user1)
+        
+        # 0人（範囲外）
+        response = self.client.patch(
+            f"/api/topics/{test_topic.id}/me/mentee-capacity/",
+            data={"mentee_capacity": 0},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 400)
+        
+        # 101人（範囲外）
+        response = self.client.patch(
+            f"/api/topics/{test_topic.id}/me/mentee-capacity/",
+            data={"mentee_capacity": 101},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_update_mentee_capacity_below_current_mentees(self):
+        """現在の弟子数より少ない定員設定テスト"""
+        from mentorship.models import MentorRelation
+        
+        # 新しいトピックを作成してテスト
+        test_topic = Topic.objects.create(title='テストトピック4', description='弟子数テスト用')
+        user_topic = UserTopic.objects.create(user=self.user1, topic=test_topic, level=5)
+        
+        # 師匠関係を作成（弟子を2人追加）
+        MentorRelation.objects.create(mentor=self.user1, mentee=self.user2, topic=test_topic)
+        MentorRelation.objects.create(mentor=self.user1, mentee=self.user3, topic=test_topic)
+        
+        headers = self.get_auth_headers(self.user1)
+        
+        # 定員を1人に設定（現在2人の弟子がいるためエラー）
+        response = self.client.patch(
+            f"/api/topics/{test_topic.id}/me/mentee-capacity/",
+            data={"mentee_capacity": 1},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 400)
+        
+        data = response.json()
+        self.assertIn("現在2人の弟子がいるため", data['detail'])
+
+    def test_update_mentee_capacity_not_participating(self):
+        """参加していないトピックの弟子定員更新テスト"""
+        # 新しいトピックを作成（参加させない）
+        test_topic = Topic.objects.create(title='テストトピック5', description='参加なしテスト用')
+        
+        headers = self.get_auth_headers(self.user1)
+        
+        # 弟子定員を更新しようとする
+        response = self.client.patch(
+            f"/api/topics/{test_topic.id}/me/mentee-capacity/",
+            data={"mentee_capacity": 10},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_mentee_capacity_nonexistent_topic(self):
+        """存在しないトピックの弟子定員更新テスト"""
+        fake_uuid = uuid.uuid4()
+        
+        headers = self.get_auth_headers(self.user1)
+        
+        response = self.client.patch(
+            f"/api/topics/{fake_uuid}/me/mentee-capacity/",
+            data={"mentee_capacity": 10},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=headers["Authorization"]
+        )
+        self.assertEqual(response.status_code, 404)

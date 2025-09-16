@@ -23,8 +23,23 @@ class TopicOut(Schema):
     updated_at: datetime
 
 
+class MyTopicOut(Schema):
+    """参加中のトピック情報（弟子定員を含む）"""
+    id: uuid.UUID
+    title: str
+    description: str
+    created_at: datetime
+    updated_at: datetime
+    mentee_capacity: int
+
+
 class TopicListOut(Schema):
     topics: list[TopicOut]
+    count: int
+
+
+class MyTopicListOut(Schema):
+    topics: list[MyTopicOut]
     count: int
 
 
@@ -46,6 +61,12 @@ class UserTopicUpdateIn(Schema):
     """ユーザーのトピック参加レベルを更新するスキーマ"""
 
     level: int
+
+
+class MenteeCapacityUpdateIn(Schema):
+    """弟子定員を更新するスキーマ"""
+
+    mentee_capacity: int  # 1-100の範囲
 
 
 class UserTopicOut(Schema):
