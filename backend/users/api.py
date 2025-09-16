@@ -1,5 +1,8 @@
 from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut
-from ninja import Router
+from ninja import Router, Form, File
+from typing import Optional
+from ninja.files import UploadedFile
+from .models import UserProfile
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
@@ -73,3 +76,24 @@ def delete_user(request, user_id: int):
     user = User.objects.get(id=user_id)
     user.delete()
     return {"success": True}
+
+@router.post("/me/profile/", response=UserOut, auth=JWTAuth())
+def update_my_profile(request,
+                      bio: Optional[str] = Form(None), 
+                      avatar_file: Optional[UploadedFile] = File(None)):
+    """
+    ログインしているユーザー自身のプロフィール（bioとアバター）を更新する
+    """
+    user = request.auth
+    profile, created = UserProfile.objects.get_or_create(user=user)
+
+    if bio is not None:
+        profile.bio = bio
+
+    if avatar_file:
+        profile.avatar = avatar_file
+    
+    profile.save()
+
+    updated_user = get_object_or_404(User.objects.select_related('profile'), id=user.id)
+    return updated_user

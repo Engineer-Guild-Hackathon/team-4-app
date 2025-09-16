@@ -53,6 +53,18 @@ export function useAuth() {
     router.replace('/login');
   }, [router]);
 
+  const refreshUser = useCallback(async () => {
+  const token = await SecureStore.getItemAsync(ACCESS_KEY);
+    if (token) {
+      try {
+        const userData = await authedApiClient<UserOut>('/api/users/me/', { token });
+        setUser(userData);
+      } catch (error) {
+        console.error("ユーザー情報の再取得に失敗:", error);
+      }
+    }
+  }, []);
+
   // 初回ロード時のユーザー情報取得
   useEffect(() => {
     loadTokens();
@@ -83,5 +95,5 @@ export function useAuth() {
     fetchUser();
   }, [router, pathname]);
 
-  return { user, accessToken, refreshToken, login, logout, loading };
+  return { user, accessToken, refreshToken, login, logout, loading ,refreshUser};
 }

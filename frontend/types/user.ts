@@ -5,7 +5,8 @@ export type UserOut = {
   username: string;
   is_active: boolean;
   is_staff: boolean;
-  avatar?: string;
+  avatar?: string | null;
+  bio?: string | null;
 };
 
 export type UserEasyOut = {
