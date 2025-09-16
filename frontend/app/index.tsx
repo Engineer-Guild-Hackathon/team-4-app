@@ -19,8 +19,8 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("画面がフォーカスされたよ！");
-    }, []) 
+      console.log('画面がフォーカスされたよ！');
+    }, [])
   );
 
   useEffect(() => {
@@ -69,10 +69,7 @@ export default function HomeScreen() {
           >
             <Text style={styles.mentorDashboardButtonText}>師匠ダッシュボード</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={logout}
-          >
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutButtonText}>ログアウト</Text>
           </TouchableOpacity>
         </View>
@@ -84,8 +81,8 @@ export default function HomeScreen() {
       </Link>
 
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
-      <SimpleTopicView 
-        onUserPress={handleUserPress} 
+      <SimpleTopicView
+        onUserPress={handleUserPress}
         onMentorSelectionRequired={handleMentorSelectionRequired}
         onTopicChange={handleTopicChange}
       />

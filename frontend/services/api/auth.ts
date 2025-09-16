@@ -5,7 +5,14 @@ import * as SecureStore from 'expo-secure-store';
 
 export const refreshAccessToken = async (): Promise<boolean> => {
   const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
-  if (!refreshToken) return false;
+  if (!refreshToken) {
+    // ログイン画面へ遷移
+    try {
+      const { router } = await import('expo-router');
+      router.push('/login');
+    } catch {}
+    return false;
+  }
 
   try {
     // apiClientを使ってリフレッシュAPIを叩く
@@ -18,10 +25,18 @@ export const refreshAccessToken = async (): Promise<boolean> => {
     await SecureStore.setItemAsync(ACCESS_KEY, res.access);
     return true;
   } catch (e) {
-    console.error('Token refresh failed:', e);
-    // リフレッシュに失敗したらトークンを削除（ログアウト相当）
-    await SecureStore.deleteItemAsync(ACCESS_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_KEY);
-    return false;
+    if (e instanceof Error) {
+      // リフレッシュに失敗したらトークンを削除（ログアウト相当）
+      await SecureStore.deleteItemAsync(ACCESS_KEY);
+      await SecureStore.deleteItemAsync(REFRESH_KEY);
+      // ログイン画面へ遷移
+      try {
+        const { router } = await import('expo-router');
+        router.push('/login');
+      } catch {
+        return false;
+      }
+    }
   }
+  return false;
 };

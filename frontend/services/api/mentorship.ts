@@ -165,7 +165,7 @@ export const graduateMentee = async (menteeId: number, topicId: string) => {
   }
 };
 
-// 師匠選択をしない（最高レベル+1に設定）　
+// 師匠選択をしない（最高レベル+1に設定）
 export const noMentorSelection = async (topicId: string) => {
   try {
     const res = await authedApiClient(`/api/mentorship/no-mentor-selection/${topicId}`, {

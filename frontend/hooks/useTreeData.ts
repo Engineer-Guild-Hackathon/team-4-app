@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 export const useTreeData = (topicId: string | null) => {
   const [data, setData] = useState<TreeUserNodeOut[]>([]);
   const [loading, setLoading] = useState(true);
-  const [max_level, setMaxLevel] = useState<number | null>(null); 
+  const [max_level, setMaxLevel] = useState<number | null>(null);
   const [min_level, setMinLevel] = useState<number | null>(null);
 
   useEffect(() => {

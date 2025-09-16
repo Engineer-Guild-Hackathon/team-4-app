@@ -23,11 +23,11 @@ interface SimpleTopicViewProps {
   onTopicChange?: (topicId: string) => void; // トピック変更時のコールバック
 }
 
-export function SimpleTopicView({ 
-  topics: propTopics, 
-  onUserPress, 
+export function SimpleTopicView({
+  topics: propTopics,
+  onUserPress,
   onMentorSelectionRequired,
-  onTopicChange
+  onTopicChange,
 }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
@@ -38,7 +38,7 @@ export function SimpleTopicView({
   // 師匠選択が必要かチェック
   const checkMentorSelection = async (topicId: string) => {
     try {
-      const response = await checkMentorSelectionRequired(topicId) as { required: boolean };
+      const response = (await checkMentorSelectionRequired(topicId)) as { required: boolean };
       if (response.required) {
         // 師匠選択が必要な場合、コールバックを呼び出し
         onMentorSelectionRequired?.(topicId);
@@ -84,7 +84,7 @@ export function SimpleTopicView({
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
-    
+
     // トピックが選択された時に師匠選択判定を実行
     if (index > 0 && topics[index - 1]) {
       const topicId = topics[index - 1].id;

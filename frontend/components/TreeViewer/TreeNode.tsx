@@ -17,7 +17,7 @@ interface Props {
   isFocused: boolean;
 }
 
-const NODE_RADIUS = 20; 
+const NODE_RADIUS = 20;
 
 // 括弧で区切られたラベルを分割
 const splitLabelByParentheses = (label: string): [string, string] => {
@@ -37,12 +37,8 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   // SVG 要素用のアニメーションプロパティ
   const animatedCircleProps = useAnimatedProps(() => {
     // アニメーション値に応じて色と線幅を補間
-    const stroke = interpolateColor(
-      focusAnimation.value,
-      [0, 1],
-      ['#573cfa', '#ff6b6b'], 
-    );
-    const strokeWidth = 2 + focusAnimation.value * 1.5; 
+    const stroke = interpolateColor(focusAnimation.value, [0, 1], ['#573cfa', '#ff6b6b']);
+    const strokeWidth = 2 + focusAnimation.value * 1.5;
     return {
       stroke,
       strokeWidth,
@@ -53,23 +49,11 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
 
   return (
     <G x={node.x} y={node.y} onPress={onPress}>
-      <AnimatedCircle
-        r={NODE_RADIUS}
-        fill="#fff"
-        animatedProps={animatedCircleProps}
-      />
-      <SvgText
-        y={NODE_RADIUS + 14}
-        fill="#1f2937"
-        fontSize={12}
-        textAnchor="middle">
+      <AnimatedCircle r={NODE_RADIUS} fill="#fff" animatedProps={animatedCircleProps} />
+      <SvgText y={NODE_RADIUS + 14} fill="#1f2937" fontSize={12} textAnchor="middle">
         {mainLabel}
       </SvgText>
-      <SvgText
-        y={NODE_RADIUS + 28}
-        fill="#6b7280"
-        fontSize={10}
-        textAnchor="middle">
+      <SvgText y={NODE_RADIUS + 28} fill="#6b7280" fontSize={10} textAnchor="middle">
         {subLabel}
       </SvgText>
     </G>
