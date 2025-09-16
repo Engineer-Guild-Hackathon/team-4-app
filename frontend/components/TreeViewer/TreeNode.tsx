@@ -7,7 +7,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-// ★ 修正点 1: Image, Defs, ClipPath をインポート
 import { Circle, ClipPath, Defs, G, Image, Text as SvgText } from 'react-native-svg';
 import { TreeNode as D3TreeNode } from './treeUtils';
 
@@ -21,7 +20,6 @@ interface Props {
 
 const NODE_RADIUS = 20;
 
-// 括弧で区切られたラベルを分割 (変更なし)
 const splitLabelByParentheses = (label: string): [string, string] => {
   const match = label.match(/^(.*?)\s*(\([^)]*\)|（[^））]*）)?$/);
   return match ? [match[1].trim(), (match[2] || '').trim()] : [label, ''];
@@ -35,7 +33,11 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   }, [isFocused, focusAnimation]);
 
   const animatedCircleProps = useAnimatedProps(() => {
-    const stroke = interpolateColor(focusAnimation.value, [0, 1], [theme.colors.purple, theme.colors.pinkRed]);
+    const stroke = interpolateColor(
+      focusAnimation.value,
+      [0, 1],
+      [theme.colors.secondary.active, theme.colors.text.link] // purple → pinkRed
+    );
     const strokeWidth = 2 + focusAnimation.value * 1.5;
     return {
       stroke,
@@ -44,20 +46,16 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   });
 
   const [mainLabel, subLabel] = splitLabelByParentheses(node.data.username);
-
-  // ★ 修正点 2: 各ノードにユニークなクリップパスIDを生成
   const clipPathId = `clip-${node.data.id}`;
 
   return (
     <G x={node.x} y={node.y} onPress={onPress}>
-      {/* ★ 修正点 3: 画像を円形に切り抜くための定義を追加 */}
       <Defs>
         <ClipPath id={clipPathId}>
           <Circle r={NODE_RADIUS} />
         </ClipPath>
       </Defs>
 
-      {/* ★ 修正点 4: アバター画像を表示 */}
       <Image
         href={node.data.avatar} // URLをhrefに指定
         width={NODE_RADIUS * 2}
@@ -68,14 +66,22 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
         clipPath={`url(#${clipPathId})`} // 上で定義したクリップパスを適用
       />
 
-      {/* ★ 修正点 5: Circleを画像の枠線として使用するため、塗りつぶしを透明に */}
       <AnimatedCircle r={NODE_RADIUS} fill="transparent" animatedProps={animatedCircleProps} />
 
-      {/* テキスト表示部分は変更なし */}
-      <SvgText y={NODE_RADIUS + 14} fill={theme.colors.textDark} fontSize={theme.typography.fontSizes.sm} textAnchor="middle">
+      <SvgText
+        y={NODE_RADIUS + 14}
+        fill={theme.colors.text.primary}
+        fontSize={parseFloat(theme.typography.fontSize.sm) * 16}
+        textAnchor="middle"
+      >
         {mainLabel}
       </SvgText>
-      <SvgText y={NODE_RADIUS + 28} fill={theme.colors.textGray} fontSize={theme.typography.fontSizes.xs} textAnchor="middle">
+      <SvgText
+        y={NODE_RADIUS + 28}
+        fill={theme.colors.text.tertiary}
+        fontSize={parseFloat(theme.typography.fontSize.xs) * 16}
+        textAnchor="middle"
+      >
         {subLabel}
       </SvgText>
     </G>

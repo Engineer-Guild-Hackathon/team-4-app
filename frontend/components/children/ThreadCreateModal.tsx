@@ -95,6 +95,8 @@ export default function ThreadCreateModal({
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -104,51 +106,60 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '90%',
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.layout.radius.xl,
-    padding: theme.spacing.xxl,
-    ...theme.shadows.lg,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.xl),
+    padding: remToPx(theme.spacing[20]), // xxl
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
   },
   title: {
-    fontSize: theme.typography.fontSizes.xl,
-    fontWeight: theme.typography.fontWeights.bold,
-    marginBottom: theme.spacing.lg,
-    color: theme.colors.textDark,
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[8]), // lg
+    color: theme.colors.text.primary,
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.layout.radius.md,
-    padding: theme.spacing.md,
-    fontSize: theme.typography.fontSizes.base,
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: remToPx(theme.borderRadius.md),
+    padding: remToPx(theme.spacing[4]), // md
+    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: remToPx(theme.spacing[8]), // lg
+    backgroundColor: theme.colors.background.secondary,
     minHeight: 60,
     textAlignVertical: 'top',
+    color: theme.colors.text.primary,
   },
   createButton: {
     backgroundColor: theme.colors.black,
-    borderRadius: theme.layout.radius.md,
-    paddingVertical: theme.spacing.md,
+    borderRadius: remToPx(theme.borderRadius.md),
+    paddingVertical: remToPx(theme.spacing[4]), // md
     alignItems: 'center',
-    marginBottom: theme.spacing.md - 2,
-    ...theme.shadows.md,
+    marginBottom: remToPx(theme.spacing[4]) - 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   createButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   closeButton: {
-    backgroundColor: theme.colors.borderExtraLight,
-    borderRadius: theme.layout.radius.md,
-    paddingVertical: theme.spacing.md - 2,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.md),
+    paddingVertical: remToPx(theme.spacing[4]) - 2,
     alignItems: 'center',
   },
   closeButtonText: {
-    color: theme.colors.textMedium,
-    fontSize: theme.typography.fontSizes.md + 1,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.secondary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });

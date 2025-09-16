@@ -3,12 +3,13 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { theme } from '@/styles/theme';
 import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-// ★ 修正点 1: useState をインポート
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
   const { accessToken, user, loading: authLoading, logout } = useAuth();
@@ -21,10 +22,8 @@ export default function HomeScreen() {
 
   const params = useLocalSearchParams();
 
-  // ★ 修正点 2: SimpleTopicView を再レンダリングするためのキーを管理するstate
   const [renderKey, setRenderKey] = useState(0);
 
-  // ★ 修正点 3: 画面がフォーカスされるたびにキーを更新し、再レンダリングをトリガーする
   useFocusEffect(
     useCallback(() => {
       console.log('画面がフォーカスされたため、SimpleTopicViewを再描画します。');
@@ -85,7 +84,6 @@ export default function HomeScreen() {
         </>
       )}
 
-      {/* ★ 修正点 4: SimpleTopicViewにkeyプロップを渡す */}
       <SimpleTopicView
         key={renderKey}
         onUserPress={handleUserPress}
@@ -113,51 +111,63 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
-  },
-  logoutButton: {
-    position: 'absolute',
-    top: theme.spacing['7xl'] * 3,
-    right: theme.spacing.xxl,
-    height: 60,
-    width: 60,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: theme.layout.radius.full,
-    zIndex: 10,
-    ...theme.shadows.lg,
+    backgroundColor: theme.colors.background.primary,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.primary,
+  },
+  logoutButton: {
+    position: 'absolute',
+    top: remToPx(theme.spacing[24]) * 3, // Approximating "7xl" × 3
+    right: remToPx(theme.spacing[20]),   // xxl
+    height: 60,
+    width: 60,
+    backgroundColor: theme.colors.black,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: remToPx(theme.borderRadius.full),
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   editButton: {
     position: 'absolute',
-    top: theme.spacing['6xl'],
-    right: theme.spacing.xxl,
+    top: remToPx(theme.spacing[24]),     // Approximating "6xl"
+    right: remToPx(theme.spacing[20]),   // xxl
     height: 60,
     width: 60,
     backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: theme.layout.radius.full,
+    borderRadius: remToPx(theme.borderRadius.full),
     zIndex: 10,
-    ...theme.shadows.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   mentorshipButton: {
     position: 'absolute',
-    top: theme.spacing['7xl'] + theme.spacing['6xl'],
-    right: theme.spacing.xxl,
+    top: remToPx(theme.spacing[24]) + remToPx(theme.spacing[24]), // "7xl" + "6xl"
+    right: remToPx(theme.spacing[20]),   // xxl
     height: 60,
     width: 60,
     backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: theme.layout.radius.full,
+    borderRadius: remToPx(theme.borderRadius.full),
     zIndex: 10,
-    ...theme.shadows.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
 });

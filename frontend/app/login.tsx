@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 export default function LoginScreen() {
   const { login, loading } = useAuth();
   const router = useRouter();
@@ -53,14 +55,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xxl,
-    backgroundColor: theme.colors.white,
+    padding: remToPx(theme.spacing[20]), // xxl
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: theme.typography.fontSizes['2xl'],
-    fontWeight: theme.typography.fontWeights.bold,
-    marginBottom: theme.spacing.xxl,
-    color: theme.colors.textDark,
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[20]), // xxl
+    color: theme.colors.text.primary,
   },
   input: {
     width: '100%',
@@ -68,34 +70,35 @@ const styles = StyleSheet.create({
     height: 48,
     borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: theme.layout.radius.md,
-    marginBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-    fontSize: theme.typography.fontSizes.base,
-    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginBottom: remToPx(theme.spacing[8]), // lg
+    paddingHorizontal: remToPx(theme.spacing[4]), // md
+    fontSize: remToPx(theme.typography.fontSize.base),
+    backgroundColor: theme.colors.background.secondary,
+    color: theme.colors.text.primary,
   },
   error: {
-    color: theme.colors.danger,
-    marginBottom: theme.spacing.md,
+    color: theme.colors.semantic.error.main,
+    marginBottom: remToPx(theme.spacing[4]), // md
   },
   button: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.layout.radius.md,
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[4]), // md
+    borderRadius: remToPx(theme.borderRadius.md),
     alignItems: 'center',
   },
   buttonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   linkButton: {
-    marginTop: theme.spacing.xxl,
+    marginTop: remToPx(theme.spacing[20]), // xxl
   },
   linkButtonText: {
-    color: theme.colors.link,
-    fontSize: theme.typography.fontSizes.base,
+    color: theme.colors.text.link,
+    fontSize: remToPx(theme.typography.fontSize.base),
   },
 });

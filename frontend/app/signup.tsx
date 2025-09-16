@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
 import { theme } from '@/styles/theme';
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 export default function UserCreateScreen() {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -73,14 +75,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing[8], // Corresponds to 32px
-    backgroundColor: theme.colors.white,
+    padding: remToPx(theme.spacing[8]), // 2rem → 32px
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeights.bold,
-    marginBottom: theme.spacing[8], // Corresponds to 32px
-    color: theme.colors.textDark,
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[8]),
+    color: theme.colors.text.primary,
   },
   input: {
     width: '100%',
@@ -88,32 +90,33 @@ const styles = StyleSheet.create({
     height: 48,
     borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing[4], // Corresponds to 16px
-    paddingHorizontal: theme.spacing[4], // Corresponds to 16px
-    fontSize: theme.typography.fontSize.base,
-    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginBottom: remToPx(theme.spacing[4]),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    backgroundColor: theme.colors.background.secondary,
+    color: theme.colors.text.primary,
   },
   error: {
-    color: theme.colors.danger,
-    marginBottom: theme.spacing.md,
+    color: theme.colors.semantic.error.main,
+    marginBottom: remToPx(theme.spacing[4]),
   },
   success: {
-    color: theme.colors.success,
-    marginBottom: theme.spacing.md,
+    color: theme.colors.semantic.success.main,
+    marginBottom: remToPx(theme.spacing[4]),
   },
   button: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing[4], // Corresponds to 16px
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.md),
     alignItems: 'center',
-    marginTop: theme.spacing[2], // Corresponds to 8px
+    marginTop: remToPx(theme.spacing[2]),
   },
   buttonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });

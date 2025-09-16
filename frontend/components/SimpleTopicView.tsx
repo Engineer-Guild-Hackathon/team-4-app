@@ -141,10 +141,12 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.backgroundWhite,
+    backgroundColor: theme.colors.background.primary,
   },
   indicatorContainer: {
     position: 'absolute',
@@ -157,39 +159,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.backgroundWhite,
+    backgroundColor: theme.colors.background.primary,
   },
   descriptionContainer: {
     position: 'absolute',
-    top: theme.spacing['3xl'],
+    top: remToPx(theme.spacing[12]), // 3xl
     left: 0,
     right: 0,
     zIndex: 1,
     alignItems: 'center',
-    paddingHorizontal: theme.spacing['4xl'],
+    paddingHorizontal: remToPx(theme.spacing[16]), // 4xl
   },
   treeContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 100, // Make space for TopicCarousel
+    bottom: 100, // Space for TopicCarousel
   },
   topicTitle: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: remToPx(theme.spacing[8]), // xl
     textAlign: 'center',
-    fontSize: theme.typography.fontSizes['3xl'],
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.textDark,
-    textShadowColor: theme.colors.white,
+    fontSize: remToPx(theme.typography.fontSize['3xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    textShadowColor: theme.colors.background.primary,
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
   topicDescription: {
     textAlign: 'center',
-    fontSize: theme.typography.fontSizes.lg,
-    lineHeight: theme.typography.lineHeights.normal,
-    color: theme.colors.textDark,
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    lineHeight: remToPx(theme.typography.lineHeight.normal),
+    color: theme.colors.text.primary,
     maxWidth: 300,
     textShadowColor: 'rgba(255, 255, 255, 0.8)',
     textShadowOffset: { width: 2, height: 2 },
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: theme.typography.fontSizes.lg,
-    color: theme.colors.textGray,
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.text.tertiary,
   },
 });

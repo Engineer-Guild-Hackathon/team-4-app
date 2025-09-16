@@ -219,33 +219,52 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   );
 };
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.white },
-  flex: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.white },
-  text: { color: theme.colors.textDark },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background.primary,
+  },
+  flex: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
+  text: {
+    color: theme.colors.text.primary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+  },
   controlsContainer: {
     position: 'absolute',
     bottom: 120,
-    right: theme.spacing.xl,
+    right: remToPx(theme.spacing[8]), // xl
     zIndex: 10,
     flexDirection: 'column',
-    gap: theme.spacing.md,
+    gap: remToPx(theme.spacing[4]), // md
   },
   controlButton: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.primary,
     width: 48,
     height: 48,
-    borderRadius: theme.layout.radius.full,
+    borderRadius: remToPx(theme.borderRadius.full),
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.borderExtraLight,
-    ...theme.shadows.md,
+    borderColor: theme.colors.background.tertiary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   controlButtonText: {
-    color: theme.colors.textMedium,
-    fontSize: theme.typography.fontSizes.xl,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.secondary,
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });

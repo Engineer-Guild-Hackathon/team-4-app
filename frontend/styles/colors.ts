@@ -7,7 +7,7 @@ export const colors = {
   // Direct access colors for convenience, mapped from the palette
   white: "#FFFFFF",
   black: "#1F2937",
-  primary: "#F5B6B0", // Main soft red, mapping to primary.300
+  primaryMain: "#F5B6B0", // Main soft red, mapping to primary.300
   success: "#4A7C59", // Mapping to semantic.success.main
   danger: "#D32F2F", // Mapping to semantic.error.main
   border: "#EAEAEF", // Mapping to neutral.300

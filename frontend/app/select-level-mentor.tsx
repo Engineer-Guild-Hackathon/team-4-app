@@ -9,6 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { theme } from '@/styles/theme';
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
 
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.primary,
   },
   rightBarContainer: {
     position: 'absolute',
@@ -143,52 +145,60 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingLeft: theme.spacing.xxl,
-    paddingRight: theme.spacing['7xl'], // Right padding for VerticalLevelSelector
+    paddingLeft: remToPx(theme.spacing[20]), // xxl
+    paddingRight: remToPx(theme.spacing[32]), // approximating "7xl"
   },
   postBox: {
-    backgroundColor: theme.colors.backgroundLighter,
+    backgroundColor: theme.colors.background.secondary,
     borderWidth: 1,
-    borderColor: theme.colors.borderExtraLight,
-    borderRadius: theme.layout.radius.lg,
-    padding: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
+    borderColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[8]), // xl
+    marginTop: remToPx(theme.spacing[8]),
     width: 260,
-    ...theme.shadows.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   postContent: {
-    fontSize: theme.typography.fontSizes.base,
-    color: theme.colors.textMedium,
-    marginBottom: theme.spacing.md,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginBottom: remToPx(theme.spacing[4]), // md
   },
   media: {
     width: '100%',
     height: 200,
-    marginTop: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
-    backgroundColor: theme.colors.backgroundLight,
-    borderRadius: theme.layout.radius.md,
+    marginTop: remToPx(theme.spacing[2]), // xs
+    marginBottom: remToPx(theme.spacing[2]),
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.md),
   },
   bottomButtonContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: theme.spacing['4xl'] - 8,
+    bottom: remToPx(theme.spacing[16]) - 8, // 4xl - 8px
     alignItems: 'center',
     justifyContent: 'center',
   },
   okButton: {
     backgroundColor: theme.colors.black,
-    borderRadius: theme.layout.radius.full,
-    paddingVertical: theme.spacing.lg - 2,
-    paddingHorizontal: theme.spacing['5xl'] - 8,
+    borderRadius: remToPx(theme.borderRadius.full),
+    paddingVertical: remToPx(theme.spacing[6]) - 2, // lg - 2px
+    paddingHorizontal: remToPx(theme.spacing[24]) - 8, // approximating "5xl"
     minWidth: 180,
-    ...theme.shadows.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   okButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSizes.lg,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
   },
 });

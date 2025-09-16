@@ -14,6 +14,8 @@ interface PostViewProps {
   onDelete: (postId: number) => void;
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
     player.loop = true;
@@ -110,48 +112,54 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   post: {
-    paddingVertical: theme.spacing.lg - 1,
+    paddingVertical: remToPx(theme.spacing[6]) - 1, // lg - 1px
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderFaint,
   },
   postContent: {
-    fontSize: theme.typography.fontSizes.base,
-    marginBottom: theme.spacing.md - 2,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: remToPx(theme.spacing[4]) - 2, // md - 2px
+    color: theme.colors.text.primary,
   },
   media: {
     width: '100%',
     height: 200,
-    marginTop: theme.spacing.xs + 1,
-    marginBottom: theme.spacing.xs + 1,
-    backgroundColor: theme.colors.backgroundLight,
+    marginTop: remToPx(theme.spacing[2]) + 1, // xs + 1px
+    marginBottom: remToPx(theme.spacing[2]) + 1,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: remToPx(theme.borderRadius.md),
   },
   deleteButton: {
     position: 'absolute',
-    top: theme.spacing.lg - 1,
+    top: remToPx(theme.spacing[6]) - 1, // lg - 1px
     right: 0,
-    backgroundColor: theme.colors.dangerAlt,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md - 2,
-    borderRadius: theme.layout.radius.sm,
+    backgroundColor: theme.colors.semantic.error.main,
+    paddingVertical: remToPx(theme.spacing[2]), // xs
+    paddingHorizontal: remToPx(theme.spacing[4]) - 2, // md - 2px
+    borderRadius: remToPx(theme.borderRadius.sm),
     zIndex: 1,
   },
   deleteButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSizes.sm,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    fontWeight: theme.typography.fontWeight.bold,
   },
   menuButton: {
-    backgroundColor: theme.colors.borderExtraLight,
-    borderRadius: theme.layout.radius.xl,
-    paddingVertical: theme.spacing.xxs,
-    paddingHorizontal: theme.spacing.sm,
-    marginRight: theme.spacing.xs,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.xl),
+    paddingVertical: remToPx(theme.spacing[1]), // xxs
+    paddingHorizontal: remToPx(theme.spacing[3]), // sm
+    marginRight: remToPx(theme.spacing[2]), // xs
   },
   menuButtonText: {
-    color: theme.colors.textMedium,
-    fontSize: theme.typography.fontSizes.xl + 2,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.secondary,
+    fontSize: remToPx(theme.typography.fontSize.xl) + 2,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });

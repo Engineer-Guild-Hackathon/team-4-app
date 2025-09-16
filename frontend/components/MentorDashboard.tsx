@@ -306,38 +306,40 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing['5xl'],
-    paddingBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.white,
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    paddingTop: remToPx(theme.spacing[24]), // 5xl
+    paddingBottom: remToPx(theme.spacing[6]),
+    backgroundColor: theme.colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
+    borderBottomColor: theme.colors.background.tertiary,
   },
   closeButton: {
-    marginRight: theme.spacing.lg,
-    padding: theme.spacing.sm,
+    marginRight: remToPx(theme.spacing[6]),
+    padding: remToPx(theme.spacing[3]), // sm
   },
   closeButtonText: {
-    fontSize: theme.typography.fontSizes.lg,
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeights.bold,
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.primary[300],
+    fontWeight: theme.typography.fontWeight.bold,
   },
   title: {
-    fontSize: theme.typography.fontSizes.xl,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.textPrimary,
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   content: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: remToPx(theme.spacing[6]),
   },
   emptyContainer: {
     flex: 1,
@@ -345,34 +347,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: theme.typography.fontSizes.base,
-    color: theme.colors.textSecondary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   requestCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.layout.radius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.md,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[6]),
+    marginBottom: remToPx(theme.spacing[4]),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   requestHeader: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: remToPx(theme.spacing[3]),
   },
   userName: {
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.semibold,
-    color: theme.colors.textPrimary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   username: {
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xxs,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginTop: remToPx(theme.spacing[1]), // xxs
   },
   topicTitle: {
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]), // xs
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -380,85 +386,91 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.layout.radius.md,
-    marginHorizontal: theme.spacing.xs,
+    paddingVertical: remToPx(theme.spacing[4]), // md
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    borderRadius: theme.borderRadius.md,
+    marginHorizontal: remToPx(theme.spacing[2]), // xs
   },
   approveButton: {
-    backgroundColor: theme.colors.success,
+    backgroundColor: theme.colors.semantic.success.main,
   },
   rejectButton: {
-    backgroundColor: theme.colors.danger,
+    backgroundColor: theme.colors.semantic.error.main,
   },
   approveButtonText: {
-    color: theme.colors.white,
+    color: theme.colors.text.inverse,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeights.semibold,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   rejectButtonText: {
-    color: theme.colors.white,
+    color: theme.colors.text.inverse,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeights.semibold,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
-  // タブ関連のスタイル
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.backgroundLight,
-    borderRadius: theme.layout.radius.md,
-    padding: theme.spacing.xs,
+    marginBottom: remToPx(theme.spacing[6]),
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: remToPx(theme.spacing[2]), // xs
   },
   tab: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.layout.radius.sm,
+    paddingVertical: remToPx(theme.spacing[3]), // sm
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    borderRadius: remToPx(theme.borderRadius.sm),
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: theme.colors.white,
-    ...theme.shadows.sm,
+    backgroundColor: theme.colors.background.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
-    fontSize: theme.typography.fontSizes.md,
-    fontWeight: theme.typography.fontWeights.medium,
-    color: theme.colors.textSecondary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.regular,
+    color: theme.colors.text.secondary,
   },
   activeTabText: {
-    color: theme.colors.textPrimary,
-    fontWeight: theme.typography.fontWeights.semibold,
+    color: theme.colors.text.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
-  // 弟子関連のスタイル
   menteeCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.layout.radius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.md,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[6]),
+    marginBottom: remToPx(theme.spacing[4]),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   menteeHeader: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: remToPx(theme.spacing[3]),
   },
   menteeName: {
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.semibold,
-    color: theme.colors.textPrimary,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   menteeUsername: {
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xxs,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginTop: remToPx(theme.spacing[1]),
   },
   menteeLevel: {
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]),
   },
   menteeDate: {
-    fontSize: theme.typography.fontSizes.sm,
-    color: theme.colors.textTertiary,
-    marginBottom: theme.spacing.md,
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.tertiary,
+    marginBottom: remToPx(theme.spacing[4]),
   },
   menteeButtonContainer: {
     flexDirection: 'row',
@@ -466,27 +478,27 @@ const styles = StyleSheet.create({
   },
   menteeButton: {
     flex: 1,
-    paddingVertical: theme.spacing.md - 2,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.layout.radius.md,
-    marginHorizontal: theme.spacing.xs,
+    paddingVertical: remToPx(theme.spacing[4]) - 2,
+    paddingHorizontal: remToPx(theme.spacing[6]),
+    borderRadius: theme.borderRadius.md,
+    marginHorizontal: remToPx(theme.spacing[2]),
   },
   graduateButton: {
-    backgroundColor: theme.colors.success,
+    backgroundColor: theme.colors.semantic.success.main,
   },
   expelButton: {
-    backgroundColor: theme.colors.danger,
+    backgroundColor: theme.colors.semantic.error.main,
   },
   graduateButtonText: {
-    color: theme.colors.white,
+    color: theme.colors.text.inverse,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeights.semibold,
-    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: remToPx(theme.typography.fontSize.base),
   },
   expelButtonText: {
-    color: theme.colors.white,
+    color: theme.colors.text.inverse,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeights.semibold,
-    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: remToPx(theme.typography.fontSize.base),
   },
 });

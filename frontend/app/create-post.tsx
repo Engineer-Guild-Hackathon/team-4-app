@@ -17,6 +17,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { theme } from '@/styles/theme';
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
     player.muted = true;
@@ -179,27 +181,58 @@ export default function CreatePostScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  container: {
+    flex: 1,
+    padding: remToPx(theme.spacing[5]), // 1.25rem → 20px
+    backgroundColor: theme.colors.background.primary,
+  },
+  title: {
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[5]),
+    color: theme.colors.text.primary,
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    padding: remToPx(theme.spacing[3]),
+    borderRadius: remToPx(theme.borderRadius.md),
     height: 150,
     textAlignVertical: 'top',
-    marginBottom: 20,
-    fontSize: 16,
+    marginBottom: remToPx(theme.spacing[5]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.background.secondary,
   },
   previewContainer: {
-    marginTop: 15,
+    marginTop: remToPx(theme.spacing[4]),
     maxHeight: 100,
   },
   previewImage: {
     width: 100,
     height: 100,
-    borderRadius: 8,
-    marginRight: 10,
-    backgroundColor: '#e0e0e0',
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginRight: remToPx(theme.spacing[3]),
+    backgroundColor: theme.colors.neutral[300],
+  },
+  button: {
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[3]),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: remToPx(theme.spacing[4]),
+  },
+  buttonText: {
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  submitButton: {
+    marginTop: remToPx(theme.spacing[4]),
+  },
+  submitButtonText: {
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });

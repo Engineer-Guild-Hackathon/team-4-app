@@ -129,41 +129,46 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   );
 };
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: remToPx(theme.spacing[4]), // md
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT + 30,
-    marginHorizontal: theme.spacing.xs,
+    marginHorizontal: remToPx(theme.spacing[2]), // xs
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderRadius: theme.layout.radius.full,
-    backgroundColor: theme.colors.textDark,
+    borderRadius: remToPx(theme.borderRadius.full),
+    backgroundColor: theme.colors.text.primary,
     borderWidth: 2,
-    borderColor: theme.colors.borderMedium,
+    borderColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    ...theme.shadows.lg,
-    shadowOpacity: 0.6, // Keep custom opacity
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   topicIconActive: {
-    backgroundColor: theme.colors.textMedium,
-    borderColor: theme.colors.textMedium,
-    shadowColor: theme.colors.textMedium,
+    backgroundColor: theme.colors.text.secondary,
+    borderColor: theme.colors.text.secondary,
+    shadowColor: theme.colors.text.secondary,
   },
   topicIconText: {
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.textLightGray,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.tertiary,
   },
   topicIconTextActive: {
-    color: theme.colors.white,
+    color: theme.colors.text.inverse,
   },
 });

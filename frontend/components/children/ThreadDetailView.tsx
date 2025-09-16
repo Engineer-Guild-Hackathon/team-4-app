@@ -95,103 +95,106 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.primary,
   },
   header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    paddingVertical: remToPx(theme.spacing[4]),   // md
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderFaint,
+    borderBottomColor: theme.colors.background.tertiary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   backButton: {
-    width: 80, 
-    backgroundColor: theme.colors.borderExtraLight,
-    borderRadius: theme.layout.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm - 2,
+    width: 80,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.md),
+    paddingHorizontal: remToPx(theme.spacing[4]), // md
+    paddingVertical: remToPx(theme.spacing[3]) - 2, // sm - 2px
     alignItems: 'center',
   },
   backButtonText: {
-    color: theme.colors.link,
-    fontWeight: theme.typography.fontWeights.bold,
-    fontSize: theme.typography.fontSizes.md + 1,
+    color: theme.colors.text.link,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: remToPx(theme.typography.fontSize.base) + 1,
   },
   titleContainer: {
     flex: 1,
     alignItems: 'center',
   },
   title: {
-    fontSize: theme.typography.fontSizes.base,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.textDark,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   messageList: {
     flex: 1,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
   },
   messageListContent: {
-    paddingVertical: theme.spacing.md - 2,
+    paddingVertical: remToPx(theme.spacing[4]) - 2, // md - 2px
   },
   messageCard: {
-    backgroundColor: theme.colors.backgroundLighter, // Assuming f3f4f6 is similar to this
-    borderRadius: theme.layout.radius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md - 2,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[4]), // md
+    marginBottom: remToPx(theme.spacing[4]) - 2,
   },
   messageAuthor: {
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.link,
-    marginBottom: theme.spacing.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.link,
+    marginBottom: remToPx(theme.spacing[2]), // xs
   },
   messageContent: {
-    fontSize: theme.typography.fontSizes.md + 1,
-    color: theme.colors.textMedium,
-    lineHeight: theme.typography.lineHeights.snug,
+    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    color: theme.colors.text.secondary,
+    lineHeight: remToPx(theme.typography.lineHeight.snug),
   },
   messageDate: {
-    fontSize: theme.typography.fontSizes.sm,
-    color: theme.colors.textGray,
-    marginTop: theme.spacing.sm - 2,
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.tertiary,
+    marginTop: remToPx(theme.spacing[3]) - 2, // sm - 2px
     alignSelf: 'flex-end',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.md - 2,
-    backgroundColor: theme.colors.white,
+    padding: remToPx(theme.spacing[4]) - 2, // md - 2px
+    backgroundColor: theme.colors.background.primary,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.borderFaint,
+    borderTopColor: theme.colors.background.tertiary,
   },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.layout.radius['2xl'],
+    borderRadius: remToPx(theme.borderRadius['2xl']),
     paddingTop: Platform.OS === 'ios' ? 10 : 8,
     paddingBottom: Platform.OS === 'ios' ? 10 : 8,
-    paddingHorizontal: theme.spacing.lg - 1,
-    fontSize: theme.typography.fontSizes.base,
-    backgroundColor: theme.colors.backgroundLighter,
-    marginRight: theme.spacing.md - 2,
+    paddingHorizontal: remToPx(theme.spacing[6]) - 1, // lg - 1px
+    fontSize: remToPx(theme.typography.fontSize.base),
+    backgroundColor: theme.colors.background.secondary,
+    marginRight: remToPx(theme.spacing[4]) - 2, // md - 2px
     maxHeight: 120,
+    color: theme.colors.text.primary,
   },
   sendButton: {
     backgroundColor: theme.colors.black,
-    borderRadius: theme.layout.radius['2xl'],
+    borderRadius: remToPx(theme.borderRadius['2xl']),
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSizes.md + 1,
-    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });
