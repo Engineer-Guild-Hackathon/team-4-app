@@ -5,7 +5,7 @@
 
 export const typography = {
   fontFamily: {
-    primary: "Klee One, sans-serif",
+    primary: "Klee One",
     mono: "Geist Mono, monospace",
   },
 

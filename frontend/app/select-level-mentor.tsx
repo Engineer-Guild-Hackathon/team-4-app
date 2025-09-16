@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   okButton: {
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.colors.primary[500],
     borderRadius: remToPx(theme.borderRadius.full),
     paddingVertical: remToPx(theme.spacing[6]) - 2, // lg - 2px
     paddingHorizontal: remToPx(theme.spacing[24]) - 8, // approximating "5xl"

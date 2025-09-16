@@ -28,21 +28,21 @@ export const colors = {
     blur: "rgba(255, 255, 255, 0.75)", // Lighter frosted effect
   },
 
-  // Primary Colors (Soft Red)
+    // Primary Colors (Soft Red) 
   primary: {
-    50: "#FDF2F2",
-    100: "#FCE8E6",
-    200: "#F9D0CC",
-    300: "#F5B6B0", // Main soft red
-    400: "#F19C94",
-    500: "#ED8278",
-    600: "#E8685C", // Used in textStyles.link
-    700: "#D4524A",
-    800: "#B8453E",
-    900: "#9C3832",
-    hover: "#ED8278", // Corresponds to text.linkHover
-    active: "#E8685C",
-    disabled: "#F9D0CC", // Muted when disabled
+    50: "#F8E6E6", 
+    100: "#F0CCCC", 
+    200: "#E8B3B3", 
+    300: "#E09999", 
+    400: "#D88080",
+    500: "#D06666", // Main soft red 
+    600: "#C84D4D", 
+    700: "#B83333", 
+    800: "#A01A1A", 
+    900: "#800000", 
+    hover: "#D88080", // Darker hover state
+    active: "#D06666", // Darker active state
+    disabled: "#E8B3B3", // Muted when disabled
   },
 
   // Secondary/Accent Colors (Golden highlights)

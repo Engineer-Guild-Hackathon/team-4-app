@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   createButton: {
-    backgroundColor: theme.colors.semantic.info.main,
+    backgroundColor: theme.colors.primary[500],
     borderRadius: theme.borderRadius.md,
     paddingVertical: remToPx(theme.spacing[4]),
     alignItems: 'center',
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
   },
   joinTopicButton: {
-    backgroundColor: theme.colors.semantic.info.main,
+    backgroundColor: theme.colors.primary[300],
     borderRadius: theme.borderRadius.sm,
     paddingHorizontal: remToPx(theme.spacing[6]),
     paddingVertical: remToPx(theme.spacing[3]),

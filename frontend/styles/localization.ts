@@ -3,7 +3,7 @@ export const localization = {
   japanese: {
     // Font settings optimized for Japanese text
     fontSettings: {
-      fontFamily: '"Klee One", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+      fontFamily: "Klee One",
       fontFeatureSettings: '"palt" 1', // Proportional alternate widths
       textRendering: "optimizeLegibility",
       fontKerning: "normal",
