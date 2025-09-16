@@ -51,3 +51,6 @@ class UserIn(Schema):
     username: str
     email: str
     password: str
+
+class UserProfileUpdateIn(Schema):
+    bio: Optional[str] = None

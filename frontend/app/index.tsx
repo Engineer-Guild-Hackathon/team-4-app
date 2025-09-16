@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useLocalSearchParams, Link, useFocusEffect, useRouter } from 'expo-router';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
@@ -17,15 +17,18 @@ export default function HomeScreen() {
 
   const params = useLocalSearchParams();
 
-  // 投稿作成画面から戻ってきた時にモーダルを再度開くための処理
+  useFocusEffect(
+    useCallback(() => {
+      console.log("画面がフォーカスされたよ！");
+    }, []) 
+  );
+
   useEffect(() => {
     if (params.openModal === 'true') {
-      // 最後に選択したユーザーのモーダルを再度開く
       setModalVisible(true);
     }
   }, [params.openModal]);
 
-  // SimpleTopicViewからtopicIdとuserIdが渡された時の処理
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
@@ -46,7 +49,6 @@ export default function HomeScreen() {
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
-  // 未ログイン時の表示
   if (!accessToken) {
     return (
       <View style={styles.centered}>
@@ -75,6 +77,11 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <Link href="/edit-profile" asChild>
+        <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.editButtonText}>編集</Text>
+        </TouchableOpacity>
+      </Link>
 
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
       <SimpleTopicView 
@@ -151,5 +158,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  editButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  editButtonText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

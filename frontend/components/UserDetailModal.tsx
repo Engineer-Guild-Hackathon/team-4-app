@@ -23,8 +23,8 @@ import ThreadView from './children/ThreadView';
 interface UserProfile {
   id: number;
   username: string;
-  avatar?: string;
-  bio?: string;
+  avatar: string | null;
+  bio: string | null;
   blocking: boolean;
   blocked: boolean;
 }
