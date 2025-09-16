@@ -4,6 +4,7 @@ from ninja.testing import TestClient
 from django.contrib.auth import get_user_model
 from config.urls import api
 from .api import router
+from .models import Block
 
 User = get_user_model()
 
@@ -79,3 +80,59 @@ class UserAPITest(TestCase):
 		response_data = response.json()
 		self.assertTrue(response_data["success"])
 		self.assertFalse(User.objects.filter(id=user.id).exists())
+
+	def test_block_user_success(self):
+		user_to_block = User.objects.create_user(username="blockme", email="blockme@example.com", password="pass")
+		response = self.client.post(f"/{user_to_block.id}/block/", headers=self.headers)
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(Block.objects.filter(blocker=self.user, blocked=user_to_block).exists())
+		self.assertIn("blocked", response.json()["message"])
+
+	def test_block_user_self(self):
+		response = self.client.post(f"/{self.user.id}/block/", headers=self.headers)
+		self.assertEqual(response.status_code, 400)
+		self.assertIn("cannot block yourself", response.json()["message"])
+
+	def test_unblock_user_success(self):
+		user_to_block = User.objects.create_user(username="blockme2", email="blockme2@example.com", password="pass")
+		Block.objects.create(blocker=self.user, blocked=user_to_block)
+		response = self.client.post(f"/{user_to_block.id}/unblock/", headers=self.headers)
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Block.objects.filter(blocker=self.user, blocked=user_to_block).exists())
+		self.assertIn("unblocked", response.json()["message"])
+
+	def test_user_detail_blocked_and_blocking(self):
+		# 他ユーザー作成
+		other = User.objects.create_user(username="otheruser", email="other@example.com", password="pass")
+		# 自分がotherをブロック
+		Block.objects.create(blocker=self.user, blocked=other)
+		# otherが自分をブロック
+		Block.objects.create(blocker=other, blocked=self.user)
+
+		# blocking=True, blocked=True
+		response = self.client.get(f"/{other.id}/", headers=self.headers)
+		self.assertEqual(response.status_code, 403)
+		self.assertIn("blocked", response.json()["message"])
+
+		# blockingのみTrue
+		Block.objects.filter(blocker=other, blocked=self.user).delete()
+		response = self.client.get(f"/{other.id}/", headers=self.headers)
+		self.assertEqual(response.status_code, 200)
+		data = response.json()
+		self.assertTrue(data["blocking"])
+		self.assertFalse(data["blocked"])
+
+		# blockedのみTrue
+		Block.objects.filter(blocker=self.user, blocked=other).delete()
+		Block.objects.create(blocker=other, blocked=self.user)
+		response = self.client.get(f"/{other.id}/", headers=self.headers)
+		self.assertEqual(response.status_code, 403)
+		self.assertIn("blocked", response.json()["message"])
+
+		# 両方False
+		Block.objects.filter(blocker=other, blocked=self.user).delete()
+		response = self.client.get(f"/{other.id}/", headers=self.headers)
+		self.assertEqual(response.status_code, 200)
+		data = response.json()
+		self.assertFalse(data["blocking"])
+		self.assertFalse(data["blocked"])

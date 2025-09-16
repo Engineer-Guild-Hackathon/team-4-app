@@ -1,5 +1,5 @@
 import { deletePost, getPosts } from '@/services/api/post';
-import { getUser } from '@/services/api/user';
+import { blockUser, getUser, unblockUser } from '@/services/api/user';
 import { PostOut } from '@/types/post';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import PagerView from 'react-native-pager-view';
@@ -25,6 +25,8 @@ interface UserProfile {
   username: string;
   avatar?: string;
   bio?: string;
+  blocking: boolean;
+  blocked: boolean;
 }
 
 interface UserDetailModalProps {
@@ -54,13 +56,11 @@ export default function UserDetailModal({
     if (visible && userId) {
       setLoading(true);
       setError(null);
-      
+
       const fetchAllData = async () => {
         try {
-          const [profileData, postsData] = await Promise.all([
-            getUser(userId),
-            getPosts(topicId!, userId),
-          ]);
+          const profileData = await getUser(userId);
+          const postsData = await getPosts(topicId!, profileData.id);
           setProfile(profileData);
           setPosts(postsData);
         } catch (e: unknown) {
@@ -73,7 +73,7 @@ export default function UserDetailModal({
           setLoading(false);
         }
       };
-      
+
       fetchAllData();
     }
   }, [visible, topicId, userId]);
@@ -118,77 +118,132 @@ export default function UserDetailModal({
         shouldRasterizeIOS={true}
         keyboardVerticalOffset={60}
       >
-      <View style={styles.modalContainer}>
-        {/* ユーザー情報エリア */}
-        <View style={styles.profileHeader}>
-          {loading ? (
-            <ActivityIndicator />
-          ) : profile ? (
-            <View style={styles.profileContainer}>
-              <Image 
-                source={
-                  profile.avatar 
-                    ? { uri: profile.avatar }
-                    : { uri: `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}` }
-                }
-                style={styles.avatar}
-              />
-              <View style={styles.profileTextContainer}>
-                <Text style={styles.profileUsername}>{profile.username}</Text>
-                <Text style={styles.profileBio} numberOfLines={2}>{profile.bio}</Text>
+        <View style={styles.modalContainer}>
+          {/* ユーザー情報エリア */}
+          <View style={styles.profileHeader}>
+            {loading ? (
+              <ActivityIndicator />
+            ) : profile ? (
+              <View style={styles.profileContainer}>
+                <Image
+                  source={
+                    profile.avatar
+                      ? { uri: profile.avatar }
+                      : {
+                          uri: `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}`,
+                        }
+                  }
+                  style={styles.avatar}
+                />
+                <View style={styles.profileTextContainer}>
+                  <Text style={styles.profileUsername}>{profile.username}</Text>
+                  <Text style={styles.profileBio} numberOfLines={2}>
+                    {profile.bio}
+                  </Text>
+                </View>
+                {profile.blocking ? (
+                  <TouchableOpacity
+                    style={[styles.createButton, { marginLeft: 12 }]}
+                    onPress={async () => {
+                      Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
+                        { text: 'キャンセル', style: 'cancel' },
+                        {
+                          text: 'はい',
+                          style: 'destructive',
+                          onPress: async () => {
+                            try {
+                              await unblockUser(userId!); // 解除APIが同じ場合
+                              Alert.alert('完了', 'ユーザーのブロックを解除しました');
+                              const updatedProfile = await getUser(userId!);
+                              setProfile(updatedProfile);
+                            } catch {
+                              Alert.alert('エラー', 'ブロック解除に失敗しました');
+                            }
+                          },
+                        },
+                      ]);
+                    }}
+                  >
+                    <Text style={styles.createButtonText}>ブロック解除</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.createButton, { marginLeft: 12 }]}
+                    onPress={async () => {
+                      Alert.alert('ブロック', 'このユーザーをブロックしますか？', [
+                        { text: 'キャンセル', style: 'cancel' },
+                        {
+                          text: 'はい',
+                          style: 'destructive',
+                          onPress: async () => {
+                            try {
+                              await blockUser(userId!);
+                              Alert.alert('完了', 'ユーザーをブロックしました');
+                              const updatedProfile = await getUser(userId!);
+                              setProfile(updatedProfile);
+                            } catch {
+                              Alert.alert('エラー', 'ブロックに失敗しました');
+                            }
+                          },
+                        },
+                      ]);
+                    }}
+                  >
+                    <Text style={styles.createButtonText}>ブロック</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            </View>
-          ) : (
-            <Text>プロフィールを読み込めませんでした</Text>
-          )}
-        </View>
-        {/* タブエリア */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 0 && styles.tabActive]}
-            onPress={() => {
-              setSelectedTab(0);
-              pagerRef.current?.setPage(0);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }}
+            ) : (
+              <Text>プロフィールを読み込めませんでした</Text>
+            )}
+          </View>
+          {/* タブエリア */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 0 && styles.tabActive]}
+              onPress={() => {
+                setSelectedTab(0);
+                pagerRef.current?.setPage(0);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text style={[styles.tabText, selectedTab === 0 && styles.tabTextActive]}>投稿</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 1 && styles.tabActive]}
+              onPress={() => {
+                setSelectedTab(1);
+                pagerRef.current?.setPage(1);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text style={[styles.tabText, selectedTab === 1 && styles.tabTextActive]}>
+                掲示板
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/* PageViewエリア */}
+          <PagerView
+            style={styles.pagerView}
+            initialPage={0}
+            ref={pagerRef}
+            onPageSelected={handlePageSelected}
           >
-            <Text style={[styles.tabText, selectedTab === 0 && styles.tabTextActive]}>投稿</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 1 && styles.tabActive]}
-            onPress={() => {
-              setSelectedTab(1);
-              pagerRef.current?.setPage(1);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }}
-          >
-            <Text style={[styles.tabText, selectedTab === 1 && styles.tabTextActive]}>掲示板</Text>
+            {/* 投稿一覧ページ */}
+            <PostView
+              posts={posts}
+              loading={loading}
+              error={error}
+              selfUserId={selfUserId}
+              onDelete={handleDeletePost}
+            />
+            {/* 掲示板ページ */}
+            <ThreadView userId={userId!} topicId={topicId!} />
+          </PagerView>
+          <TouchableOpacity style={styles.closeCircleButton} onPress={onClose}>
+            <Text style={styles.closeCircleText}>×</Text>
           </TouchableOpacity>
         </View>
-        {/* PageViewエリア */}
-        <PagerView
-          style={styles.pagerView}
-          initialPage={0}
-          ref={pagerRef}
-          onPageSelected={handlePageSelected}
-        >
-           {/* 投稿一覧ページ */}
-           <View key="1" style={styles.pageContainer}>
-             <PostView
-               posts={posts}
-               loading={loading}
-               error={error}
-               selfUserId={selfUserId}
-               onDelete={handleDeletePost}
-             />
-           </View>
-          {/* 掲示板ページ */}
-          <ThreadView userId={userId!} topicId={topicId!} />
-        </PagerView>
-        <TouchableOpacity style={styles.closeCircleButton} onPress={onClose}>
-          <Text style={styles.closeCircleText}>×</Text>
-        </TouchableOpacity>
-      </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -366,5 +421,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#555',
   },
-
 });

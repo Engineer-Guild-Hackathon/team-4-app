@@ -1,7 +1,7 @@
 import { getThreads, sendMessageToThread } from '@/services/api/thread';
 import { ThreadOut } from '@/types/thread';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
@@ -17,17 +17,17 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const reloadThreads = async () => {
+  const reloadThreads = useCallback(async () => {
     try {
       setThreads(await getThreads(topicId, userId));
-    } catch (e) {
+    } catch {
       setError('スレッドの取得に失敗しました');
     }
-  };
+  }, [topicId, userId]);
 
   useEffect(() => {
     reloadThreads();
-  }, [topicId, userId]);
+  }, [topicId, userId, reloadThreads]);
 
   // 詳細ページを表示する場合
   if (selectedThread) {

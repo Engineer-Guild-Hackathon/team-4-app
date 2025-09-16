@@ -140,9 +140,9 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <Button 
-        title={isPickingMedia ? "メディアを読み込み中..." : "画像・動画を選択"}
-        onPress={pickMedia} 
+      <Button
+        title={isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
+        onPress={pickMedia}
         disabled={isPickingMedia}
       />
 

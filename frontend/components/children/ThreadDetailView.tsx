@@ -1,13 +1,13 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import React, { useRef, useState } from 'react'; // useRefを追加
 import {
-    FlatList,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface ThreadDetailViewProps {
@@ -37,28 +37,27 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
       // ★ 3. 送信後、すぐに一番下にスクロールする
       setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 100);
     } catch (error) {
-      console.error("Message send failed:", error);
-    } 
-    finally {
+      console.error('Message send failed:', error);
+    } finally {
       setSending(false);
     }
   };
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* ヘッダー部分は変更なし */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <Text style={styles.backButtonText}>← 戻る</Text>
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>{thread.mentor.username} : {thread.starter.username}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {thread.mentor.username} : {thread.starter.username}
+          </Text>
         </View>
         <View style={{ width: styles.backButton.width }} />
       </View>
-      
+
       {/* ★ 4. FlatListにrefとcontentContainerStyleを追加 */}
       <FlatList
         ref={flatListRef}
@@ -109,7 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backButton: {
-    width: 80, 
+    width: 80,
     backgroundColor: '#e5e7eb',
     borderRadius: 8,
     paddingHorizontal: 12,
