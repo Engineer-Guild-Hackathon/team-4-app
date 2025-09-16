@@ -26,6 +26,7 @@ export function buildTree(nodes: TreeUserNodeOut[]): TreeNode | null {
   // ノードを Map に登録
   nodes.forEach(n =>
     map.set(n.user.id, { id: n.user.id, username: n.user.username, avatar: n.user.avatar, level: n.level, children: [] })
+  );
 
   // メンター情報を元にツリー構造を構築
   nodes.forEach(n => {
