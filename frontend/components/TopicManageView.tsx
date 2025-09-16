@@ -180,7 +180,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   <Text style={styles.topicItemTitle}>{topic.title}</Text>
                   <Text style={styles.topicItemDescription}>{topic.description}</Text>
                 </View>
-                <Button variant="warning" size="sm" onPress={() => handleLeaveTopic(topic.id)}>
+                <Button variant="secondary" size="sm" onPress={() => handleLeaveTopic(topic.id)}>
                   抜ける
                 </Button>
               </View>

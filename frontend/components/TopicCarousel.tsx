@@ -38,7 +38,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
 
   const displayData = [
     { id: 'left-spacer' },
-    { id: 'manage', title: '+' },
+    { id: 'manage', title: '＋' },
     ...topics,
     { id: 'right-spacer' },
   ];
@@ -146,9 +146,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: ITEM_HEIGHT,
     borderRadius: remToPx(theme.borderRadius.full),
-    backgroundColor: theme.colors.text.primary,
+    backgroundColor: theme.colors.primary[300],
+    borderColor: theme.colors.primary[300],
     borderWidth: 2,
-    borderColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: remToPx(theme.spacing[6]), // lg
@@ -159,17 +159,17 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   topicIconActive: {
-    backgroundColor: theme.colors.text.secondary,
-    borderColor: theme.colors.text.secondary,
+    backgroundColor: theme.colors.primary[500],
+    borderColor: theme.colors.primary[500],
     shadowColor: theme.colors.text.secondary,
   },
   topicIconText: {
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.tertiary,
+    color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.primary,
   },
   topicIconTextActive: {
-    color: theme.colors.text.inverse,
+    color: theme.colors.white,
   },
 });

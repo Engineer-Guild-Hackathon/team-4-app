@@ -192,7 +192,7 @@ export default function UserDetailModal({
                         },
                       ]);
                     }}
-                    variant="danger"
+                    variant="secondary"
                     size="sm"
                     style={{ marginLeft: 12 }}
                   >
@@ -252,6 +252,7 @@ export default function UserDetailModal({
           <Button
             variant="icon"
             size="icon"
+            textStyle={styles.closeButtonText}
             style={styles.closeCircleButton}
             onPress={onClose}
           >
@@ -300,11 +301,14 @@ const styles = StyleSheet.create({
   },
   closeCircleButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 0,
+    right: 5,
     width: 40,
     height: 40,
     zIndex: 100,
+  },
+  closeButtonText: {
+    fontSize: 28,
   },
   profileHeader: {
     flexDirection: 'row',

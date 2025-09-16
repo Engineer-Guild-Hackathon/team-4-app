@@ -60,7 +60,7 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     <View style={styles.post}>
       <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <Button variant="danger" size="sm" onPress={() => onDelete(item.id)} style={styles.actionButton}>
+          <Button variant="secondary" size="sm" onPress={() => onDelete(item.id)} style={styles.actionButton}>
             削除
           </Button>
         ) : (

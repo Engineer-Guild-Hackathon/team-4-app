@@ -1,27 +1,25 @@
-import { theme } from '@/styles/theme';
 import React from 'react';
 import {
-  StyleSheet,
-  Text,
-  TextStyle,
   TouchableOpacity,
+  Text,
   View,
-  ViewStyle,
+  StyleSheet,
   ActivityIndicator,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
+import { theme } from '@/styles/theme';
 
 export interface ButtonProps {
-  variant?: 'primary' | 'success' | 'danger' | 'warning' | 'secondary' | 'ghost' | 'link' | 'icon';
+  variant?: 'primary' | 'secondary' | 'icon' | 'frosted' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg' | 'icon';
-  children?: React.ReactNode;
+  children: React.ReactNode;
   icon?: React.ReactNode;
   onPress?: () => void;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
   disabled?: boolean;
   loading?: boolean;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -30,15 +28,18 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   icon,
   onPress,
-  style,
-  textStyle,
   disabled,
   loading,
+  style,
+  textStyle,
 }) => {
   const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
+      onPress={onPress}
+      disabled={isDisabled}
+      activeOpacity={0.8}
       style={[
         styles.base,
         sizeStyles[size],
@@ -46,21 +47,23 @@ export const Button: React.FC<ButtonProps> = ({
         isDisabled && styles.disabled,
         style,
       ]}
-      onPress={onPress}
-      disabled={isDisabled}
-      activeOpacity={0.8}
     >
       {loading ? (
         <ActivityIndicator color={variantStyles[variant].text.color} />
       ) : (
-        <>
-          {icon && <View style={styles.iconWrapper}>{icon}</View>}
-          {children && (
-            <Text style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}>
-              {children}
-            </Text>
-          )}
-        </>
+        <View style={styles.content}>
+          {icon && <View style={styles.icon}>{icon}</View>}
+          <Text
+            style={[
+              styles.textBase,
+              sizeTextStyles[size],
+              variantStyles[variant].text,
+              textStyle,
+            ]}
+          >
+            {children}
+          </Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -71,67 +74,102 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'transparent',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  disabled: {
-    opacity: 0.6,
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  iconWrapper: {
-    marginRight: remToPx(theme.spacing[2]),
+  icon: {
+    marginRight: 8,
   },
   textBase: {
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontWeight: '600',
     textAlign: 'center',
+    fontFamily: 'Klee One',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });
 
 const sizeStyles = StyleSheet.create({
-  sm: { paddingVertical: parseFloat(theme.spacing[3]) * 16, paddingHorizontal: parseFloat(theme.spacing[4]) * 16 },
-  md: { paddingVertical: parseFloat(theme.spacing[4]) * 16, paddingHorizontal: parseFloat(theme.spacing[6]) * 16 },
-  lg: { paddingVertical: parseFloat(theme.spacing[6]) * 16, paddingHorizontal: parseFloat(theme.spacing[8]) * 16 },
-  icon: { width: 60, height: 60, borderRadius: 30, padding: 0 },
+  sm: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  md: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
+  lg: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 16 },
+  icon: { width: 48, height: 48, borderRadius: 24, padding: 0 },
 });
 
 const sizeTextStyles = StyleSheet.create({
-  sm: { fontSize: parseFloat(theme.typography.fontSize.sm) * 16 },
-  md: { fontSize: parseFloat(theme.typography.fontSize.base) * 16 },
-  lg: { fontSize: parseFloat(theme.typography.fontSize.lg) * 16 },
-  icon: {}, // Icon variant uses icon prop, not text
+  sm: { fontSize: 14 },
+  md: { fontSize: 16 },
+  lg: { fontSize: 18 },
+  icon: {},
 });
 
 const variantStyles = {
   primary: StyleSheet.create({
-    button: { backgroundColor: theme.colors.primary[300], borderColor: theme.colors.primary[300] },
-    text: { color: theme.colors.text.inverse },
-  }),
-  success: StyleSheet.create({
-    button: { backgroundColor: theme.colors.semantic.success.main },
-    text: { color: theme.colors.text.inverse },
-  }),
-  danger: StyleSheet.create({
-    button: { backgroundColor: theme.colors.semantic.error.main },
-    text: { color: theme.colors.text.inverse },
-  }),
-  warning: StyleSheet.create({
-    button: { backgroundColor: theme.colors.semantic.warning.main },
-    text: { color: theme.colors.text.inverse },
+    button: {
+      backgroundColor: theme.colors.primary[500],
+      borderColor: theme.colors.primary[300],
+      shadowColor: 'rgba(208,102,102,0.25)',
+    },
+    text: {
+      color: theme.colors.text.inverse,
+    },
   }),
   secondary: StyleSheet.create({
-    button: { backgroundColor: theme.colors.background.tertiary },
-    text: { color: theme.colors.text.secondary },
-  }),
-  ghost: StyleSheet.create({
-    button: { backgroundColor: 'transparent' },
-    text: { color: theme.colors.text.primary },
-  }),
-  link: StyleSheet.create({
-    button: { backgroundColor: 'transparent' },
-    text: { color: theme.colors.text.link },
+    button: {
+      backgroundColor: theme.colors.secondary[500],
+      borderColor: theme.colors.secondary[700],
+      shadowColor: 'rgba(208,102,102,0.25)',
+    },
+    text: {
+      color: theme.colors.text.primary,
+    },
   }),
   icon: StyleSheet.create({
-    button: { backgroundColor: theme.colors.black },
-    text: { color: theme.colors.white }, // Not used, but good for consistency
+    button: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+    },
+    text: {
+      color: theme.colors.text.secondary,
+    },
+  }),
+  frosted: StyleSheet.create({
+    button: {
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      borderColor: 'rgba(255,255,255,0.25)',
+      shadowColor: 'rgba(255,255,255,0.08)',
+    },
+    text: {
+      color: theme.colors.text.primary,
+    },
+  }),
+  outline: StyleSheet.create({
+    button: {
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      borderColor: theme.colors.primary[600],
+      shadowColor: 'rgba(208,102,102,0.15)',
+    },
+    text: {
+      color: theme.colors.primary[500],
+    },
+  }),
+  ghost: StyleSheet.create({
+    button: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+    },
+    text: {
+      color: theme.colors.primary[500],
+    },
   }),
 };

@@ -182,14 +182,14 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
 
       <View style={styles.buttonContainer}>
         <Button
-          variant="success"
+          variant="primary"
           onPress={() => handleApprove(item.id, item.from_user.username)}
           style={styles.actionButton}
         >
           承認
         </Button>
         <Button
-          variant="danger"
+          variant="secondary"
           onPress={() => handleReject(item.id, item.from_user.username)}
           style={styles.actionButton}
         >
@@ -215,14 +215,14 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
 
       <View style={styles.menteeButtonContainer}>
         <Button
-          variant="success"
+          variant="primary"
           onPress={() => handleGraduateMentee(item.id, item.username)}
           style={styles.actionButton}
         >
           卒業
         </Button>
         <Button
-          variant="danger"
+          variant="secondary"
           onPress={() => handleExpelMentee(item.id, item.username)}
           style={styles.actionButton}
         >

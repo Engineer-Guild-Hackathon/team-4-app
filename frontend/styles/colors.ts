@@ -17,7 +17,7 @@ export const colors = {
   textDark: "#1F2937", // Mapping to text.primary
   textMedium: "#4B5563", // Mapping to text.secondary
   textGray: "#6B7280", // Mapping to text.tertiary
-  link: "#F5B6B0", // Mapping to text.link
+  link: "#ff7a6eff", // Mapping to text.link
   green: "#4A7C59", // Mapping to semantic.success.main
 
   background: {
@@ -70,7 +70,7 @@ export const colors = {
     disabled: "#D1D5DB", // Disabled text
     inverse: "#FFFFFF", // White text on dark backgrounds
     accent: "#E4C56A", // Golden text for highlights
-    link: "#F5B6B0", // Soft red for links
+    link: "#e47066ff", // Soft red for links
     linkHover: "#ED8278", // Darker red on link hover
   },
 

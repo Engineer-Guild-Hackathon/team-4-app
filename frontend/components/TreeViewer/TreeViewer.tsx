@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    width: 48,
-    height: 48,
+    width: 54,
+    height: 54,
     borderRadius: remToPx(theme.borderRadius.full),
     borderColor: theme.colors.background.tertiary,
     shadowColor: '#000',
