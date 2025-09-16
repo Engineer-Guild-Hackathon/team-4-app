@@ -32,7 +32,7 @@ export function SimpleTopicView({
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const { accessToken } = useAuth();
+  const { user } = useAuth();
 
   const checkMentorSelection = async (topicId: string) => {
     try {
@@ -66,12 +66,8 @@ export function SimpleTopicView({
   };
 
   useEffect(() => {
-    if (accessToken) {
-      refreshMyTopics();
-    } else {
-      setLoading(false);
-    }
-  }, [accessToken]);
+    refreshMyTopics();
+  }, []);
 
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
@@ -146,6 +142,7 @@ export function SimpleTopicView({
             <View key={topic.id} style={styles.topicPageContainer}>
               <View style={styles.treeContainer}>
                 <TreeViewer
+                  userId={user?.id}
                   topicId={topic.id}
                   onNodePress={userId => {
                     onUserPress(topic.id, userId);

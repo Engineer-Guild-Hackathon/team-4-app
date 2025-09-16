@@ -17,7 +17,7 @@ interface Props {
   isFocused: boolean;
 }
 
-const NODE_RADIUS = 20;
+const NODE_RADIUS = 40;
 
 // 括弧で区切られたラベルを分割 (変更なし)
 const splitLabelByParentheses = (label: string): [string, string] => {
@@ -33,7 +33,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   }, [isFocused, focusAnimation]);
 
   const animatedCircleProps = useAnimatedProps(() => {
-    const stroke = interpolateColor(focusAnimation.value, [0, 1], ['#573cfa', '#ff6b6b']);
+    const stroke = interpolateColor(focusAnimation.value, [0, 1], ['#000000ff', '#ff6b6b']);
     const strokeWidth = 2 + focusAnimation.value * 1.5;
     return {
       stroke,
@@ -69,10 +69,10 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
       <AnimatedCircle r={NODE_RADIUS} fill="transparent" animatedProps={animatedCircleProps} />
 
       {/* テキスト表示部分は変更なし */}
-      <SvgText y={NODE_RADIUS + 14} fill="#1f2937" fontSize={12} textAnchor="middle">
+      <SvgText y={NODE_RADIUS + 14} fill="#1f2937" fontSize={20} textAnchor="middle">
         {mainLabel}
       </SvgText>
-      <SvgText y={NODE_RADIUS + 28} fill="#6b7280" fontSize={10} textAnchor="middle">
+      <SvgText y={NODE_RADIUS + 28} fill="#6b7280" fontSize={16} textAnchor="middle">
         {subLabel}
       </SvgText>
     </G>

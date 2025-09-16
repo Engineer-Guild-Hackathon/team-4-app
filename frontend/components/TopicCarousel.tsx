@@ -1,12 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
   Animated,
-  TouchableOpacity,
+  Dimensions,
   FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface Topic {
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: ITEM_HEIGHT,
     borderRadius: 25,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#000',
     borderWidth: 2,
-    borderColor: '#374151',
+    borderColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   topicIconActive: {
-    backgroundColor: '#374151',
-    borderColor: '#374151',
-    shadowColor: '#374151',
+    backgroundColor: '#000',
+    borderColor: '#000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
     shadowRadius: 5,
