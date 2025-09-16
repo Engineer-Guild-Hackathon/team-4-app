@@ -65,11 +65,10 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   }, [accessToken]);
 
   // 参加可能なトピックを更新するuseEffect
-  useEffect(() => { 
-      const myTopicIds = myTopics.map(topic => topic.id);
-      setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+  useEffect(() => {
+    const myTopicIds = myTopics.map(topic => topic.id);
+    setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
   }, [allTopics, myTopics]);
-
 
   // トピック作成
   const handleCreateTopic = async () => {
