@@ -1,14 +1,15 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Dimensions, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { hierarchy, HierarchyPointNode, tree } from 'd3-hierarchy';
+import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { G, Line } from 'react-native-svg';
-import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
 import { useTreeData } from '../../hooks/useTreeData';
 import { TreeNodeView } from './TreeNode';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const HORIZONTAL_SPACING = 120;
 
 interface TreeViewerProps {
   topicId: string | null;
@@ -16,58 +17,67 @@ interface TreeViewerProps {
 }
 
 export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
-  const { data, loading } = useTreeData(topicId);
-  const [myNodeId, setMyNodeId] = useState<number | null>(null); // デモ用に自分のノードIDを管理
+  // useTreeDataフックがmax_levelとmin_levelも返すように修正したと仮定
+  // もしそうでなければ、ここでdataから計算してもOK
+  const { data, loading, max_level, min_level } = useTreeData(topicId);
 
-  // --- D3 レイアウト ---
   const layout = useMemo(() => {
     if (!data || data.length === 0) return null;
 
     const hierarchyData = buildTree(data);
-    if (!hierarchyData) return null;
+    const root = hierarchy(hierarchyData);
+    const nodes = root.descendants().slice(1);
 
-    const treeLayout = tree<D3TreeNode>().nodeSize([120, 150]);
-    const root = treeLayout(hierarchy(hierarchyData));
-    const nodes = root.descendants();
+    if (nodes.length === 0) return null;
+    
+    // X座標の配置はD3に任せる
+    const treeLayout = tree<D3TreeNode>().nodeSize([HORIZONTAL_SPACING, 0]); // Yのspacingは使わない
+    const layoutRoot = treeLayout(root);
+    const layoutNodes = layoutRoot.descendants().slice(1);
 
-    const xCoords = nodes.map(n => n.x);
-    const yCoords = nodes.map(n => n.y);
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const minY = Math.min(...yCoords);
-    const maxY = Math.max(...yCoords);
-
-    const PADDING = 80;
-    const treeWidth = maxX - minX;
-    const treeHeight = maxY - minY;
-
-    const scaleX = (screenWidth - PADDING * 2) / treeWidth;
-    const scaleY = (screenHeight - PADDING * 2) / treeHeight;
-    const initialScale = Math.min(scaleX, scaleY, 1.0);
-
-    // ノード座標を画面中央にスケーリング
-    nodes.forEach(node => {
-      const centeredX = node.x - (minX + treeWidth / 2);
-      const centeredY = node.y - (minY + treeHeight / 2);
-      node.x = centeredX * initialScale + screenWidth / 2;
-      node.y = centeredY * initialScale + screenHeight / 2;
+    nodes.forEach((node, i) => {
+      node.x = layoutNodes[i].x;
     });
 
-    const currentUserNode = root.find(node => node.data.id === 1);
+    // ★★★ ここからが修正箇所 ★★★
 
-    return {
-      root,
-      bounds: { minX, maxX, minY, maxY },
-      initialScale,
-      currentUserId: currentUserNode?.data.id ?? null,
-    };
-  }, [data]);
+    // 画面の上下パディング
+    const PADDING_Y = 150;
+    // Y座標を計算するための高さを確保
+    const availableHeight = screenHeight - PADDING_Y * 2;
+
+    // レベルの範囲 (APIからの値を使うか、データから計算)
+    const maxLevel = max_level ?? Math.max(...nodes.map(n => n.data.level), 0);
+    const minLevel = min_level ?? Math.min(...nodes.map(n => n.data.level), 0);
+    const levelRange = maxLevel - minLevel;
+
+    // Y座標をlevel値に基づいて、画面の高さに合わせて正規化
+    nodes.forEach(node => {
+      // levelRangeが0の場合（全員同じレベル）は中央に配置
+      const ratio = levelRange === 0 ? 0.5 : (maxLevel - node.data.level) / levelRange;
+      node.y = ratio * availableHeight + PADDING_Y;
+    });
+
+    // X座標を画面中央に配置するための計算
+    const xCoords = nodes.map(n => n.x!);
+    const minX = Math.min(...xCoords);
+    const maxX = Math.max(...xCoords);
+    const treeWidth = maxX - minX;
+
+    nodes.forEach(node => {
+      // X座標をツリーの中央からの相対位置に変換し、画面中央に配置
+      const centeredX = node.x! - (minX + treeWidth / 2);
+      node.x = centeredX + screenWidth / 2;
+    });
+    
+    // ★★★ 修正箇所ここまで ★★★
+
+    return { root };
+  }, [data, max_level, min_level]);
 
   const rootNode = layout?.root ?? null;
-  const layoutBounds = layout?.bounds ?? null;
-  const initialScale = layout?.initialScale ?? 1;
 
-  // --- ズーム・パン用の共有値 ---
+  // --- ズーム・パン・ジェスチャー・ボタン操作・スタイルは変更なし ---
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -75,28 +85,11 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
-  const findNodeById = (id: number | null): HierarchyPointNode<D3TreeNode> | undefined => {
-    return id !== null ? rootNode?.find(node => node.data.id === id) : undefined;
-  };
+  const pinchGesture = Gesture.Pinch()
+      .onUpdate(e => { scale.value = Math.max(0.3, Math.min(e.scale * savedScale.value, 4.0)); })
+      .onEnd(() => { savedScale.value = scale.value; });
 
-  const zoomIn = () => {
-    scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
-  };
-
-  const zoomOut = () => {
-    scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
-  };
-
-  // --- ジェスチャー処理 ---
-  const exploreGesture = Gesture.Simultaneous(
-    Gesture.Pinch()
-      .onUpdate(e => {
-        scale.value = Math.max(0.3, Math.min(e.scale * savedScale.value, 4.0));
-      })
-      .onEnd(() => {
-        savedScale.value = scale.value;
-      }),
-    Gesture.Pan()
+  const panGesture = Gesture.Pan()
       .onUpdate(e => {
         translateX.value = savedTranslateX.value + e.translationX;
         translateY.value = savedTranslateY.value + e.translationY;
@@ -104,40 +97,18 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
       .onBegin(() => {
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
-      }),
-  );
-  const composedGesture = exploreGesture;
+      });
+  
+  const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
-  // --- ボタン操作 ---
-  const DURATION = 300;
-
+  const zoomIn = () => { scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 }); };
+  const zoomOut = () => { scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 }); };
   const fitToNetwork = () => {
-    if (!rootNode) return;
-
-    const nodes = rootNode.descendants();
-    if (nodes.length === 0) return;
-
-    const xCoords = nodes.map(n => n.x);
-    const yCoords = nodes.map(n => n.y);
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const maxY = Math.max(...yCoords);
-
-    const PADDING = 80;
-    const treeWidth = maxX - minX;
-    const treeHeight = maxY;
-
-    const scaleX = (screenWidth - PADDING * 2) / treeWidth;
-    const scaleY = (screenHeight - PADDING * 2) / treeHeight;
-    const newScale = Math.min(scaleX, scaleY, 1.0);
-
-    // 初期スケールと中央揃えにリセット
-    scale.value = withTiming(newScale, { duration: DURATION });
-    translateX.value = withTiming(0, { duration: DURATION });
-    translateY.value = withTiming(0, { duration: DURATION });
+    scale.value = withTiming(1, { duration: 300 });
+    translateX.value = withTiming(0, { duration: 300 });
+    translateY.value = withTiming(0, { duration: 300 });
   };
-
-  // --- アニメーションスタイル ---
+  
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -146,37 +117,24 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     ],
   }));
 
-  // --- 初期表示時に全体をフィット ---
   useEffect(() => {
-    if (rootNode) {
-      fitToNetwork();
-    }
-  }, [rootNode]);
+    fitToNetwork();
+  }, [layout]);
 
-  // --- ノードタップ処理 ---
-  const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
-    onNodePress(node.data.id);
-  };
-
-  // --- レンダリング ---
   if (loading) {
-    return (
-      <View style={styles.center}><Text style={styles.text}>読み込み中...</Text></View>
-    );
+    return <View style={styles.center}><ActivityIndicator /></View>;
   }
   if (!rootNode) {
-    return (
-      <View style={styles.center}><Text style={styles.text}>表示できるデータがありません。</Text></View>
-    );
+    return <View style={styles.center}><Text style={styles.text}>表示できるデータがありません。</Text></View>;
   }
 
-  const nodes = rootNode.descendants();
-  const links = rootNode.links();
+  const nodesToRender = rootNode.descendants().slice(1);
+  const linksToRender = rootNode.links().filter(link => link.source.data.id !== -1);
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={() => fitToNetwork()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork} activeOpacity={0.7}>
           <Text style={styles.controlButtonText}>⛶</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
@@ -191,22 +149,19 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
         <Animated.View style={[styles.flex, animatedStyle]}>
           <Svg width={screenWidth} height={screenHeight}>
             <G>
-              {links.map((link, i) => (
+              {linksToRender.map((link) => (
                 <Line
-                  key={i}
-                  x1={link.source.x}
-                  y1={link.source.y}
-                  x2={link.target.x}
-                  y2={link.target.y}
-                  stroke="#6b7280"
-                  strokeWidth={1.5}
+                  key={`${link.source.data.id}-${link.target.data.id}`}
+                  x1={link.source.x!} y1={link.source.y!}
+                  x2={link.target.x!} y2={link.target.y!}
+                  stroke="#6b7280" strokeWidth={1.5}
                 />
               ))}
-              {nodes.map(node => (
+              {nodesToRender.map(node => (
                 <TreeNodeView
                   key={node.data.id}
-                  node={node}
-                  onPress={() => handleNodeTap(node)}
+                  node={node as HierarchyPointNode<D3TreeNode>}
+                  onPress={() => onNodePress(node.data.id)}
                   isFocused={false}
                 />
               ))}
