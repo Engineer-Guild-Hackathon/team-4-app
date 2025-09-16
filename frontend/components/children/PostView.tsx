@@ -5,6 +5,7 @@ import React from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { theme } from '@/styles/theme';
 import ReportModal from './ReportModal';
+import { Button } from '../Shared/Button';
 
 interface PostViewProps {
   posts: PostOut[];
@@ -59,13 +60,11 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     <View style={styles.post}>
       <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(item.id)}>
-            <Text style={styles.deleteButtonText}>削除</Text>
-          </TouchableOpacity>
+          <Button variant="danger" size="sm" onPress={() => onDelete(item.id)} style={styles.actionButton}>
+            削除
+          </Button>
         ) : (
-            <TouchableOpacity onPress={() => handleOpenMenu(item)} style={styles.menuButton}>
-                <Text style={styles.menuButtonText}>⋮</Text>
-            </TouchableOpacity>
+          <Button variant="secondary" size="sm" onPress={() => handleOpenMenu(item)} style={styles.actionButton}>⋮</Button>
         )}
       </View>
       <View>
@@ -148,32 +147,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
     borderRadius: remToPx(theme.borderRadius.md),
   },
-  deleteButton: {
+  actionButton: {
     position: 'absolute',
     top: remToPx(theme.spacing[6]) - 1, // lg - 1px
-    right: 0,
-    backgroundColor: theme.colors.semantic.error.main,
-    paddingVertical: remToPx(theme.spacing[2]), // xs
-    paddingHorizontal: remToPx(theme.spacing[4]) - 2, // md - 2px
-    borderRadius: remToPx(theme.borderRadius.sm),
+    right: remToPx(theme.spacing[4]),
     zIndex: 1,
-  },
-  deleteButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.sm),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: 'Klee One',
-  },
-  menuButton: {
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: remToPx(theme.borderRadius.xl),
-    paddingVertical: remToPx(theme.spacing[1]), // xxs
-    paddingHorizontal: remToPx(theme.spacing[3]), // sm
-    marginRight: remToPx(theme.spacing[2]), // xs
-  },
-  menuButtonText: {
-    color: theme.colors.text.secondary,
-    fontSize: remToPx(theme.typography.fontSize.xl) + 2,
-    fontWeight: theme.typography.fontWeight.bold,
   },
 });

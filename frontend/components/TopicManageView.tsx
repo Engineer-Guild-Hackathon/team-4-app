@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/Shared/Button';
 import { createTopic, getAllTopics, getMyTopics, leaveTopic } from '@/services/api/topic';
 import { theme } from '@/styles/theme';
 import { getMe } from '@/services/api/user';
@@ -129,18 +130,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       <ScrollView style={styles.manageContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.manageTitle}>トピック管理</Text>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backButtonText}>戻る</Text>
-          </TouchableOpacity>
+          <Button variant="secondary" size="sm" onPress={onBack}>戻る</Button>
         </View>
 
         {/* 新規トピック作成 */}
 
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
-          <TouchableOpacity style={styles.createButton} onPress={openCreateModal}>
-            <Text style={styles.createButtonText}>新規トピック作成</Text>
-          </TouchableOpacity>
+          <Button variant="primary" onPress={openCreateModal}>新規トピック作成</Button>
         </View>
 
         {/* トピック参加 */}
@@ -160,12 +157,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   <Text style={styles.availableTopicTitle}>{topic.title}</Text>
                   <Text style={styles.availableTopicDescription}>{topic.description}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.joinTopicButton}
-                  onPress={() => handleJoinTopic(topic.id)}
-                >
-                  <Text style={styles.joinTopicButtonText}>参加</Text>
-                </TouchableOpacity>
+                <Button variant="primary" size="sm" onPress={() => handleJoinTopic(topic.id)}>
+                  参加
+                </Button>
               </View>
             ))
           )}
@@ -186,12 +180,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   <Text style={styles.topicItemTitle}>{topic.title}</Text>
                   <Text style={styles.topicItemDescription}>{topic.description}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.leaveButton}
-                  onPress={() => handleLeaveTopic(topic.id)}
-                >
-                  <Text style={styles.leaveButtonText}>抜ける</Text>
-                </TouchableOpacity>
+                <Button variant="warning" size="sm" onPress={() => handleLeaveTopic(topic.id)}>
+                  抜ける
+                </Button>
               </View>
             ))
           )}
@@ -209,12 +200,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>新規トピック作成</Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowCreateModal(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>閉じる</Text>
-            </TouchableOpacity>
+            <Button variant="secondary" size="sm" onPress={() => setShowCreateModal(false)}>
+              閉じる
+            </Button>
           </View>
 
           <View style={styles.modalContent}>
@@ -232,9 +220,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               multiline
               numberOfLines={3}
             />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateTopic}>
-              <Text style={styles.createButtonText}>作成</Text>
-            </TouchableOpacity>
+            <Button variant="primary" onPress={handleCreateTopic}>
+              作成
+            </Button>
           </View>
         </View>
       </Modal>
@@ -277,18 +265,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: 'Klee One',
   },
-  backButton: {
-    backgroundColor: theme.colors.text.tertiary,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
-    paddingVertical: remToPx(theme.spacing[3]), // sm
-  },
-  backButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: 'Klee One',
-  },
   createSection: {
     marginBottom: remToPx(theme.spacing[12]),
   },
@@ -318,18 +294,6 @@ const styles = StyleSheet.create({
     height: 80,
     textAlignVertical: 'top',
   },
-  createButton: {
-    backgroundColor: theme.colors.primary[500],
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: remToPx(theme.spacing[4]),
-    alignItems: 'center',
-  },
-  createButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: 'Klee One',
-  },
   topicItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -351,18 +315,6 @@ const styles = StyleSheet.create({
   topicItemDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    fontFamily: 'Klee One',
-  },
-  leaveButton: {
-    backgroundColor: theme.colors.semantic.warning.main,
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: remToPx(theme.spacing[4]),
-    paddingVertical: remToPx(theme.spacing[3]),
-  },
-  leaveButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
     fontFamily: 'Klee One',
   },
   emptyTopicsContainer: {
@@ -389,18 +341,6 @@ const styles = StyleSheet.create({
   joinSection: {
     marginBottom: remToPx(theme.spacing[12]),
   },
-  joinButton: {
-    backgroundColor: theme.colors.semantic.success.main,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: remToPx(theme.spacing[4]),
-    alignItems: 'center',
-  },
-  joinButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: 'Klee One',
-  },
   modalContainer: {
     flex: 1,
     backgroundColor: theme.colors.background.primary,
@@ -419,18 +359,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
-  },
-  modalCloseButton: {
-    backgroundColor: theme.colors.text.tertiary,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: remToPx(theme.spacing[6]),
-    paddingVertical: remToPx(theme.spacing[3]),
-  },
-  modalCloseButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
     fontFamily: 'Klee One',
   },
   modalContent: {
@@ -459,18 +387,6 @@ const styles = StyleSheet.create({
   availableTopicDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    fontFamily: 'Klee One',
-  },
-  joinTopicButton: {
-    backgroundColor: theme.colors.primary[300],
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: remToPx(theme.spacing[6]),
-    paddingVertical: remToPx(theme.spacing[3]),
-  },
-  joinTopicButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.bold,
     fontFamily: 'Klee One',
   },
 });

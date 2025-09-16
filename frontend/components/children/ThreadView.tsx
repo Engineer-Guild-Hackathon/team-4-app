@@ -6,6 +6,7 @@ import { theme } from '@/styles/theme';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
+import { Button } from '../Shared/Button';
 
 type ThreadViewProps = {
   topicId: string;
@@ -77,13 +78,14 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
           ))}
         </ScrollView>
       )}
-      <TouchableOpacity
+      <Button
+        variant="icon"
         style={styles.fab}
-        activeOpacity={0.7}
+        textStyle={styles.fabText}
         onPress={() => setShowCreateModal(true)}
       >
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
+        ＋
+      </Button>
 
       <ThreadCreateModal
         visible={showCreateModal}
@@ -220,25 +222,13 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    right: remToPx(theme.spacing[20]), // xxl
-    bottom: remToPx(theme.spacing[16]) - 8, // 4xl - 8px
+    right: remToPx(theme.spacing[8]),
+    bottom: remToPx(theme.spacing[8]),
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 6,
   },
   fabText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize['4xl']),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: theme.typography.fontFamily.primary,
-    lineHeight: remToPx(theme.typography.lineHeight.loose),
+    fontSize: remToPx(theme.typography.fontSize['3xl']),
+    lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },
 });

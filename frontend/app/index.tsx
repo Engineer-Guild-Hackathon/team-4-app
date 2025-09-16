@@ -3,11 +3,12 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { theme } from '@/styles/theme';
 import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+import { Button } from '@/components/Shared/Button';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -31,12 +32,6 @@ export default function HomeScreen() {
       setRenderKey(prevKey => prevKey + 1);
     }, [])
   );
-
-  useEffect(() => {
-    if (params.openModal === 'true') {
-      setModalVisible(true);
-    }
-  }, [params.openModal]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
@@ -68,27 +63,27 @@ export default function HomeScreen() {
       {currentTopicId && (
         <>
           <Link href="/edit-profile" asChild>
-            <TouchableOpacity style={styles.editButton}>
-              <Feather name="user" size={24} color={theme.colors.white} />
-            </TouchableOpacity>
+            <Button variant="icon" size="icon" style={styles.editButton}>
+              <Feather name="user" size={24} color="white" />
+            </Button>
           </Link>
-          <TouchableOpacity
+          <Button
+            variant="icon"
+            size="icon"
             onPress={() => setMentorDashboardVisible(true)}
             style={styles.mentorshipButton}
           >
-            <Feather name="user-plus" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <AntDesign name="logout" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
+            <Feather name="user-plus" size={24} color="white" />
+          </Button>
+          <Button variant="icon" size="icon" style={styles.logoutButton} onPress={logout}>
+            <AntDesign name="logout" size={24} color="white" />
+          </Button>
         </>
       )}
 
       <SimpleTopicView
         key={renderKey}
         onUserPress={handleUserPress}
-        onMentorSelectionRequired={handleMentorSelectionRequired}
-        onTopicChange={handleTopicChange}
       />
 
       <UserDetailModal
@@ -124,55 +119,44 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.primary,
   },
+  fabBase: {
+    // This style is now defined in the fabBaseStyle constant below
+    // and is no longer needed here.
+  },
   logoutButton: {
-    position: 'absolute',
-    top: remToPx(theme.spacing[24]) * 3, // Approximating "7xl" × 3
-    right: remToPx(theme.spacing[20]),   // xxl
-    height: 60,
-    width: 60,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: remToPx(theme.borderRadius.full),
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    // This will be defined using the fabBaseStyle constant
   },
   editButton: {
-    position: 'absolute',
-    top: remToPx(theme.spacing[24]),     // Approximating "6xl"
-    right: remToPx(theme.spacing[20]),   // xxl
-    height: 60,
-    width: 60,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: remToPx(theme.borderRadius.full),
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    // This will be defined using the fabBaseStyle constant
   },
   mentorshipButton: {
-    position: 'absolute',
+    // This will be defined using the fabBaseStyle constant
+  },
+});
+
+const fabBaseStyle: ViewStyle = {
+  position: 'absolute',
+  right: remToPx(theme.spacing[20]), // xxl
+  zIndex: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 6,
+  elevation: 5,
+  borderWidth: 0, // Override default border from Button
+};
+
+Object.assign(styles, {
+  logoutButton: {
+    ...fabBaseStyle,
+    top: remToPx(theme.spacing[24]) * 3, // Approximating "7xl" × 3
+  },
+  editButton: {
+    ...fabBaseStyle,
+    top: remToPx(theme.spacing[24]), // Approximating "6xl"
+  },
+  mentorshipButton: {
+    ...fabBaseStyle,
     top: remToPx(theme.spacing[24]) + remToPx(theme.spacing[24]), // "7xl" + "6xl"
-    right: remToPx(theme.spacing[20]),   // xxl
-    height: 60,
-    width: 60,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: remToPx(theme.borderRadius.full),
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
   },
 });

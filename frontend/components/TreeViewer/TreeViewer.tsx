@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Dimensions, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { theme } from '@/styles/theme';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import Svg, { G, Line } from 'react-native-svg';
 import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
 import { useTreeData } from '../../hooks/useTreeData';
 import { TreeNodeView } from './TreeNode';
+import { Button } from '../Shared/Button';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -177,15 +178,15 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={() => fitToNetwork()} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>⛶</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>＋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={zoomOut} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>－</Text>
-        </TouchableOpacity>
+        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={() => fitToNetwork()}>
+          ⛶
+        </Button>
+        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={zoomIn}>
+          ＋
+        </Button>
+        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={zoomOut}>
+          －
+        </Button>
       </View>
 
       <GestureDetector gesture={composedGesture}>
@@ -249,13 +250,10 @@ const styles = StyleSheet.create({
     gap: remToPx(theme.spacing[4]), // md
   },
   controlButton: {
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     width: 48,
     height: 48,
     borderRadius: remToPx(theme.borderRadius.full),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
     borderColor: theme.colors.background.tertiary,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },

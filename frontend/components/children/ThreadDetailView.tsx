@@ -1,15 +1,8 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import React, { useRef, useState } from 'react'; // useRefを追加
 import { theme } from '@/styles/theme';
-import {
-    FlatList,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import { FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button } from '../Shared/Button';
 
 interface ThreadDetailViewProps {
   thread: ThreadOut;
@@ -51,9 +44,9 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
     >
       {/* ヘッダー部分は変更なし */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>← 戻る</Text>
-        </TouchableOpacity>
+        <Button variant="secondary" size="sm" onPress={onBack} style={styles.backButton}>
+          ← 戻る
+        </Button>
         <View style={styles.titleContainer}>
           <Text style={styles.title} numberOfLines={1}>{thread.mentor.username} : {thread.starter.username}</Text>
         </View>
@@ -87,9 +80,9 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           onChangeText={setContent}
           multiline
         />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending}>
-          <Text style={styles.sendButtonText}>{sending ? '送信中...' : '送信'}</Text>
-        </TouchableOpacity>
+        <Button style={styles.sendButton} textStyle={styles.sendButtonText} onPress={handleSend} disabled={sending}>
+          {sending ? '...' : '➤'}
+        </Button>
       </View>
     </View>
   );
@@ -112,17 +105,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backButton: {
-    width: 80,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: remToPx(theme.borderRadius.md),
-    paddingHorizontal: remToPx(theme.spacing[4]), // md
-    paddingVertical: remToPx(theme.spacing[3]) - 2, // sm - 2px
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: theme.colors.text.link,
-    fontWeight: theme.typography.fontWeight.bold,
-    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    width: 90,
   },
   titleContainer: {
     flex: 1,
@@ -185,16 +168,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   sendButton: {
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.colors.primary[300],
     borderRadius: remToPx(theme.borderRadius['2xl']),
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   sendButtonText: {
     color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base) + 1,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: remToPx(theme.typography.fontSize.xl),
   },
 });

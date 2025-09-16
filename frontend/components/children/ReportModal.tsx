@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '@/styles/theme';
+import { Button } from '../Shared/Button';
 
 interface ReportModalProps {
   visible: boolean;
@@ -48,12 +49,12 @@ export default function ReportModal({ visible, onClose, onSubmit }: ReportModalP
             onChangeText={setReason}
             multiline
           />
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-            <Text style={styles.submitButtonText}>{loading ? '報告中...' : '報告する'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>閉じる</Text>
-          </TouchableOpacity>
+          <Button variant="danger" onPress={handleSubmit} loading={loading} style={styles.button}>
+            {loading ? '報告中...' : '報告する'}
+          </Button>
+          <Button variant="secondary" onPress={onClose} style={styles.button}>
+            閉じる
+          </Button>
         </View>
       </View>
     </Modal>
@@ -97,32 +98,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     color: theme.colors.text.primary,
   },
-  submitButton: {
-    backgroundColor: theme.colors.black,
-    borderRadius: remToPx(theme.borderRadius.md),
-    paddingVertical: remToPx(theme.spacing[4]), // md
-    alignItems: 'center',
-    marginBottom: remToPx(theme.spacing[4]) - 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  submitButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  closeButton: {
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: remToPx(theme.borderRadius.md),
-    paddingVertical: remToPx(theme.spacing[4]) - 2,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: theme.colors.text.secondary,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.semibold,
+  button: {
+    marginBottom: remToPx(theme.spacing[3]),
   },
 });

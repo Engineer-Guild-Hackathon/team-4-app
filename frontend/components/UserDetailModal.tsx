@@ -12,7 +12,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
@@ -20,6 +19,7 @@ import PagerView from 'react-native-pager-view';
 import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
 import { theme } from '@/styles/theme';
+import { Button } from './Shared/Button';
 
 interface UserProfile {
   id: number;
@@ -145,8 +145,7 @@ export default function UserDetailModal({
                   </Text>
                 </View>
                 {profile.blocking ? (
-                  <TouchableOpacity
-                    style={[styles.unblockButton, { marginLeft: 12 }]}
+                  <Button // Unblock
                     onPress={async () => {
                       Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
                         { text: 'キャンセル', style: 'cancel' },
@@ -166,12 +165,14 @@ export default function UserDetailModal({
                         },
                       ]);
                     }}
+                    variant="secondary"
+                    size="sm"
+                    style={{ marginLeft: 12 }}
                   >
-                    <Text style={styles.actionButtonText}>ブロック解除</Text>
-                  </TouchableOpacity>
+                    ブロック解除
+                  </Button> // Unblock
                 ) : (
-                  <TouchableOpacity
-                    style={[styles.blockButton, { marginLeft: 12 }]}
+                  <Button
                     onPress={async () => {
                       Alert.alert('ブロック', 'このユーザーをブロックしますか？', [
                         { text: 'キャンセル', style: 'cancel' },
@@ -191,9 +192,12 @@ export default function UserDetailModal({
                         },
                       ]);
                     }}
+                    variant="danger"
+                    size="sm"
+                    style={{ marginLeft: 12 }}
                   >
-                    <Text style={styles.actionButtonText}>ブロック</Text>
-                  </TouchableOpacity>
+                    ブロック
+                  </Button>
                 )}
               </View>
             ) : (
@@ -202,28 +206,30 @@ export default function UserDetailModal({
           </View>
           {/* タブエリア */}
           <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, selectedTab === 0 && styles.tabActive]}
+            <Button
+              variant={selectedTab === 0 ? 'primary' : 'ghost'}
+              textStyle={selectedTab === 0 ? styles.tabTextActive : styles.tabText}
+              style={styles.tab}
               onPress={() => {
                 setSelectedTab(0);
                 pagerRef.current?.setPage(0);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
             >
-              <Text style={[styles.tabText, selectedTab === 0 && styles.tabTextActive]}>投稿</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, selectedTab === 1 && styles.tabActive]}
+              投稿
+            </Button>
+            <Button
+              variant={selectedTab === 1 ? 'primary' : 'ghost'}
+              textStyle={selectedTab === 1 ? styles.tabTextActive : styles.tabText}
+              style={styles.tab}
               onPress={() => {
                 setSelectedTab(1);
                 pagerRef.current?.setPage(1);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
             >
-              <Text style={[styles.tabText, selectedTab === 1 && styles.tabTextActive]}>
-                掲示板
-              </Text>
-            </TouchableOpacity>
+              掲示板
+            </Button>
           </View>
           {/* PageViewエリア */}
           <PagerView
@@ -243,9 +249,14 @@ export default function UserDetailModal({
             {/* 掲示板ページ */}
             <ThreadView userId={userId!} topicId={topicId!} />
           </PagerView>
-          <TouchableOpacity style={styles.closeCircleButton} onPress={onClose}>
-            <Text style={styles.closeCircleText}>×</Text>
-          </TouchableOpacity>
+          <Button
+            variant="icon"
+            size="icon"
+            style={styles.closeCircleButton}
+            onPress={onClose}
+          >
+            ×
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -267,19 +278,13 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.background.secondary,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background.primary,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: theme.colors.primary[500],
-    backgroundColor: theme.colors.background.primary,
+    borderRadius: 0,
+    borderWidth: 0,
   },
   tabText: {
     fontSize: parseFloat(theme.typography.fontSize.base) * 16,
@@ -288,52 +293,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Klee One',
   },
   tabTextActive: {
-    color: theme.colors.primary[500],
+    color: theme.colors.text.inverse,
   },
   pagerView: {
     flex: 1,
   },
-  actionButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: 'bold',
-    fontSize: 14,
-    fontFamily: 'Klee One',
-  },
-  blockButton: {
-    backgroundColor: theme.colors.semantic.error.main,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  unblockButton: {
-    backgroundColor: theme.colors.primary[500],
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
   closeCircleButton: {
     position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: theme.colors.black,
-    justifyContent: 'center',
-    alignItems: 'center',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
     zIndex: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  closeCircleText: {
-    color: theme.colors.white,
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 26,
   },
   profileHeader: {
     flexDirection: 'row',

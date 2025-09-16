@@ -1,17 +1,8 @@
 import { createThread } from '@/services/api/thread';
 import React, { useState } from 'react';
 import { theme } from '@/styles/theme';
-import {
-  Alert,
-  Keyboard,
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import { Alert, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { Button } from '../Shared/Button';
 
 interface ThreadCreateModalProps {
   visible: boolean;
@@ -82,12 +73,12 @@ export default function ThreadCreateModal({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreate} disabled={loading}>
-              <Text style={styles.createButtonText}>{loading ? '作成中...' : '作成'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>閉じる</Text>
-            </TouchableOpacity>
+            <Button variant="primary" onPress={handleCreate} loading={loading} style={styles.button}>
+              {loading ? '作成中...' : '作成'}
+            </Button>
+            <Button variant="secondary" onPress={onClose} style={styles.button}>
+              閉じる
+            </Button>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -134,32 +125,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     color: theme.colors.text.primary,
   },
-  createButton: {
-    backgroundColor: theme.colors.black,
-    borderRadius: remToPx(theme.borderRadius.md),
-    paddingVertical: remToPx(theme.spacing[4]), // md
-    alignItems: 'center',
-    marginBottom: remToPx(theme.spacing[4]) - 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  createButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  closeButton: {
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: remToPx(theme.borderRadius.md),
-    paddingVertical: remToPx(theme.spacing[4]) - 2,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: theme.colors.text.secondary,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.semibold,
+  button: {
+    marginBottom: remToPx(theme.spacing[3]),
   },
 });

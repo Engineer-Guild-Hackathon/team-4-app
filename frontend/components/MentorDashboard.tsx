@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
 import { theme } from '@/styles/theme';
+import { Button } from './Shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getReceivedMentorRequests,
@@ -180,19 +181,20 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
       <Text style={styles.topicTitle}>トピック: {item.topic.title}</Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.approveButton]}
+        <Button
+          variant="success"
           onPress={() => handleApprove(item.id, item.from_user.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.approveButtonText}>承認</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.rejectButton]}
+          承認
+        </Button>
+        <Button
+          variant="danger"
           onPress={() => handleReject(item.id, item.from_user.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.rejectButtonText}>拒否</Text>
-        </TouchableOpacity>
+          拒否
+        </Button>
       </View>
     </View>
   );
@@ -212,19 +214,20 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
       </Text>
 
       <View style={styles.menteeButtonContainer}>
-        <TouchableOpacity
-          style={[styles.menteeButton, styles.graduateButton]}
+        <Button
+          variant="success"
           onPress={() => handleGraduateMentee(item.id, item.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.graduateButtonText}>卒業</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menteeButton, styles.expelButton]}
+          卒業
+        </Button>
+        <Button
+          variant="danger"
           onPress={() => handleExpelMentee(item.id, item.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.expelButtonText}>破門</Text>
-        </TouchableOpacity>
+          破門
+        </Button>
       </View>
     </View>
   );
@@ -238,9 +241,14 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
+          <Button
+            variant="ghost"
+            onPress={onClose}
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
+          >
+            ✕
+          </Button>
           <Text style={styles.title}>師匠ダッシュボード</Text>
         </View>
 
@@ -325,7 +333,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     marginRight: remToPx(theme.spacing[6]),
-    padding: remToPx(theme.spacing[3]), // sm
   },
   closeButtonText: {
     fontSize: remToPx(theme.typography.fontSize.lg),
@@ -384,28 +391,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  button: {
+  actionButton: {
     flex: 1,
-    paddingVertical: remToPx(theme.spacing[4]), // md
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
-    borderRadius: theme.borderRadius.md,
     marginHorizontal: remToPx(theme.spacing[2]), // xs
-  },
-  approveButton: {
-    backgroundColor: theme.colors.semantic.success.main,
-  },
-  rejectButton: {
-    backgroundColor: theme.colors.semantic.error.main,
-  },
-  approveButtonText: {
-    color: theme.colors.text.inverse,
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  rejectButtonText: {
-    color: theme.colors.text.inverse,
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -475,30 +463,5 @@ const styles = StyleSheet.create({
   menteeButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  menteeButton: {
-    flex: 1,
-    paddingVertical: remToPx(theme.spacing[4]) - 2,
-    paddingHorizontal: remToPx(theme.spacing[6]),
-    borderRadius: theme.borderRadius.md,
-    marginHorizontal: remToPx(theme.spacing[2]),
-  },
-  graduateButton: {
-    backgroundColor: theme.colors.semantic.success.main,
-  },
-  expelButton: {
-    backgroundColor: theme.colors.semantic.error.main,
-  },
-  graduateButtonText: {
-    color: theme.colors.text.inverse,
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: remToPx(theme.typography.fontSize.base),
-  },
-  expelButtonText: {
-    color: theme.colors.text.inverse,
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: remToPx(theme.typography.fontSize.base),
   },
 });
