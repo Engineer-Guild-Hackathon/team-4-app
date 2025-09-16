@@ -164,3 +164,16 @@ export const graduateMentee = async (menteeId: number, topicId: string) => {
     throw error;
   }
 };
+
+// 師匠選択をしない（最高レベル+1に設定）　
+export const noMentorSelection = async (topicId: string) => {
+  try {
+    const res = await authedApiClient(`/api/mentorship/no-mentor-selection/${topicId}`, {
+      method: 'POST',
+    });
+    return res;
+  } catch (error: any) {
+    console.error('師匠選択スキップエラー:', error);
+    throw error;
+  }
+};

@@ -134,6 +134,15 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     ).exists():
         return 400, {"message": "A pending request to this user already exists."}
 
+    # 師匠のレベルが弟子より高いかチェック
+    try:
+        from_user_topic = UserTopic.objects.get(user=from_user, topic=topic)
+        to_user_topic = UserTopic.objects.get(user=to_user, topic=topic)
+        if to_user_topic.level <= from_user_topic.level:
+            return 400, {"message": "Mentor must have a higher level than the mentee."}
+    except UserTopic.DoesNotExist:
+        return 400, {"message": "UserTopic not found for the specified topic."}
+
     # 師匠の定員をチェック
     is_within_capacity, current_count, capacity = _check_mentor_capacity(to_user, payload.topic_id)
     
@@ -145,12 +154,14 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
             topic=topic,
         )
         
-        # 弟子のUserTopicのstatusをACTIVEにリセット
+        # 弟子のUserTopicのレベルを師匠のレベル-1に設定し、statusをACTIVEにリセット
         try:
+            mentor_user_topic = UserTopic.objects.get(user=to_user, topic=topic)
             mentee_user_topic = UserTopic.objects.get(
                 user=from_user, 
                 topic=topic
             )
+            mentee_user_topic.level = mentor_user_topic.level - 1  # マイナスレベルも許可
             mentee_user_topic.status = UserTopic.Status.ACTIVE
             mentee_user_topic.save()
         except UserTopic.DoesNotExist:
@@ -209,12 +220,17 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
         topic=mentor_request.topic,
     )
 
-    # 弟子のUserTopicのstatusをACTIVEにリセット（師匠選択完了）
+    # 弟子のUserTopicのレベルを師匠のレベル-1に設定し、statusをACTIVEにリセット（師匠選択完了）
     try:
+        mentor_user_topic = UserTopic.objects.get(
+            user=mentor_request.to_user, 
+            topic=mentor_request.topic
+        )
         mentee_user_topic = UserTopic.objects.get(
             user=mentor_request.from_user, 
             topic=mentor_request.topic
         )
+        mentee_user_topic.level = max(1, mentor_user_topic.level - 1)  # 最低レベルは1
         mentee_user_topic.status = UserTopic.Status.ACTIVE
         mentee_user_topic.save()
     except UserTopic.DoesNotExist:
@@ -318,12 +334,17 @@ def approve_mentor_request_with_selection(request: HttpRequest, request_id: int,
         topic=mentor_request.topic,
     )
 
-    # 弟子のUserTopicのstatusをACTIVEにリセット（師匠選択完了）
+    # 弟子のUserTopicのレベルを師匠のレベル-1に設定し、statusをACTIVEにリセット（師匠選択完了）
     try:
+        mentor_user_topic = UserTopic.objects.get(
+            user=mentor_request.to_user, 
+            topic=mentor_request.topic
+        )
         mentee_user_topic = UserTopic.objects.get(
             user=mentor_request.from_user, 
             topic=mentor_request.topic
         )
+        mentee_user_topic.level = max(1, mentor_user_topic.level - 1)  # 最低レベルは1
         mentee_user_topic.status = UserTopic.Status.ACTIVE
         mentee_user_topic.save()
     except UserTopic.DoesNotExist:
@@ -625,20 +646,11 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
             usertopic__topic_id=topic_id
         ).exclude(id=request.user.id)
         
-        # UserTopicのstatusに基づく制限を適用
-        if user_topic.status == UserTopic.Status.GRADUATED:
-            # GRADUATEDユーザーは自分のlevel + 1以上の師匠のみ選択可能
-            available_users = available_users.filter(
-                usertopic__topic_id=topic_id,
-                usertopic__level__gt=user_topic.level
-            )
-        elif user_topic.status == UserTopic.Status.EXPELLED:
-            # EXPELLEDユーザーは自分と同レベル以下の師匠のみ選択可能
-            available_users = available_users.filter(
-                usertopic__topic_id=topic_id,
-                usertopic__level__lte=user_topic.level
-            )
-        # ACTIVEユーザーは制限なし
+        # 師匠は弟子より高いレベルでなければならない
+        available_users = available_users.filter(
+            usertopic__topic_id=topic_id,
+            usertopic__level__gt=user_topic.level
+        )
         
         # 既に師弟関係にあるユーザーを除外
         existing_mentors = MentorRelation.objects.filter(
@@ -724,4 +736,39 @@ def get_mentor_capacity(request: HttpRequest, topic_id: str):
         
     except Exception as e:
         return 400, {"message": f"Error retrieving capacity: {str(e)}"}
+
+
+@router.post(
+    "/no-mentor-selection/{topic_id}",
+    summary="師匠選択をしない（最高レベル+1に設定）",
+    response={200: dict, 400: dict, 404: dict},
+    auth=JWTAuth(),
+)
+@transaction.atomic
+def no_mentor_selection(request: HttpRequest, topic_id: str):
+    """
+    師匠選択をしない場合、そのトピックの最高レベル+1にレベルを設定します。
+    """
+    try:
+        user_topic = UserTopic.objects.get(user=request.user, topic_id=topic_id)
+        
+        # そのトピックの最高レベルを取得
+        max_level = UserTopic.objects.filter(topic_id=topic_id).aggregate(
+            max_level=models.Max('level')
+        )['max_level']
+        
+        # 最高レベル+1に設定（最高レベルがNoneの場合は1に設定）
+        new_level = (max_level or 0) + 1
+        user_topic.level = new_level
+        user_topic.status = UserTopic.Status.ACTIVE
+        user_topic.save()
+        
+        return {
+            "new_level": new_level
+        }
+        
+    except UserTopic.DoesNotExist:
+        return 404, {"message": "UserTopic not found for the specified topic."}
+    except Exception as e:
+        return 400, {"message": f"Error setting level: {str(e)}"}
 

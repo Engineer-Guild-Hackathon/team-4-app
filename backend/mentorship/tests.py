@@ -43,17 +43,17 @@ class MentorAPITestCase(TestCase):
         """
         Test: 弟子入りリクエスト作成（成功）
         """
-        headers = get_jwt_auth_headers(self.user1)
+        headers = get_jwt_auth_headers(self.user2)
         response = self.client.post(
             "/api/mentorship/request",
-            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            {"to_user_id": self.user1.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
             headers=headers,
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
             MentorRelationRequest.objects.filter(
-                from_user=self.user1, to_user=self.user2
+                from_user=self.user2, to_user=self.user1
             ).exists()
         )
 
@@ -168,27 +168,33 @@ class MentorAPITestCase(TestCase):
         Test: 異なるメンターへ複数のリクエストを作成（成功）
         """
         topic2 = Topic.objects.create(title="Test Topic 2")
-        headers = get_jwt_auth_headers(self.user1)
+        # topic2用のUserTopicを作成
+        UserTopic.objects.create(user=self.user1, topic=topic2, level=5, mentee_capacity=3)
+        UserTopic.objects.create(user=self.user2, topic=topic2, level=4, mentee_capacity=3)
+        UserTopic.objects.create(user=self.user3, topic=topic2, level=3, mentee_capacity=3)
+        
+        headers = get_jwt_auth_headers(self.user2)
 
-        # Request 1: user1 -> user2 with self.topic
+        # Request 1: user2 -> user1 with self.topic
         response1 = self.client.post(
             "/api/mentorship/request",
-            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            {"to_user_id": self.user1.id, "topic_id": str(self.topic.id)},
             content_type="application/json",
             headers=headers,
         )
-        # Request 2: user1 -> user3 with topic2
+        # Request 2: user3 -> user2 with topic2
+        headers2 = get_jwt_auth_headers(self.user3)
         response2 = self.client.post(
             "/api/mentorship/request",
-            {"to_user_id": self.user3.id, "topic_id": str(topic2.id)},
+            {"to_user_id": self.user2.id, "topic_id": str(topic2.id)},
             content_type="application/json",
-            headers=headers,
+            headers=headers2,
         )
         self.assertEqual(response1.status_code, 200)
         self.assertEqual(response2.status_code, 200)
 
         self.assertEqual(
-            MentorRelationRequest.objects.filter(from_user=self.user1).count(), 2
+            MentorRelationRequest.objects.filter(from_user__in=[self.user2, self.user3]).count(), 2
         )
 
     def test_create_request_when_relation_exists_fails(self):

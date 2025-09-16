@@ -9,7 +9,8 @@ import {
   completeMentorSelection,
   createMentorRequest,
   getUserLevel,
-  getMentorRequestStatus
+  getMentorRequestStatus,
+  noMentorSelection
 } from '@/services/api/mentorship';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
@@ -239,6 +240,38 @@ export default function SelectLevelMentorScreen() {
     }
   };
 
+  // 師匠選択をしない処理
+  const handleNoMentorSelection = async () => {
+    Alert.alert(
+      '確認', 
+      '師匠を選択せずに参加しますか？\n最高レベル+1に設定されます。', 
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '参加する',
+          onPress: async () => {
+            try {
+              const response = await noMentorSelection(topicId) as {
+                message?: string;
+                new_level?: number;
+              };
+              
+              Alert.alert('参加完了', `師匠選択をスキップしました。レベル${response.new_level}で参加しました。`, [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/'),
+                },
+              ]);
+            } catch (error) {
+              console.error('師匠選択スキップエラー:', error);
+              Alert.alert('エラー', '参加に失敗しました');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // 戻るボタン処理（参加を取り消す）
   const handleBack = async () => {
     Alert.alert('確認', '参加を取り消して戻りますか？', [
@@ -362,6 +395,14 @@ export default function SelectLevelMentorScreen() {
                   )}
                   style={styles.mentorList}
                 />
+                
+                {/* 選択しないボタン */}
+                <TouchableOpacity
+                  style={styles.noSelectionButton}
+                  onPress={handleNoMentorSelection}
+                >
+                  <Text style={styles.noSelectionButtonText}>師匠を選択しない</Text>
+                </TouchableOpacity>
               </View>
             )}
             
@@ -569,5 +610,20 @@ const styles = StyleSheet.create({
     bottom: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  noSelectionButton: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  noSelectionButtonText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
   },
 });
