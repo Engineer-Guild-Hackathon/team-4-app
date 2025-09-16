@@ -1,29 +1,24 @@
-import { useAuth } from '@/hooks/useAuth';
-import { PostMediaOut, PostOut } from '@/types/post';
-import { useEvent } from 'expo';
+import { deletePost, getPosts } from '@/services/api/post';
+import { getUser } from '@/services/api/user';
+import { PostOut } from '@/types/post';
 import * as Haptics from 'expo-haptics';
-import { Link } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import PagerView from 'react-native-pager-view';
+import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface UserProfile {
   id: number;
@@ -31,24 +26,6 @@ interface UserProfile {
   avatar?: string;
   bio?: string;
 }
-
-const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
-  const player = useVideoPlayer(uri, player => {
-    player.loop = true;
-    player.play();
-  });
-
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-  return (
-    <VideoView
-      player={player}
-      style={style}
-      // allowsFullscreen
-      // allowsPictureInPicture
-    />
-  );
-};
 
 interface UserDetailModalProps {
   visible: boolean;
@@ -64,14 +41,12 @@ export default function UserDetailModal({
   onClose,
   topicId,
   userId,
-  isSelf,
   selfUserId,
 }: UserDetailModalProps) {
   const [posts, setPosts] = useState<PostOut[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { accessToken } = useAuth();
   const [selectedTab, setSelectedTab] = useState(0); // 0: 投稿, 1: 掲示板
   const pagerRef = React.useRef<PagerView>(null);
 
@@ -83,13 +58,17 @@ export default function UserDetailModal({
       const fetchAllData = async () => {
         try {
           const [profileData, postsData] = await Promise.all([
-            fetchProfile(userId),
-            fetchPosts(topicId, userId)
+            getUser(userId),
+            getPosts(topicId!, userId),
           ]);
           setProfile(profileData);
           setPosts(postsData);
-        } catch (e: any) {
-          setError(e.message);
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            setError(e.message);
+          } else {
+            setError('不明なエラーが発生しました');
+          }
         } finally {
           setLoading(false);
         }
@@ -99,41 +78,6 @@ export default function UserDetailModal({
     }
   }, [visible, topicId, userId]);
 
-  const fetchProfile = async (id: number) => {
-    const url = `${API_BASE_URL}/api/users/${id}/`;
-    const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    if (!response.ok) {
-      throw new Error(`プロフィール取得エラー: ${response.status}`);
-    }
-    return await response.json();
-  };
-
-  const fetchPosts = async (tId?: string, uId?: number) => {
-    const params = new URLSearchParams();
-    if (tId) params.append('topic_id', tId);
-    if (uId) params.append('author_id', String(uId));
-    const url = `${API_BASE_URL}/api/posts/?${params.toString()}`;
-
-    try {
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      if (!response.ok) {
-        throw new Error(`APIサーバーからの応答エラー: ${response.status}`);
-      }
-      return await response.json();
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('不明なエラーが発生しました');
-      }
-      return []; // エラー時は空の配列を返す
-    }
-  };
-
   const handleDeletePost = async (postId: number) => {
     Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
       { text: 'キャンセル', style: 'cancel' },
@@ -142,15 +86,8 @@ export default function UserDetailModal({
         style: 'destructive',
         onPress: async () => {
           try {
-            const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-              method: 'DELETE',
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.detail || '削除に失敗しました。');
-            }
-            fetchPosts();
+            await deletePost(postId);
+            await getPosts(topicId!, userId!);
           } catch (e: unknown) {
             if (e instanceof Error) {
               Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
@@ -162,41 +99,6 @@ export default function UserDetailModal({
       },
     ]);
   };
-
-  const renderPost = ({ item }: { item: PostOut }) => (
-    <View style={styles.post}>
-      {Number(selfUserId) === Number(item.author?.id) && (
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
-          <Text style={styles.deleteButtonText}>削除</Text>
-        </TouchableOpacity>
-      )}
-      <View>
-        {item.media.map((media: PostMediaOut, index: number) => {
-          const mediaUrl = media.file;
-          if (media.media_type === 'image') {
-            return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
-          } else if (media.media_type === 'video') {
-            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
-          }
-          return null;
-        })}
-      </View>
-      <Text style={styles.postContent}>{item.content}</Text>
-    </View>
-  );
-
-  let content;
-  if (loading) {
-    content = <ActivityIndicator size="large" style={styles.centered} />;
-  } else if (error) {
-    content = <Text style={styles.centered}>エラー: {error}</Text>;
-  } else if (posts.length === 0) {
-    content = <Text style={styles.centered}>まだ投稿がありません。</Text>;
-  } else {
-    content = (
-      <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
-    );
-  }
 
   const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
     setSelectedTab(e.nativeEvent.position);
@@ -270,26 +172,16 @@ export default function UserDetailModal({
           ref={pagerRef}
           onPageSelected={handlePageSelected}
         >
-          {/* 投稿一覧ページ */}
-          <View key="1" style={styles.pageContainer}>
-            <View style={styles.header}>
-              <Text style={styles.modalTitle}>投稿一覧</Text>
-              {Number(selfUserId) === Number(userId) && (
-                <Link
-                  href={{
-                    pathname: '/create-post',
-                    params: { topicId: topicId },
-                  }}
-                  asChild
-                >
-                  <Pressable style={styles.createButton} onPress={onClose}>
-                    <Text style={styles.createButtonText}>投稿する</Text>
-                  </Pressable>
-                </Link>
-              )}
-            </View>
-            {content}
-          </View>
+           {/* 投稿一覧ページ */}
+           <View key="1" style={styles.pageContainer}>
+             <PostView
+               posts={posts}
+               loading={loading}
+               error={error}
+               selfUserId={selfUserId}
+               onDelete={handleDeletePost}
+             />
+           </View>
           {/* 掲示板ページ */}
           <ThreadView userId={userId!} topicId={topicId!} />
         </PagerView>
@@ -466,6 +358,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  menuButton: {
+    padding: 6,
+  },
+  menuButtonText: {
+    fontSize: 18,
+    color: '#555',
   },
 
 });
