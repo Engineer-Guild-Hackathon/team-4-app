@@ -33,7 +33,7 @@ def delete_post(request, post_id: int):
     """指定されたIDの投稿を削除する"""
     post = get_object_or_404(Post, id=post_id)
     post.delete()
-    return 204
+    return None
 
 @router.post("/", response=PostOut, auth=JWTAuth())
 @transaction.atomic
