@@ -477,24 +477,6 @@ def get_tree_data(request: HttpRequest):
     
     return data
 
-
-@router.post(
-    "/mentor-selection/complete",
-    summary="師匠選択完了",
-    auth=JWTAuth(),
-)
-def complete_mentor_selection(request: HttpRequest, data: TopicId):
-    """
-    師匠選択完了時にUserTopicのstatusをACTIVEにリセットします。
-    """
-    try:
-        user_topic = UserTopic.objects.get(user=request.user, topic_id=data.topic_id)
-        user_topic.status = UserTopic.Status.ACTIVE
-        user_topic.save()
-        return {"message": "Mentor selection completed successfully"}
-    except UserTopic.DoesNotExist:
-        return 400, {"message": "UserTopic not found."}
-
 @router.get(
     "/mentor-selection/required/{topic_id}",
     summary="師匠選択が必要かどうかを判定",
