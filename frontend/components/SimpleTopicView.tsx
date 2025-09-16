@@ -20,7 +20,7 @@ interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
-  onTopicChange?: (topicId: string) => void; // トピック変更時のコールバック
+  onTopicChange?: (topicId: string | null) => void; // トピック変更時のコールバック
 }
 
 export function SimpleTopicView({
@@ -91,6 +91,9 @@ export function SimpleTopicView({
       checkMentorSelection(topicId);
       // 現在のトピックIDを親コンポーネントに通知
       onTopicChange?.(topicId);
+    } else {
+      // トピックが未選択（管理ページ）の場合はnullを通知
+      onTopicChange?.(null);
     }
   };
 
