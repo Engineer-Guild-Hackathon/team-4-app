@@ -6,7 +6,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-// ★ 修正点 1: Image, Defs, ClipPath をインポート
 import { Circle, ClipPath, Defs, G, Image, Text as SvgText } from 'react-native-svg';
 import { TreeNode as D3TreeNode } from './treeUtils';
 
@@ -44,7 +43,6 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
 
   const [mainLabel, subLabel] = splitLabelByParentheses(node.data.username);
 
-  // ★ 修正点 2: 各ノードにユニークなクリップパスIDを生成
   const clipPathId = `clip-${node.data.id}`;
 
   return (

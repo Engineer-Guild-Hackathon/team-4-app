@@ -1,6 +1,7 @@
 import { deletePost, getPosts } from '@/services/api/post';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect } from 'react';
@@ -8,7 +9,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -115,8 +115,16 @@ export default function PostView({
       <View>
         {item.media.map((media: PostMediaOut, index: number) => {
           const mediaUrl = media.file;
+          const cacheKey = mediaUrl.split('?')[0];
           if (media.media_type === 'image') {
-            return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
+            return (
+              <Image
+                key={index}
+                source={{ uri: mediaUrl, cacheKey }}
+                style={styles.media}
+                contentFit="cover"
+              />
+            );
           } else if (media.media_type === 'video') {
             return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
           }

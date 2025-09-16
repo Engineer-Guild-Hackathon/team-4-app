@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -6,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Button,
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -116,13 +116,12 @@ export default function EditProfileScreen() {
 
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
           <Image
-            source={
-              avatarUri
-                ? { uri: avatarUri }
-                : {
-                    uri: `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
-                  }
-            }
+            source={{
+              uri: avatarUri
+                ? avatarUri
+                : `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
+              cacheKey: avatarUri ? avatarUri.split('?')[0] : undefined,
+            }}
             style={styles.avatar}
           />
           <Text style={styles.avatarEditText}>画像を変更</Text>

@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -7,16 +8,17 @@ import {
   ActivityIndicator,
   Alert,
   Button,
-  Image,
   Platform,
   ScrollView,
+  StyleProp,
   StyleSheet,
   Text,
   TextInput,
   View,
+  ViewStyle,
 } from 'react-native';
 
-const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
+const VideoPreviewItem = ({ uri, style }: { uri: string; style: StyleProp<ViewStyle> }) => {
   const player = useVideoPlayer(uri, player => {
     player.muted = true;
   });
@@ -55,7 +57,7 @@ export default function CreatePostScreen() {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsMultipleSelection: true,
-        quality: 1,
+        quality: 0.1,
       });
 
       if (!result.canceled) {
@@ -151,9 +153,15 @@ export default function CreatePostScreen() {
 
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset => {
+          const cacheKey = asset.uri.split('?')[0];
           if (asset.type === 'image') {
             return (
-              <Image key={asset.assetId} source={{ uri: asset.uri }} style={styles.previewImage} />
+              <Image
+                key={asset.assetId}
+                transition={300}
+                source={{ uri: asset.uri, cacheKey }}
+                style={styles.previewImage}
+              />
             );
           } else if (asset.type === 'video') {
             return (

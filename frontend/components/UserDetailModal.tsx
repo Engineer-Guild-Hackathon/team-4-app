@@ -1,10 +1,10 @@
 import { blockUser, getUser, unblockUser } from '@/services/api/user';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -99,13 +99,12 @@ export default function UserDetailModal({
             ) : profile ? (
               <View style={styles.profileContainer}>
                 <Image
-                  source={
-                    profile.avatar
-                      ? { uri: profile.avatar }
-                      : {
-                          uri: `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}`,
-                        }
-                  }
+                  source={{
+                    uri: profile.avatar
+                      ? profile.avatar
+                      : `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}`,
+                    cacheKey: profile.avatar ? profile.avatar.split('?')[0] : undefined,
+                  }}
                   style={styles.avatar}
                 />
                 <View style={styles.profileTextContainer}>
