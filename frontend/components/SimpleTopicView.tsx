@@ -2,7 +2,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+// ★ 修正点 1: ActivityIndicator をインポート
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
@@ -18,8 +19,8 @@ interface Topic {
 
 interface SimpleTopicViewProps {
   onUserPress: (topicId: string, userId: number) => void;
-  onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
-  onTopicChange?: (topicId: string | null) => void; // トピック変更時のコールバック
+  onMentorSelectionRequired?: (topicId: string) => void;
+  onTopicChange?: (topicId: string | null) => void;
 }
 
 export function SimpleTopicView({
@@ -33,12 +34,10 @@ export function SimpleTopicView({
   const [loading, setLoading] = useState(true);
   const { accessToken } = useAuth();
 
-  // 師匠選択が必要かチェック
   const checkMentorSelection = async (topicId: string) => {
     try {
       const response = (await checkMentorSelectionRequired(topicId)) as { required: boolean };
       if (response.required) {
-        // 師匠選択が必要な場合、コールバックを呼び出し
         onMentorSelectionRequired?.(topicId);
       }
     } catch (error) {
@@ -78,14 +77,11 @@ export function SimpleTopicView({
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
 
-    // トピックが選択された時に師匠選択判定を実行
     if (index > 0 && topics[index - 1]) {
       const topicId = topics[index - 1].id;
       checkMentorSelection(topicId);
-      // 現在のトピックIDを親コンポーネントに通知
       onTopicChange?.(topicId);
     } else {
-      // トピックが未選択（管理ページ）の場合はnullを通知
       onTopicChange?.(null);
     }
   };
@@ -102,24 +98,27 @@ export function SimpleTopicView({
     }
   }, [loading]);
 
-  // 初期表示時にも師匠選択判定を実行
   useEffect(() => {
     if (topics.length > 0 && currentIndex > 0 && topics[currentIndex - 1]) {
       const topicId = topics[currentIndex - 1].id;
       checkMentorSelection(topicId);
-      // 初期表示時にも現在のトピックIDを親コンポーネントに通知
       onTopicChange?.(topicId);
+    } else if (topics.length > 0) {
+      // トピックはあるが、管理ページにいる場合
+      onTopicChange?.(null);
     }
   }, [topics, currentIndex]);
 
+  // ★ 修正点 2: ローディング中の表示を先に行う
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>読み込み中...</Text>
+        <ActivityIndicator size="large" color="#6b7280" />
       </View>
     );
   }
 
+  // ★ 修正点 3: ローディング完了後にtopicsが空の場合のみ、管理ビューを表示
   if (topics.length === 0) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
@@ -140,7 +139,6 @@ export function SimpleTopicView({
           }}
           key={topics.length + 1}
         >
-          {/* 作成ページを一番左 */}
           <View key="manage" style={{ flex: 1 }}>
             <TopicManageView onBack={() => refreshMyTopics(true)} />
           </View>
@@ -228,10 +226,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
+  // ★ 修正点 4: ローディングコンテナ用のスタイルを追加
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#ffffff', // 必要に応じて背景色を設定
   },
   loadingText: {
     fontSize: 18,

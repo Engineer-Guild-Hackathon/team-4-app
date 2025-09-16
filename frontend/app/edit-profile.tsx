@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Button,
-  Image,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-} from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
-  const { user, accessToken, refreshUser } = useAuth();
+  const { user, accessToken } = useAuth();
   const router = useRouter();
 
   // 編集対象のstateを初期化
@@ -94,13 +94,8 @@ export default function EditProfileScreen() {
 
       Alert.alert('成功', 'プロフィールを更新しました。');
 
-      // ユーザー情報を再取得して、アプリ全体に変更を反映させる
-      if (refreshUser) {
-        await refreshUser();
-      }
-
       // 前の画面に戻る
-      router.back();
+      router.push('/?profileUpdated=true');
     } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
       Alert.alert('エラー', error.detail || 'プロフィールの更新に失敗しました。');

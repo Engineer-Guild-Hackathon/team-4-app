@@ -1,5 +1,13 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic, getTopicLevelInfo, updateMenteeCapacity } from '@/services/api/topic';
+import {
+  createTopic,
+  getAllTopics,
+  getMyTopics,
+  leaveTopic,
+  joinTopic,
+  getTopicLevelInfo,
+  updateMenteeCapacity,
+} from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
@@ -27,7 +35,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [availableTopics, setAvailableTopics] = useState<TopicOut[]>([]);
   const [allTopics, setAllTopics] = useState<TopicOut[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [capacityInputs, setCapacityInputs] = useState<{[topicId: string]: string}>({});
+  const [capacityInputs, setCapacityInputs] = useState<{ [topicId: string]: string }>({});
   const { accessToken } = useAuth();
   const router = useRouter();
 
@@ -37,7 +45,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       const response = await getMyTopics();
       setMyTopics(response.topics || []);
       // 弟子定員の入力値を初期化
-      const initialCapacityInputs: {[topicId: string]: string} = {};
+      const initialCapacityInputs: { [topicId: string]: string } = {};
       (response.topics || []).forEach(topic => {
         initialCapacityInputs[topic.id] = topic.mentee_capacity.toString();
       });
@@ -94,15 +102,15 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleJoinTopic = async (topicId: string) => {
     try {
       // トピックのレベル情報を取得
-      const levelInfo = await getTopicLevelInfo(topicId) as {
+      const levelInfo = (await getTopicLevelInfo(topicId)) as {
         max_level: number;
         min_level: number;
         user_count: number;
       };
-      
+
       // デフォルトレベルを設定（最低レベル-1、誰もいない場合は1）
       const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
-      
+
       // トピックに参加
       await joinTopic(topicId, defaultLevel);
       await fetchMyTopics();
@@ -158,7 +166,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       if (topic) {
         setCapacityInputs(prev => ({
           ...prev,
-          [topicId]: topic.mentee_capacity.toString()
+          [topicId]: topic.mentee_capacity.toString(),
         }));
       }
     }
@@ -168,7 +176,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleCapacityInputChange = (topicId: string, value: string) => {
     setCapacityInputs(prev => ({
       ...prev,
-      [topicId]: value
+      [topicId]: value,
     }));
   };
 
@@ -176,20 +184,20 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleCapacityInputSubmit = (topicId: string) => {
     const value = capacityInputs[topicId];
     const numValue = parseInt(value);
-    
+
     if (isNaN(numValue) || numValue < 1 || numValue > 100) {
       // 無効な値の場合は元の値に戻す
       const topic = myTopics.find(t => t.id === topicId);
       if (topic) {
         setCapacityInputs(prev => ({
           ...prev,
-          [topicId]: topic.mentee_capacity.toString()
+          [topicId]: topic.mentee_capacity.toString(),
         }));
       }
       Alert.alert('エラー', '弟子定員は1〜100の範囲で入力してください');
       return;
     }
-    
+
     handleUpdateCapacity(topicId, numValue);
   };
 
@@ -293,7 +301,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                         value={capacityInputs[topic.id] || topic.mentee_capacity.toString()}
                         keyboardType="numeric"
                         maxLength={3}
-                        onChangeText={(text) => handleCapacityInputChange(topic.id, text)}
+                        onChangeText={text => handleCapacityInputChange(topic.id, text)}
                         onBlur={() => handleCapacityInputSubmit(topic.id)}
                         onSubmitEditing={() => handleCapacityInputSubmit(topic.id)}
                       />

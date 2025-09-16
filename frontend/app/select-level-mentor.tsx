@@ -107,7 +107,7 @@ export default function SelectLevelMentorScreen() {
         console.error('ユーザーレベル取得エラー:', error);
         // エラーの場合はトピックのレベル情報を取得してデフォルト値を設定
         try {
-          const levelInfo = await getTopicLevelInfo(topicId) as {
+          const levelInfo = (await getTopicLevelInfo(topicId)) as {
             max_level: number;
             min_level: number;
             user_count: number;

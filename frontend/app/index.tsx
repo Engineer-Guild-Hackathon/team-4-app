@@ -1,16 +1,15 @@
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/AuthProvider';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
-import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-// ★ 修正点 1: useState をインポート
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 
 export default function HomeScreen() {
-  const { accessToken, user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
@@ -20,16 +19,15 @@ export default function HomeScreen() {
 
   const params = useLocalSearchParams();
 
-  // ★ 修正点 2: SimpleTopicView を再レンダリングするためのキーを管理するstate
   const [renderKey, setRenderKey] = useState(0);
 
-  // ★ 修正点 3: 画面がフォーカスされるたびにキーを更新し、再レンダリングをトリガーする
-  useFocusEffect(
-    useCallback(() => {
-      // キーの値を更新することで、keyプロップを持つコンポーネントが再マウントされる
+  useEffect(() => {
+    if (params.profileUpdated === 'true') {
       setRenderKey(prevKey => prevKey + 1);
-    }, [])
-  );
+
+      router.setParams({ profileUpdated: undefined });
+    }
+  }, [params.profileUpdatedm, router, params.profileUpdated]);
 
   useEffect(() => {
     if (params.openModal === 'true') {
@@ -55,13 +53,6 @@ export default function HomeScreen() {
 
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
-  }
-  if (!accessToken) {
-    return (
-      <View style={styles.centered}>
-        <Text>ログインが必要です</Text>
-      </View>
-    );
   }
 
   return (
