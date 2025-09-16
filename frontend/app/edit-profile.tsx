@@ -38,7 +38,10 @@ export default function EditProfileScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('許可が必要です', 'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。');
+      Alert.alert(
+        '許可が必要です',
+        'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。'
+      );
       return;
     }
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -66,18 +69,19 @@ export default function EditProfileScreen() {
 
       // 新しいアバターが選択されている場合のみ、ファイルを追加
       if (newAvatarAsset) {
-        const uri = Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
+        const uri =
+          Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
         const filename = newAvatarAsset.fileName || `avatar_${user.id}.jpg`;
         const mimeType = newAvatarAsset.mimeType || 'image/jpeg';
         formData.append('avatar_file', { uri, name: filename, type: mimeType } as any);
       }
-      
+
       const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
       // プロフィール更新APIにPOSTリクエストを送信
       const response = await fetch(`${API_BASE_URL}/api/users/me/profile/`, {
         method: 'POST', // 投稿の時と同じPOSTメソッドを使用
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           // 'Content-Type'はfetchがFormDataを使う際に自動で設定するため、指定しない
         },
         body: formData,
@@ -89,15 +93,14 @@ export default function EditProfileScreen() {
       }
 
       Alert.alert('成功', 'プロフィールを更新しました。');
-      
+
       // ユーザー情報を再取得して、アプリ全体に変更を反映させる
       if (refreshUser) {
         await refreshUser();
       }
-      
+
       // 前の画面に戻る
       router.back();
-
     } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
       Alert.alert('エラー', error.detail || 'プロフィールの更新に失敗しました。');
@@ -115,19 +118,21 @@ export default function EditProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
         <Text style={styles.title}>プロフィール編集</Text>
-        
+
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-          <Image 
+          <Image
             source={
               avatarUri
                 ? { uri: avatarUri }
-                : { uri: `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}` }
+                : {
+                    uri: `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
+                  }
             }
             style={styles.avatar}
           />
           <Text style={styles.avatarEditText}>画像を変更</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.label}>自己紹介</Text>
         <TextInput
           style={styles.bioInput}
@@ -136,12 +141,12 @@ export default function EditProfileScreen() {
           placeholder="自己紹介を入力..."
           multiline
         />
-        
+
         <View style={styles.spacer} />
-        
-        <Button 
-          title={isSubmitting ? "保存中..." : "保存する"}
-          onPress={handleSave} 
+
+        <Button
+          title={isSubmitting ? '保存中...' : '保存する'}
+          onPress={handleSave}
           disabled={isSubmitting}
         />
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
@@ -151,55 +156,54 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    innerContainer: {
-        padding: 20,
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    avatarContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    avatar: {
-        width: 128,
-        height: 128,
-        borderRadius: 64,
-        backgroundColor: '#f0f0f0',
-    },
-    avatarEditText: {
-        marginTop: 8,
-        color: '#007AFF',
-        fontWeight: '600',
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 8,
-    },
-    bioInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        height: 100,
-        textAlignVertical: 'top',
-        fontSize: 16,
-    },
-    spacer: {
-        flex: 1,
-        minHeight: 40,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  innerContainer: {
+    padding: 20,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  avatar: {
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: '#f0f0f0',
+  },
+  avatarEditText: {
+    marginTop: 8,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  bioInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    height: 100,
+    textAlignVertical: 'top',
+    fontSize: 16,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 40,
+  },
 });
-

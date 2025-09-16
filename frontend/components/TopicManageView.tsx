@@ -107,12 +107,12 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       await joinTopic(topicId, defaultLevel);
       await fetchMyTopics();
       await fetchAllTopics();
-      
+
       // 師匠選択が必要かチェック
-      const selectionResponse = await checkMentorSelectionRequired(topicId) as {
+      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
         required: boolean;
       };
-      
+
       if (selectionResponse.required) {
         // 師匠選択が必要な場合
         Alert.alert('参加完了', '師匠選択が必要です', [

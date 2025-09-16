@@ -1,10 +1,12 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams, Link, useFocusEffect, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
+import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
-import MentorDashboard from '../components/MentorDashboard';
 
 export default function HomeScreen() {
   const { accessToken, user, loading: authLoading, logout } = useAuth();
@@ -12,15 +14,15 @@ export default function HomeScreen() {
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
-  const [currentTopicId, setCurrentTopicId] = useState<string | undefined>(undefined);
+  const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
   const router = useRouter();
 
   const params = useLocalSearchParams();
 
   useFocusEffect(
     useCallback(() => {
-      console.log("画面がフォーカスされたよ！");
-    }, []) 
+      console.log('画面がフォーカスされたよ！');
+    }, [])
   );
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function HomeScreen() {
   };
 
   // 現在表示中のトピックIDを更新
-  const handleTopicChange = (topicId: string) => {
+  const handleTopicChange = (topicId: string | null) => {
     setCurrentTopicId(topicId);
   };
 
@@ -59,33 +61,33 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ヘッダー部分 */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>師弟関係アプリ</Text>
-        <View style={styles.headerButtons}>
+      {currentTopicId && (
+        <>
+          {/* プロフィール編集ボタン */}
+          <Link href="/edit-profile" asChild>
+            <TouchableOpacity style={styles.editButton}>
+              <Feather name="user" size={24} color="white" />
+            </TouchableOpacity>
+          </Link>
+
+          {/* 師匠ダッシュボードボタン */}
           <TouchableOpacity
-            style={styles.mentorDashboardButton}
             onPress={() => setMentorDashboardVisible(true)}
+            style={styles.mentorshipButton}
           >
-            <Text style={styles.mentorDashboardButtonText}>師匠ダッシュボード</Text>
+            <Feather name="user-plus" size={24} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={logout}
-          >
-            <Text style={styles.logoutButtonText}>ログアウト</Text>
+
+          {/* ログアウトボタン */}
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <AntDesign name="logout" size={24} color="white" />
           </TouchableOpacity>
-        </View>
-      </View>
-      <Link href="/edit-profile" asChild>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>編集</Text>
-        </TouchableOpacity>
-      </Link>
+        </>
+      )}
 
       {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
-      <SimpleTopicView 
-        onUserPress={handleUserPress} 
+      <SimpleTopicView
+        onUserPress={handleUserPress}
         onMentorSelectionRequired={handleMentorSelectionRequired}
         onTopicChange={handleTopicChange}
       />
@@ -101,7 +103,7 @@ export default function HomeScreen() {
       <MentorDashboard
         visible={mentorDashboardVisible}
         onClose={() => setMentorDashboardVisible(false)}
-        topicId={currentTopicId}
+        topicId={currentTopicId!}
       />
     </View>
   );
@@ -144,10 +146,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   logoutButton: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    position: 'absolute',
+    top: 240,
+    right: 24,
+    height: 60,
+    width: 60,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 2,
   },
   logoutButtonText: {
     color: '#fff',
@@ -163,15 +176,34 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 60,
     right: 24,
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    height: 60,
+    width: 60,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
     zIndex: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  mentorshipButton: {
+    position: 'absolute',
+    top: 150,
+    right: 24,
+    height: 60,
+    width: 60,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
     elevation: 2,
   },
   editButtonText: {
