@@ -2,10 +2,10 @@ import { TopicListOut, TreeOut } from '@/types/topic';
 import { UserWithTopicsOut } from '@/types/user';
 import { authedApiClient } from '@/utils/authedApiClient';
 
-export const joinTopic = async (topicId: string, userId: number, level: number) => {
-  const res = await authedApiClient(`/api/topics/${topicId}/users/`, {
+export const joinTopic = async (topicId: string, level: number, mentorId?: number) => {
+  const res = await authedApiClient(`/api/topics/${topicId}/me/`, {
     method: 'POST',
-    body: { user_id: userId, level },
+    body: { level, ...(mentorId && { mentor_id: mentorId }) },
   });
   return res;
 };

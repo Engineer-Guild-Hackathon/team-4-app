@@ -2,20 +2,20 @@ from ninja import Router
 from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db import transaction, models
 import uuid
 from .models import Topic, UserTopic
+from mentorship.models import MentorRelation
 from .schemas import (
     TopicCreateIn,
     TopicUpdateIn,
     TopicOut,
     TopicListOut,
-    TreeStructureOut,
     UserTopicCreateIn,
     UserTopicUpdateIn,
     UserTopicOut,
     TreeOut,
 )
-from mentorship.models import MentorRelation
 
 
 User = get_user_model()
@@ -118,6 +118,7 @@ def add_user_to_topic(request, topic_id: uuid.UUID, data: UserTopicCreateIn):
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )
@@ -143,26 +144,46 @@ def update_user_topic_level(
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )
 
 
 @router.delete("/{topic_id}/users/{user_id}/", auth=JWTAuth())
+@transaction.atomic
 def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
     """
     ユーザーをトピックから退出させる
+    師弟関係も同時に削除する
     """
     user_topic = get_object_or_404(UserTopic, topic_id=topic_id, user_id=user_id)
+    user = user_topic.user
+    
+    # 師弟関係を削除
+    MentorRelation.objects.filter(
+        models.Q(mentor=user, topic_id=topic_id) | 
+        models.Q(mentee=user, topic_id=topic_id)
+    ).delete()
+    
+    # 承認待ちのリクエストも削除（送信したリクエストと受信したリクエストの両方）
+    from mentorship.models import MentorRelationRequest
+    MentorRelationRequest.objects.filter(
+        models.Q(from_user=user, topic_id=topic_id) | 
+        models.Q(to_user=user, topic_id=topic_id)
+    ).delete()
+    
+    # UserTopicを削除
     user_topic.delete()
     return {"message": "ユーザーをトピックから退出させました"}
 
 
-# 阿部TODO: この際に何らかの指定関係を結ぶ場合は、MentorRelationも同時に作成する。引数にmentor_idを追加するのがいいと思う。transaction.atomicデコレータは必須です。
+# completed: この際に何らかの指定関係を結ぶ場合は、MentorRelationも同時に作成する。引数にmentor_idを追加するのがいいと思う。transaction.atomicデコレータは必須です。
 @router.post("/{topic_id}/me/", response=UserTopicOut, auth=JWTAuth())
-def join_topic(request, topic_id: uuid.UUID):
+def join_topic(request, topic_id: uuid.UUID, mentor_id: int = None, level: int = 1):
     """
     現在のユーザーをトピックに参加させる
+    mentor_idが指定された場合は、師弟関係も同時に作成する
     """
     topic = get_object_or_404(Topic, id=topic_id)
     user = request.user
@@ -171,11 +192,28 @@ def join_topic(request, topic_id: uuid.UUID):
     if UserTopic.objects.filter(user=user, topic=topic).exists():
         return {"detail": "既にこのトピックに参加しています"}, 400
 
-    user_topic = UserTopic.objects.create(
-        user=user,
-        topic=topic,
-        level=1,  # デフォルトレベル
-    )
+    with transaction.atomic():
+        # UserTopicを作成
+        user_topic = UserTopic.objects.create(
+            user=user,
+            topic=topic,
+            level=level,
+        )
+
+        # mentor_idが指定された場合は師弟関係を作成
+        if mentor_id:
+            mentor = get_object_or_404(User, id=mentor_id)
+            
+            # 既に師弟関係が存在するかチェック
+            if MentorRelation.objects.filter(mentee=user, topic=topic).exists():
+                return {"detail": "既にこのトピックで師匠が設定されています"}, 400
+            
+            # 師弟関係を作成
+            MentorRelation.objects.create(
+                mentor=mentor,
+                mentee=user,
+                topic=topic,
+            )
 
     return UserTopicOut(
         id=user_topic.id,
@@ -184,6 +222,7 @@ def join_topic(request, topic_id: uuid.UUID):
         topic_id=user_topic.topic.id,
         topic_title=user_topic.topic.title,
         level=user_topic.level,
+        status=user_topic.status,
         created_at=user_topic.created_at,
         updated_at=user_topic.updated_at,
     )
@@ -225,28 +264,3 @@ def get_topic_tree(request, topic_id: uuid.UUID):
     return {"tree": tree_data, "max_level": max_level, "min_level": min_level}
 
 
-# --------予選時点未使用-----------------------
-@router.get("/{topic_id}/users/", response=TreeStructureOut)
-def get_topic_users(request, topic_id: uuid.UUID):
-    """トピックの参加ユーザー一覧を取得する"""
-    topic = get_object_or_404(Topic, id=topic_id)
-    parent_map = {
-        rel.mentee_id: rel.mentor_id
-        for rel in MentorRelation.objects.filter(topic_id=topic_id)
-    }
-    user_topics = UserTopic.objects.filter(topic=topic).select_related("user")
-    users = []
-    levels = []
-    for ut in user_topics:
-        user_out = {
-            "id": ut.user.id,
-            "username": ut.user.username,
-            "is_active": ut.user.is_active,
-            "is_staff": ut.user.is_staff,
-        }
-        parent_id = parent_map.get(ut.user.id)
-        users.append({"user": user_out, "level": ut.level, "parent_id": parent_id})
-        levels.append(ut.level)
-    max_level = max(levels) if levels else 0
-    min_level = min(levels) if levels else 0
-    return {"users": users, "max_level": max_level, "min_level": min_level}

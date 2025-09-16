@@ -1,11 +1,12 @@
 import { useAuth } from '@/hooks/useAuth';
 import { getMyTopics } from '@/services/api/topic';
+import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
-import { TreeViewer } from './TreeViewer';
+import { TreeViewer } from './TreeViewer/TreeViewer';
 
 interface Topic {
   id: string;
@@ -18,14 +19,34 @@ interface Topic {
 interface SimpleTopicViewProps {
   topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
+  onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
+  onTopicChange?: (topicId: string) => void; // トピック変更時のコールバック
 }
 
-export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
+export function SimpleTopicView({ 
+  topics: propTopics, 
+  onUserPress, 
+  onMentorSelectionRequired,
+  onTopicChange
+}: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const { accessToken } = useAuth();
+
+  // 師匠選択が必要かチェック
+  const checkMentorSelection = async (topicId: string) => {
+    try {
+      const response = await checkMentorSelectionRequired(topicId) as { required: boolean };
+      if (response.required) {
+        // 師匠選択が必要な場合、コールバックを呼び出し
+        onMentorSelectionRequired?.(topicId);
+      }
+    } catch (error) {
+      console.error('師匠選択判定エラー:', error);
+    }
+  };
 
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
@@ -63,10 +84,18 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
+    
+    // トピックが選択された時に師匠選択判定を実行
+    if (index > 0 && topics[index - 1]) {
+      const topicId = topics[index - 1].id;
+      checkMentorSelection(topicId);
+      // 現在のトピックIDを親コンポーネントに通知
+      onTopicChange?.(topicId);
+    }
   };
-  
+
   const [isPagerScrollEnabled, setIsPagerScrollEnabled] = useState(true);
-  
+
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => {
@@ -75,7 +104,17 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
 
       return () => clearTimeout(timer);
     }
-  }, [loading]); 
+  }, [loading]);
+
+  // 初期表示時にも師匠選択判定を実行
+  useEffect(() => {
+    if (topics.length > 0 && currentIndex > 0 && topics[currentIndex - 1]) {
+      const topicId = topics[currentIndex - 1].id;
+      checkMentorSelection(topicId);
+      // 初期表示時にも現在のトピックIDを親コンポーネントに通知
+      onTopicChange?.(topicId);
+    }
+  }, [topics, currentIndex]);
 
   if (loading) {
     return (
@@ -89,18 +128,16 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
-
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
         <PagerView
-
           ref={pagerRef}
           style={{ flex: 1 }}
           scrollEnabled={isPagerScrollEnabled}
           initialPage={currentIndex}
           onPageSelected={e => {
-            setCurrentIndex(e.nativeEvent.position)
+            setCurrentIndex(e.nativeEvent.position);
             if (!isPagerScrollEnabled) {
               return;
             }

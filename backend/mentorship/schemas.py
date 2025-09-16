@@ -65,3 +65,21 @@ class UserNodeOut(Schema):
     user: UserEasyOut
     rank: int
     mentor_id: int | None = None
+
+
+class MenteeSelectionIn(Schema):
+    """承認時の弟子選択スキーマ"""
+    
+    mentee_id: int
+    action: str  # "expel" または "graduate"
+
+
+class MenteeInfoOut(Schema):
+    """弟子情報スキーマ"""
+    
+    id: int
+    username: str
+    first_name: str
+    last_name: str
+    level: int
+    created_at: str

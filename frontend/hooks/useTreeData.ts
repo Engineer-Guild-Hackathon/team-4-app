@@ -2,10 +2,11 @@ import { getTopicTree } from '@/services/api/topic';
 import { TreeUserNodeOut } from '@/types/topic';
 import { useEffect, useState } from 'react';
 
-// topicIdを引数として受け取れるように変更
 export const useTreeData = (topicId: string | null) => {
   const [data, setData] = useState<TreeUserNodeOut[]>([]);
   const [loading, setLoading] = useState(true);
+  const [max_level, setMaxLevel] = useState<number | null>(null); 
+  const [min_level, setMinLevel] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTreeData = async () => {
@@ -14,11 +15,12 @@ export const useTreeData = (topicId: string | null) => {
         setData([]);
         return;
       }
-
       try {
         setLoading(true);
         const response = await getTopicTree(topicId);
         setData(response.tree || []);
+        setMaxLevel(response.max_level ?? null);
+        setMinLevel(response.min_level ?? null);
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error('ツリーデータ取得エラー:', error.message);
@@ -27,9 +29,8 @@ export const useTreeData = (topicId: string | null) => {
         setLoading(false);
       }
     };
-
     fetchTreeData();
   }, [topicId]);
 
-  return { data, loading };
+  return { data, loading, max_level, min_level };
 };

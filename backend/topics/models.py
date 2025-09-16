@@ -33,13 +33,25 @@ class Topic(models.Model):
 class UserTopic(models.Model):
     """ユーザーとトピックの中間テーブル"""
 
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "アクティブ"
+        GRADUATED = "GRADUATED", "卒業済み"
+        EXPELLED = "EXPELLED", "破門済み"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="ユーザー"
     )
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="トピック")
     level = models.IntegerField(default=1, verbose_name="レベル")
+    mentee_capacity = models.IntegerField(default=3, verbose_name="弟子定員")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="参加日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
+    status = models.CharField(
+        max_length=20, 
+        choices=Status.choices, 
+        default=Status.ACTIVE, 
+        verbose_name="ステータス"
+    )
 
     class Meta:
         unique_together = ("user", "topic")
