@@ -73,6 +73,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
         fill={theme.colors.text.primary}
         fontSize={parseFloat(theme.typography.fontSize.sm) * 16}
         textAnchor="middle"
+        fontFamily={theme.typography.fontFamily.primary}
       >
         {mainLabel}
       </SvgText>
@@ -81,6 +82,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
         fill={theme.colors.text.tertiary}
         fontSize={parseFloat(theme.typography.fontSize.xs) * 16}
         textAnchor="middle"
+        fontFamily={theme.typography.fontFamily.primary}
       >
         {subLabel}
       </SvgText>

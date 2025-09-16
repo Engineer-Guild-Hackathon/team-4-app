@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[8]), // xl
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   avatarContainer: {
     alignItems: 'center',
@@ -172,12 +173,14 @@ const styles = StyleSheet.create({
     marginTop: remToPx(theme.spacing[2]), // sm
     color: theme.colors.primary[300],
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
   label: {
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[2]), // sm
     color: theme.colors.text.secondary,
+    fontFamily: 'Klee One',
   },
   bioInput: {
     borderWidth: 1,
@@ -188,6 +191,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   spacer: {
     flex: 1,
@@ -203,5 +207,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
 });

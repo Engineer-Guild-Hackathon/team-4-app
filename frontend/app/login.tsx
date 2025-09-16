@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[20]), // xxl
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   input: {
     width: '100%',
@@ -76,10 +77,12 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   error: {
     color: theme.colors.semantic.error.main,
     marginBottom: remToPx(theme.spacing[4]), // md
+    fontFamily: 'Klee One',
   },
   button: {
     width: '100%',
@@ -93,6 +96,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
   linkButton: {
     marginTop: remToPx(theme.spacing[20]), // xxl
@@ -100,5 +104,6 @@ const styles = StyleSheet.create({
   linkButtonText: {
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
+    fontFamily: 'Klee One',
   },
 });

@@ -2,8 +2,8 @@ import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
-import { theme } from '@/styles/theme';
 import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { theme } from '@/styles/theme';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
@@ -90,7 +90,11 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     return <Text style={styles.centered}>エラー: {error}</Text>;
   }
   if (posts.length === 0) {
-    return <Text style={styles.centered}>まだ投稿がありません。</Text>;
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyText}>まだ投稿がありません。</Text>
+      </View>
+    );
   }
   return (
     <>
@@ -117,15 +121,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  emptyText: {
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: remToPx(theme.spacing[16]),
+    fontFamily: 'Klee One',
+    fontSize: remToPx(theme.typography.fontSize.base),
+  },
   post: {
     paddingVertical: remToPx(theme.spacing[6]) - 1, // lg - 1px
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderFaint,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background.primary,
   },
   postContent: {
     fontSize: remToPx(theme.typography.fontSize.base),
     marginBottom: remToPx(theme.spacing[4]) - 2, // md - 2px
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   media: {
     width: '100%',
@@ -149,6 +162,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.sm),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   menuButton: {
     backgroundColor: theme.colors.background.tertiary,

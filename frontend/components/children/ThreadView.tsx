@@ -48,13 +48,17 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={styles.pageContainer}>
-        {error ? (
+      {error ? (
+        <View style={styles.centered}>
           <Text style={styles.errorText}>{error}</Text>
-        ) : threads.length === 0 ? (
+        </View>
+      ) : threads.length === 0 ? (
+        <View style={styles.centered}>
           <Text style={styles.emptyText}>まだスレッドがありません</Text>
-        ) : (
-          threads.map(thread => (
+        </View>
+      ) : (
+        <ScrollView style={styles.pageContainer}>
+          {threads.map(thread => (
             <TouchableOpacity
               key={thread.id}
               style={styles.threadCard}
@@ -70,9 +74,9 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
               <Text style={styles.threadDate}>{new Date(thread.created_at).toLocaleString()}</Text>
               <Text style={styles.threadMsgCount}>メッセージ数: {thread.messages.length}</Text>
             </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.7}
@@ -95,9 +99,14 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   pageContainer: {
     padding: remToPx(theme.spacing[8]), // xl
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: theme.colors.background.primary,
   },
   modalTitle: {
     fontSize: remToPx(theme.typography.fontSize['2xl']),

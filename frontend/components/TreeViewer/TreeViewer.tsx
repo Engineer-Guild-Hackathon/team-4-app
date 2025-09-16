@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
   text: {
     color: theme.colors.text.primary,
     fontSize: remToPx(theme.typography.fontSize.base),
+    fontFamily: theme.typography.fontFamily.primary,
   },
   controlsContainer: {
     position: 'absolute',
@@ -266,5 +267,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: theme.typography.fontFamily.primary,
   },
 });

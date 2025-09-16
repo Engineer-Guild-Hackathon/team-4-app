@@ -19,6 +19,7 @@ import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import PagerView from 'react-native-pager-view';
 import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
+import { theme } from '@/styles/theme';
 
 interface UserProfile {
   id: number;
@@ -45,6 +46,8 @@ export default function UserDetailModal({
   userId,
   selfUserId,
 }: UserDetailModalProps) {
+  const remToPx = (rem: string) => parseFloat(rem) * 16;
+
   const [posts, setPosts] = useState<PostOut[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,7 +146,7 @@ export default function UserDetailModal({
                 </View>
                 {profile.blocking ? (
                   <TouchableOpacity
-                    style={[styles.createButton, { marginLeft: 12 }]}
+                    style={[styles.unblockButton, { marginLeft: 12 }]}
                     onPress={async () => {
                       Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
                         { text: 'キャンセル', style: 'cancel' },
@@ -164,11 +167,11 @@ export default function UserDetailModal({
                       ]);
                     }}
                   >
-                    <Text style={styles.createButtonText}>ブロック解除</Text>
+                    <Text style={styles.actionButtonText}>ブロック解除</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
-                    style={[styles.createButton, { marginLeft: 12 }]}
+                    style={[styles.blockButton, { marginLeft: 12 }]}
                     onPress={async () => {
                       Alert.alert('ブロック', 'このユーザーをブロックしますか？', [
                         { text: 'キャンセル', style: 'cancel' },
@@ -189,7 +192,7 @@ export default function UserDetailModal({
                       ]);
                     }}
                   >
-                    <Text style={styles.createButtonText}>ブロック</Text>
+                    <Text style={styles.actionButtonText}>ブロック</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -250,33 +253,22 @@ export default function UserDetailModal({
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.background.primary,
     paddingTop: 40,
-  },
-  userInfoContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  userInfoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#374151',
-  },
-  userInfoText: {
-    fontSize: 14,
-    color: '#6b7280',
   },
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#f3f4f6',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background.secondary,
   },
   tab: {
     flex: 1,
@@ -286,99 +278,62 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: '#3b82f6',
-    backgroundColor: '#fff',
+    borderBottomColor: theme.colors.primary[500],
+    backgroundColor: theme.colors.background.primary,
   },
   tabText: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: parseFloat(theme.typography.fontSize.base) * 16,
+    color: theme.colors.text.secondary,
     fontWeight: 'bold',
+    fontFamily: 'Klee One',
   },
   tabTextActive: {
-    color: '#3b82f6',
+    color: theme.colors.primary[500],
   },
   pagerView: {
     flex: 1,
   },
-  pageContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 24,
+  actionButtonText: {
+    color: theme.colors.text.inverse,
     fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Klee One',
   },
-  createButton: {
-    backgroundColor: '#007AFF',
+  blockButton: {
+    backgroundColor: theme.colors.semantic.error.main,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
   },
-  createButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
+  unblockButton: {
+    backgroundColor: theme.colors.primary[500],
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
   },
   closeCircleButton: {
     position: 'absolute',
     top: 20,
     right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#111',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
     elevation: 4,
   },
   closeCircleText: {
-    color: '#fff',
-    fontSize: 24,
+    color: theme.colors.white,
+    fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
-    lineHeight: 28,
-  },
-  post: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  postContent: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  media: {
-    width: '100%',
-    height: 200,
-    marginTop: 5,
-    marginBottom: 5,
-    backgroundColor: '#f0f0f0',
-  },
-  deleteButton: {
-    position: 'absolute',
-    top: 15,
-    right: 0,
-    backgroundColor: '#ff4d4d',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    zIndex: 1,
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
+    lineHeight: 26,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -388,7 +343,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     paddingTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: theme.colors.border,
   },
   profileContainer: {
     flexDirection: 'row',
@@ -400,7 +355,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 12,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.background.secondary,
   },
   profileTextContainer: {
     flex: 1,
@@ -408,17 +363,13 @@ const styles = StyleSheet.create({
   profileUsername: {
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Klee One',
+    color: theme.colors.text.primary,
   },
   profileBio: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.text.secondary,
     marginTop: 2,
-  },
-  menuButton: {
-    padding: 6,
-  },
-  menuButtonText: {
-    fontSize: 18,
-    color: '#555',
+    fontFamily: 'Klee One',
   },
 });

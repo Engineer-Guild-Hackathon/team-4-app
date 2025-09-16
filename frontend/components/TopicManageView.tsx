@@ -257,6 +257,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   manageContainer: {
     flex: 1,
@@ -274,6 +275,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize['2xl']),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   backButton: {
     backgroundColor: theme.colors.text.tertiary,
@@ -285,6 +287,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   createSection: {
     marginBottom: remToPx(theme.spacing[12]),
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
     marginBottom: remToPx(theme.spacing[6]) - 1,
+    fontFamily: 'Klee One',
   },
   input: {
     borderWidth: 1,
@@ -308,6 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[4]) - 2,
     backgroundColor: theme.colors.background.primary,
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   textArea: {
     height: 80,
@@ -323,6 +328,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   topicItem: {
     flexDirection: 'row',
@@ -340,10 +346,12 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: remToPx(theme.spacing[2]), // xs
+    fontFamily: 'Klee One',
   },
   topicItemDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   leaveButton: {
     backgroundColor: theme.colors.semantic.warning.main,
@@ -355,6 +363,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   emptyTopicsContainer: {
     backgroundColor: theme.colors.background.secondary,
@@ -368,12 +377,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     marginBottom: remToPx(theme.spacing[3]),
     textAlign: 'center',
+    fontFamily: 'Klee One',
   },
   emptyTopicsSubText: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.placeholder,
     textAlign: 'center',
     lineHeight: remToPx(theme.typography.lineHeight.tight),
+    fontFamily: 'Klee One',
   },
   joinSection: {
     marginBottom: remToPx(theme.spacing[12]),
@@ -388,6 +399,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   modalContainer: {
     flex: 1,
@@ -407,6 +419,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   modalCloseButton: {
     backgroundColor: theme.colors.text.tertiary,
@@ -418,6 +431,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
   modalContent: {
     flex: 1,
@@ -440,10 +454,12 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: remToPx(theme.spacing[2]),
+    fontFamily: 'Klee One',
   },
   availableTopicDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   joinTopicButton: {
     backgroundColor: theme.colors.primary[300],
@@ -455,5 +471,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: 'Klee One',
   },
 });

@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[5]),
     color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   input: {
     borderWidth: 1,
@@ -203,6 +204,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
     backgroundColor: theme.colors.background.secondary,
+    fontFamily: 'Klee One',
   },
   previewContainer: {
     marginTop: remToPx(theme.spacing[4]),
@@ -228,11 +230,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
   submitButton: {
     marginTop: remToPx(theme.spacing[4]),
   },
   submitButtonText: {
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
 });

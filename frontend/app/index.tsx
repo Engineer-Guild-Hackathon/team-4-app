@@ -58,7 +58,7 @@ export default function HomeScreen() {
   if (!accessToken) {
     return (
       <View style={styles.centered}>
-        <Text>ログインが必要です</Text>
+        <Text style={styles.infoText}>ログインが必要です</Text>
       </View>
     );
   }
@@ -118,6 +118,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: theme.colors.background.primary,
+  },
+  infoText: {
+    fontFamily: 'Klee One',
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.text.primary,
   },
   logoutButton: {
     position: 'absolute',

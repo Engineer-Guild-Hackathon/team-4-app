@@ -111,7 +111,7 @@ export default function SelectLevelMentorScreen() {
             <Text style={styles.postContent}>{posts[0].content || '内容なし'}</Text>
           </View>
         ) : (
-          <Text style={{ marginTop: 20 }}>投稿がありません</Text>
+          <Text style={styles.noPostsText}>投稿がありません</Text>
         )}
       </View>
       {/* 下中央にOKボタン */}
@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     marginBottom: remToPx(theme.spacing[4]), // md
+    fontFamily: 'Klee One',
   },
   media: {
     width: '100%',
@@ -174,6 +175,11 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[2]),
     backgroundColor: theme.colors.background.tertiary,
     borderRadius: remToPx(theme.borderRadius.md),
+  },
+  noPostsText: {
+    marginTop: 20,
+    fontFamily: 'Klee One',
+    color: theme.colors.text.secondary,
   },
   bottomButtonContainer: {
     position: 'absolute',
@@ -200,5 +206,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.lg),
     fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
+    fontFamily: 'Klee One',
   },
 });

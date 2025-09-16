@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.tertiary,
+    fontFamily: theme.typography.fontFamily.primary,
   },
   topicIconTextActive: {
     color: theme.colors.text.inverse,
