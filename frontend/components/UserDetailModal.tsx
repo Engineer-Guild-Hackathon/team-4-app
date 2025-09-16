@@ -1,50 +1,31 @@
-import { useAuth } from '@/hooks/useAuth';
-import { PostMediaOut, PostOut } from '@/types/post';
-import { useEvent } from 'expo';
+import { deletePost, getPosts } from '@/services/api/post';
+import { getUser } from '@/services/api/user';
+import { PostOut } from '@/types/post';
 import * as Haptics from 'expo-haptics';
-import { Link } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import PagerView from 'react-native-pager-view';
+import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-
-const videoSource =
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
-const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
-  const player = useVideoPlayer(videoSource, player => {
-    player.loop = true;
-    player.play();
-  });
-
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-  return (
-    <VideoView
-      player={player}
-      style={style}
-      // allowsFullscreen
-      // allowsPictureInPicture
-    />
-  );
-};
+interface UserProfile {
+  id: number;
+  username: string;
+  avatar?: string;
+  bio?: string;
+}
 
 interface UserDetailModalProps {
   visible: boolean;
@@ -60,47 +41,42 @@ export default function UserDetailModal({
   onClose,
   topicId,
   userId,
-  isSelf,
   selfUserId,
 }: UserDetailModalProps) {
   const [posts, setPosts] = useState<PostOut[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { accessToken } = useAuth();
   const [selectedTab, setSelectedTab] = useState(0); // 0: 投稿, 1: 掲示板
   const pagerRef = React.useRef<PagerView>(null);
 
   useEffect(() => {
-    if (visible && (topicId || userId)) {
+    if (visible && userId) {
       setLoading(true);
       setError(null);
-      fetchPosts();
+      
+      const fetchAllData = async () => {
+        try {
+          const [profileData, postsData] = await Promise.all([
+            getUser(userId),
+            getPosts(topicId!, userId),
+          ]);
+          setProfile(profileData);
+          setPosts(postsData);
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            setError(e.message);
+          } else {
+            setError('不明なエラーが発生しました');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchAllData();
     }
   }, [visible, topicId, userId]);
-
-  const fetchPosts = async () => {
-    const params = new URLSearchParams();
-    if (topicId) params.append('topic_id', topicId);
-    if (userId) params.append('author_id', String(userId));
-    const url = `${API_BASE_URL}/api/posts/?${params.toString()}`;
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`APIサーバーからの応答エラー: ${response.status}`);
-      }
-      const data = await response.json();
-      setPosts(data);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('不明なエラーが発生しました');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeletePost = async (postId: number) => {
     Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
@@ -110,15 +86,8 @@ export default function UserDetailModal({
         style: 'destructive',
         onPress: async () => {
           try {
-            const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-              method: 'DELETE',
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.detail || '削除に失敗しました。');
-            }
-            fetchPosts();
+            await deletePost(postId);
+            await getPosts(topicId!, userId!);
           } catch (e: unknown) {
             if (e instanceof Error) {
               Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
@@ -130,41 +99,6 @@ export default function UserDetailModal({
       },
     ]);
   };
-
-  const renderPost = ({ item }: { item: PostOut }) => (
-    <View style={styles.post}>
-      {Number(selfUserId) === Number(item.author?.id) && (
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
-          <Text style={styles.deleteButtonText}>削除</Text>
-        </TouchableOpacity>
-      )}
-      <View>
-        {item.media.map((media: PostMediaOut, index: number) => {
-          const mediaUrl = `${API_BASE_URL}${media.file}`;
-          if (media.media_type === 'image') {
-            return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
-          } else if (media.media_type === 'video') {
-            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
-          }
-          return null;
-        })}
-      </View>
-      <Text style={styles.postContent}>{item.content}</Text>
-    </View>
-  );
-
-  let content;
-  if (loading) {
-    content = <ActivityIndicator size="large" style={styles.centered} />;
-  } else if (error) {
-    content = <Text style={styles.centered}>エラー: {error}</Text>;
-  } else if (posts.length === 0) {
-    content = <Text style={styles.centered}>まだ投稿がありません。</Text>;
-  } else {
-    content = (
-      <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
-    );
-  }
 
   const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
     setSelectedTab(e.nativeEvent.position);
@@ -186,9 +120,27 @@ export default function UserDetailModal({
       >
       <View style={styles.modalContainer}>
         {/* ユーザー情報エリア */}
-        <View style={styles.userInfoContainer}>
-          <Text style={styles.userInfoTitle}>ユーザー情報</Text>
-          <Text style={styles.userInfoText}>ユーザーID: {userId ?? '不明'}</Text>
+        <View style={styles.profileHeader}>
+          {loading ? (
+            <ActivityIndicator />
+          ) : profile ? (
+            <View style={styles.profileContainer}>
+              <Image 
+                source={
+                  profile.avatar 
+                    ? { uri: profile.avatar }
+                    : { uri: `https://placehold.co/64x64/e0e0e0/555555?text=${profile.username.charAt(0)}` }
+                }
+                style={styles.avatar}
+              />
+              <View style={styles.profileTextContainer}>
+                <Text style={styles.profileUsername}>{profile.username}</Text>
+                <Text style={styles.profileBio} numberOfLines={2}>{profile.bio}</Text>
+              </View>
+            </View>
+          ) : (
+            <Text>プロフィールを読み込めませんでした</Text>
+          )}
         </View>
         {/* タブエリア */}
         <View style={styles.tabContainer}>
@@ -220,26 +172,16 @@ export default function UserDetailModal({
           ref={pagerRef}
           onPageSelected={handlePageSelected}
         >
-          {/* 投稿一覧ページ */}
-          <View key="1" style={styles.pageContainer}>
-            <View style={styles.header}>
-              <Text style={styles.modalTitle}>投稿一覧</Text>
-              {Number(selfUserId) === Number(userId) && (
-                <Link
-                  href={{
-                    pathname: '/create-post',
-                    params: { topicId: topicId },
-                  }}
-                  asChild
-                >
-                  <Pressable style={styles.createButton} onPress={onClose}>
-                    <Text style={styles.createButtonText}>投稿する</Text>
-                  </Pressable>
-                </Link>
-              )}
-            </View>
-            {content}
-          </View>
+           {/* 投稿一覧ページ */}
+           <View key="1" style={styles.pageContainer}>
+             <PostView
+               posts={posts}
+               loading={loading}
+               error={error}
+               selfUserId={selfUserId}
+               onDelete={handleDeletePost}
+             />
+           </View>
           {/* 掲示板ページ */}
           <ThreadView userId={userId!} topicId={topicId!} />
         </PagerView>
@@ -383,4 +325,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    paddingTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  profileTextContainer: {
+    flex: 1,
+  },
+  profileUsername: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  profileBio: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  menuButton: {
+    padding: 6,
+  },
+  menuButtonText: {
+    fontSize: 18,
+    color: '#555',
+  },
+
 });

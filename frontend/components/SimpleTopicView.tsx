@@ -6,7 +6,7 @@ import { StyleSheet, Text, View, Alert } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
-import { TreeViewer } from './TreeViewer';
+import { TreeViewer } from './TreeViewer/TreeViewer';
 
 interface Topic {
   id: string;
@@ -93,6 +93,18 @@ export function SimpleTopicView({
       onTopicChange?.(topicId);
     }
   };
+  
+  const [isPagerScrollEnabled, setIsPagerScrollEnabled] = useState(true);
+  
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setIsPagerScrollEnabled(false);
+      }, 136);
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]); 
 
   // 初期表示時にも師匠選択判定を実行
   useEffect(() => {
@@ -116,15 +128,22 @@ export function SimpleTopicView({
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
+
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
         <PagerView
+
           ref={pagerRef}
           style={{ flex: 1 }}
-          scrollEnabled={false}
+          scrollEnabled={isPagerScrollEnabled}
           initialPage={currentIndex}
-          onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}
+          onPageSelected={e => {
+            setCurrentIndex(e.nativeEvent.position)
+            if (!isPagerScrollEnabled) {
+              return;
+            }
+          }}
           key={topics.length + 1}
         >
           {/* 作成ページを一番左 */}
