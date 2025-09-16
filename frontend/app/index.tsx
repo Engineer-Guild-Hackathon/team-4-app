@@ -1,10 +1,10 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams, Link, useFocusEffect, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
-import MentorDashboard from '../components/MentorDashboard';
 
 export default function HomeScreen() {
   const { accessToken, user, loading: authLoading, logout } = useAuth();

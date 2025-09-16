@@ -43,7 +43,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   });
 
   const [mainLabel, subLabel] = splitLabelByParentheses(node.data.username);
-  
+
   // ★ 修正点 2: 各ノードにユニークなクリップパスIDを生成
   const clipPathId = `clip-${node.data.id}`;
 
@@ -68,11 +68,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
       />
 
       {/* ★ 修正点 5: Circleを画像の枠線として使用するため、塗りつぶしを透明に */}
-      <AnimatedCircle
-        r={NODE_RADIUS}
-        fill="transparent"
-        animatedProps={animatedCircleProps}
-      />
+      <AnimatedCircle r={NODE_RADIUS} fill="transparent" animatedProps={animatedCircleProps} />
 
       {/* テキスト表示部分は変更なし */}
       <SvgText y={NODE_RADIUS + 14} fill="#1f2937" fontSize={12} textAnchor="middle">
