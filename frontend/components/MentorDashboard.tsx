@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  Modal,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getReceivedMentorRequests,
@@ -57,7 +49,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
 
   const fetchRequests = async () => {
     try {
-      const data = await getReceivedMentorRequests() as MentorRequest[];
+      const data = (await getReceivedMentorRequests()) as MentorRequest[];
       setRequests(data);
     } catch (error) {
       console.error('リクエスト取得エラー:', error);
@@ -68,7 +60,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   const fetchMentees = async () => {
     if (!topicId) return;
     try {
-      const data = await getMentees(topicId) as Mentee[];
+      const data = (await getMentees(topicId)) as Mentee[];
       setMentees(data);
     } catch (error) {
       console.error('弟子一覧取得エラー:', error);
@@ -85,57 +77,48 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     }
   }, [accessToken, visible, topicId]);
 
-
   const handleApprove = async (requestId: number, fromUserName: string) => {
-    Alert.alert(
-      '承認確認',
-      `${fromUserName}さんの師匠選択リクエストを承認しますか？`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '承認',
-          onPress: async () => {
-            try {
-              await approveMentorRequest(requestId);
-              Alert.alert('承認完了', '師匠選択リクエストを承認しました');
-              fetchRequests(); // リストを更新
-            } catch (error) {
-              console.error('承認エラー:', error);
-              Alert.alert('エラー', '承認に失敗しました');
-            }
-          },
+    Alert.alert('承認確認', `${fromUserName}さんの師匠選択リクエストを承認しますか？`, [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '承認',
+        onPress: async () => {
+          try {
+            await approveMentorRequest(requestId);
+            Alert.alert('承認完了', '師匠選択リクエストを承認しました');
+            fetchRequests(); // リストを更新
+          } catch (error) {
+            console.error('承認エラー:', error);
+            Alert.alert('エラー', '承認に失敗しました');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleReject = async (requestId: number, fromUserName: string) => {
-    Alert.alert(
-      '拒否確認',
-      `${fromUserName}さんの師匠選択リクエストを拒否しますか？`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '拒否',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await rejectMentorRequest(requestId);
-              Alert.alert('拒否完了', '師匠選択リクエストを拒否しました');
-              fetchRequests(); // リストを更新
-            } catch (error) {
-              console.error('拒否エラー:', error);
-              Alert.alert('エラー', '拒否に失敗しました');
-            }
-          },
+    Alert.alert('拒否確認', `${fromUserName}さんの師匠選択リクエストを拒否しますか？`, [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '拒否',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await rejectMentorRequest(requestId);
+            Alert.alert('拒否完了', '師匠選択リクエストを拒否しました');
+            fetchRequests(); // リストを更新
+          } catch (error) {
+            console.error('拒否エラー:', error);
+            Alert.alert('エラー', '拒否に失敗しました');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleExpelMentee = async (menteeId: number, menteeName: string) => {
     if (!topicId) return;
-    
+
     Alert.alert(
       '破門確認',
       `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
@@ -161,7 +144,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
 
   const handleGraduateMentee = async (menteeId: number, menteeName: string) => {
     if (!topicId) return;
-    
+
     Alert.alert(
       '卒業確認',
       `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
@@ -184,7 +167,6 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     );
   };
 
-
   const renderRequest = ({ item }: { item: MentorRequest }) => (
     <View style={styles.requestCard}>
       <View style={styles.requestHeader}>
@@ -193,9 +175,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         </Text>
         <Text style={styles.username}>@{item.from_user.username}</Text>
       </View>
-      
+
       <Text style={styles.topicTitle}>トピック: {item.topic.title}</Text>
-      
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.approveButton]}
@@ -203,7 +185,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         >
           <Text style={styles.approveButtonText}>承認</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.button, styles.rejectButton]}
           onPress={() => handleReject(item.id, item.from_user.username)}
@@ -222,10 +204,12 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         </Text>
         <Text style={styles.menteeUsername}>@{item.username}</Text>
       </View>
-      
+
       <Text style={styles.menteeLevel}>レベル: {item.level}</Text>
-      <Text style={styles.menteeDate}>入門日: {new Date(item.created_at).toLocaleDateString()}</Text>
-      
+      <Text style={styles.menteeDate}>
+        入門日: {new Date(item.created_at).toLocaleDateString()}
+      </Text>
+
       <View style={styles.menteeButtonContainer}>
         <TouchableOpacity
           style={[styles.menteeButton, styles.graduateButton]}
@@ -233,7 +217,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         >
           <Text style={styles.graduateButtonText}>卒業</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.menteeButton, styles.expelButton]}
           onPress={() => handleExpelMentee(item.id, item.username)}
@@ -244,7 +228,6 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     </View>
   );
 
-
   return (
     <Modal
       visible={visible}
@@ -254,10 +237,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-          >
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
           <Text style={styles.title}>師匠ダッシュボード</Text>
@@ -289,15 +269,13 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {requests.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    現在、師匠選択リクエストはありません
-                  </Text>
+                  <Text style={styles.emptyText}>現在、師匠選択リクエストはありません</Text>
                 </View>
               ) : (
                 <FlatList
                   data={requests}
                   renderItem={renderRequest}
-                  keyExtractor={(item) => item.id.toString()}
+                  keyExtractor={item => item.id.toString()}
                   showsVerticalScrollIndicator={false}
                 />
               )}
@@ -309,15 +287,13 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {mentees.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    現在、弟子はいません
-                  </Text>
+                  <Text style={styles.emptyText}>現在、弟子はいません</Text>
                 </View>
               ) : (
                 <FlatList
                   data={mentees}
                   renderItem={renderMentee}
-                  keyExtractor={(item) => item.id.toString()}
+                  keyExtractor={item => item.id.toString()}
                   showsVerticalScrollIndicator={false}
                 />
               )}

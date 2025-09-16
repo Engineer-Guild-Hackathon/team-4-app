@@ -1,8 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
-import { getMyTopics } from '@/services/api/topic';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
+import { getMyTopics } from '@/services/api/topic';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
@@ -17,17 +17,15 @@ interface Topic {
 }
 
 interface SimpleTopicViewProps {
-  topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
-  onTopicChange?: (topicId: string) => void; // トピック変更時のコールバック
+  onTopicChange?: (topicId: string | null) => void; // トピック変更時のコールバック
 }
 
-export function SimpleTopicView({ 
-  topics: propTopics, 
-  onUserPress, 
+export function SimpleTopicView({
+  onUserPress,
   onMentorSelectionRequired,
-  onTopicChange
+  onTopicChange,
 }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
@@ -38,7 +36,7 @@ export function SimpleTopicView({
   // 師匠選択が必要かチェック
   const checkMentorSelection = async (topicId: string) => {
     try {
-      const response = await checkMentorSelectionRequired(topicId) as { required: boolean };
+      const response = (await checkMentorSelectionRequired(topicId)) as { required: boolean };
       if (response.required) {
         // 師匠選択が必要な場合、コールバックを呼び出し
         onMentorSelectionRequired?.(topicId);
@@ -69,28 +67,26 @@ export function SimpleTopicView({
   };
 
   useEffect(() => {
-    if (propTopics) {
-      setTopics(propTopics);
-      setLoading(false);
-      return;
-    }
     if (accessToken) {
       refreshMyTopics();
     } else {
       setLoading(false);
     }
-  }, [propTopics, accessToken]);
+  }, [accessToken]);
 
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
-    
+
     // トピックが選択された時に師匠選択判定を実行
     if (index > 0 && topics[index - 1]) {
       const topicId = topics[index - 1].id;
       checkMentorSelection(topicId);
       // 現在のトピックIDを親コンポーネントに通知
       onTopicChange?.(topicId);
+    } else {
+      // トピックが未選択（管理ページ）の場合はnullを通知
+      onTopicChange?.(null);
     }
   };
 
@@ -124,7 +120,7 @@ export function SimpleTopicView({
     );
   }
 
-  if (topics.length === 0 && !propTopics) {
+  if (topics.length === 0) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 

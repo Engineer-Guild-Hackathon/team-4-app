@@ -26,6 +26,7 @@ def get_current_user(request):
 @router.get("/{user_id}/", response={200: UserDetail, 403: dict}, auth=JWTAuth())
 def get_user(request, user_id: int):
     user = get_object_or_404(User.objects.select_related('profile'), id=user_id)
+    print(user.profile.avatar)
     blocked = Block.objects.filter(blocker=user, blocked=request.user).exists()
     blocking = Block.objects.filter(blocker=request.user, blocked=user).exists()
     if blocked:
@@ -34,6 +35,8 @@ def get_user(request, user_id: int):
         id=user.id,
         username=user.username,
         email=user.email,
+        avatar=user.profile.avatar,
+        bio=user.profile.bio,
         is_active=user.is_active,
         is_staff=user.is_staff,
         blocked=blocked,

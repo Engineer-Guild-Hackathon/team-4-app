@@ -1,5 +1,11 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic } from '@/services/api/topic';
+import {
+  createTopic,
+  getAllTopics,
+  getMyTopics,
+  leaveTopic,
+  joinTopic,
+} from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
@@ -97,12 +103,12 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       await joinTopic(topicId, 1);
       await fetchMyTopics();
       await fetchAllTopics();
-      
+
       // 師匠選択が必要かチェック
-      const selectionResponse = await checkMentorSelectionRequired(topicId) as {
+      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
         required: boolean;
       };
-      
+
       if (selectionResponse.required) {
         // 師匠選択が必要な場合
         Alert.alert('参加完了', '師匠選択が必要です', [
