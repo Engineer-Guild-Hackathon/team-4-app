@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,13 @@ export default function EditProfileScreen() {
   const [avatarUri, setAvatarUri] = useState<string | null>(user?.avatar || null);
   const [newAvatarAsset, setNewAvatarAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setBio(user.bio || '');
+      setAvatarUri(user.avatar || null);
+    }
+  }, [user]);
 
   // 画像ピッカーで新しいアバターを選択する関数
   const pickImage = async () => {
