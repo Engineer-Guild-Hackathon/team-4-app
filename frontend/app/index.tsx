@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+// ★ 修正点 1: useState をインポート
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
@@ -19,9 +20,15 @@ export default function HomeScreen() {
 
   const params = useLocalSearchParams();
 
+  // ★ 修正点 2: SimpleTopicView を再レンダリングするためのキーを管理するstate
+  const [renderKey, setRenderKey] = useState(0);
+
+  // ★ 修正点 3: 画面がフォーカスされるたびにキーを更新し、再レンダリングをトリガーする
   useFocusEffect(
     useCallback(() => {
-      console.log('画面がフォーカスされたよ！');
+      console.log('画面がフォーカスされたため、SimpleTopicViewを再描画します。');
+      // キーの値を更新することで、keyプロップを持つコンポーネントが再マウントされる
+      setRenderKey(prevKey => prevKey + 1);
     }, [])
   );
 
@@ -37,17 +44,14 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  // 現在表示中のトピックIDを更新
   const handleTopicChange = (topicId: string | null) => {
     setCurrentTopicId(topicId);
   };
 
-  // 師匠選択が必要な場合の処理
   const handleMentorSelectionRequired = (topicId: string) => {
     router.push(`/select-level-mentor?topicId=${topicId}`);
   };
 
-  // 認証情報を読み込み中の表示
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
@@ -63,30 +67,26 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {currentTopicId && (
         <>
-          {/* プロフィール編集ボタン */}
           <Link href="/edit-profile" asChild>
             <TouchableOpacity style={styles.editButton}>
               <Feather name="user" size={24} color="white" />
             </TouchableOpacity>
           </Link>
-
-          {/* 師匠ダッシュボードボタン */}
           <TouchableOpacity
             onPress={() => setMentorDashboardVisible(true)}
             style={styles.mentorshipButton}
           >
             <Feather name="user-plus" size={24} color="white" />
           </TouchableOpacity>
-
-          {/* ログアウトボタン */}
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <AntDesign name="logout" size={24} color="white" />
           </TouchableOpacity>
         </>
       )}
 
-      {/* SimpleTopicViewにonUserPress関数を渡して、タップイベントを受け取る */}
+      {/* ★ 修正点 4: SimpleTopicViewにkeyプロップを渡す */}
       <SimpleTopicView
+        key={renderKey}
         onUserPress={handleUserPress}
         onMentorSelectionRequired={handleMentorSelectionRequired}
         onTopicChange={handleTopicChange}
@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  // ... (以下、stylesの変更なし)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

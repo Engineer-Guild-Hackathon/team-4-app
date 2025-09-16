@@ -17,14 +17,12 @@ interface Topic {
 }
 
 interface SimpleTopicViewProps {
-  topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
   onTopicChange?: (topicId: string | null) => void; // トピック変更時のコールバック
 }
 
 export function SimpleTopicView({
-  topics: propTopics,
   onUserPress,
   onMentorSelectionRequired,
   onTopicChange,
@@ -69,17 +67,12 @@ export function SimpleTopicView({
   };
 
   useEffect(() => {
-    if (propTopics) {
-      setTopics(propTopics);
-      setLoading(false);
-      return;
-    }
     if (accessToken) {
       refreshMyTopics();
     } else {
       setLoading(false);
     }
-  }, [propTopics, accessToken]);
+  }, [accessToken]);
 
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
@@ -127,7 +120,7 @@ export function SimpleTopicView({
     );
   }
 
-  if (topics.length === 0 && !propTopics) {
+  if (topics.length === 0) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
