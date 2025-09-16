@@ -230,7 +230,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
             user=mentor_request.from_user, 
             topic=mentor_request.topic
         )
-        mentee_user_topic.level = max(1, mentor_user_topic.level - 1)  # 最低レベルは1
+        mentee_user_topic.level = mentor_user_topic.level - 1  # マイナスレベルも許可
         mentee_user_topic.status = UserTopic.Status.ACTIVE
         mentee_user_topic.save()
     except UserTopic.DoesNotExist:
@@ -309,14 +309,12 @@ def approve_mentor_request_with_selection(request: HttpRequest, request_id: int,
             mentor_level = request.user.usertopic_set.get(topic_id=mentor_request.topic.id).level
             mentee_level = mentee.usertopic_set.get(topic_id=mentor_request.topic.id).level
             
-            # 弟子のレベルが師匠より高い場合は、師匠より1レベル高くする
-            if mentee_level >= mentor_level:
-                delta = 1
-            else:
-                delta = mentor_level - mentee_level
+            # 卒業時は師匠のレベル+1に設定
+            target_level = mentor_level + 1
+            delta = target_level - mentee_level
             
             user_topic = mentee.usertopic_set.get(topic_id=mentor_request.topic.id)
-            user_topic.level += delta
+            user_topic.level = target_level
             user_topic.status = UserTopic.Status.GRADUATED
             user_topic.save()
             
@@ -344,7 +342,7 @@ def approve_mentor_request_with_selection(request: HttpRequest, request_id: int,
             user=mentor_request.from_user, 
             topic=mentor_request.topic
         )
-        mentee_user_topic.level = max(1, mentor_user_topic.level - 1)  # 最低レベルは1
+        mentee_user_topic.level = mentor_user_topic.level - 1  # マイナスレベルも許可
         mentee_user_topic.status = UserTopic.Status.ACTIVE
         mentee_user_topic.save()
     except UserTopic.DoesNotExist:
@@ -439,14 +437,12 @@ def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     mentor_level = request.user.usertopic_set.get(topic_id=data.topic_id).level
     mentee_level = mentee.usertopic_set.get(topic_id=data.topic_id).level
     
-    # 弟子のレベルが師匠より高い場合は、師匠より1レベル高くする
-    if mentee_level >= mentor_level:
-        delta = 1
-    else:
-        delta = mentor_level - mentee_level
+    # 卒業時は師匠のレベル+1に設定
+    target_level = mentor_level + 1
+    delta = target_level - mentee_level
     
     user_topic = mentee.usertopic_set.get(topic_id=data.topic_id)
-    user_topic.level += delta
+    user_topic.level = target_level
     # UserTopicのstatusをGRADUATEDに更新
     user_topic.status = UserTopic.Status.GRADUATED
     user_topic.save()
