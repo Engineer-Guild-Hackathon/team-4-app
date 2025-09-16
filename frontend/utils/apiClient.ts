@@ -28,8 +28,13 @@ export async function apiClient<T = unknown>(
 
   const res = await fetch(url, fetchOptions);
   if (!res.ok) {
+    // 204 No Contentでもres.okはtrueなのでここは通らない
     const error = await res.json().catch(() => ({}));
     throw new Error(error.detail || res.statusText);
   }
-  return res.json();
+  if (res.status === 204) {
+    // No Content: サーバーは空レスポンス
+    return undefined as T;
+  }
+  return (await res.json()) as T;
 }

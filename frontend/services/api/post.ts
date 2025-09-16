@@ -11,7 +11,7 @@ export const getPosts = async (topicId?: string, userId?: number): Promise<PostO
 };
 
 export const deletePost = async (postId: number): Promise<void> => {
-  await authedApiClient(`/api/posts/${postId}/`, {
+  await authedApiClient(`/api/posts/${postId}`, {
     method: 'DELETE',
   });
 };

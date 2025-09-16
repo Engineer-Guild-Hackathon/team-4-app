@@ -26,7 +26,6 @@ export default function HomeScreen() {
   // ★ 修正点 3: 画面がフォーカスされるたびにキーを更新し、再レンダリングをトリガーする
   useFocusEffect(
     useCallback(() => {
-      console.log('画面がフォーカスされたため、SimpleTopicViewを再描画します。');
       // キーの値を更新することで、keyプロップを持つコンポーネントが再マウントされる
       setRenderKey(prevKey => prevKey + 1);
     }, [])
@@ -34,9 +33,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (params.openModal === 'true') {
+      setSelectedTopicId(params.topicId as string);
+      setSelectedUserId(Number(params.selfUserId));
       setModalVisible(true);
     }
-  }, [params.openModal]);
+  }, [params.openModal, params.topicId, params.selfUserId]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);

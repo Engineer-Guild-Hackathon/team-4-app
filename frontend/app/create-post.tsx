@@ -1,20 +1,20 @@
+import { useAuth } from '@/hooks/useAuth';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
+  ActivityIndicator,
+  Alert,
   Button,
   Image,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@/hooks/useAuth';
-import { useVideoPlayer, VideoView } from 'expo-video';
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
@@ -116,7 +116,10 @@ export default function CreatePostScreen() {
       }
 
       Alert.alert('成功', '投稿が完了しました！');
-      router.replace({ pathname: '/', params: { openModal: 'true' } });
+      router.replace({
+        pathname: '/',
+        params: { openModal: 'true', topicId, selfUserId: params.selfUserId },
+      });
     } catch (error: any) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage =

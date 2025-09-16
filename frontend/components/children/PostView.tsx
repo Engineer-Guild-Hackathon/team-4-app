@@ -1,7 +1,9 @@
+import { deletePost, getPosts } from '@/services/api/post';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
+import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,11 +17,12 @@ import {
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
-  posts: PostOut[];
   loading: boolean;
   error: string | null;
   selfUserId?: number;
-  onDelete: (postId: number) => void;
+  onClose: () => void;
+  userId: number;
+  topicId: string;
 }
 
 const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
@@ -40,9 +43,44 @@ const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
   );
 };
 
-export default function PostView({ posts, loading, error, selfUserId, onDelete }: PostViewProps) {
+export default function PostView({
+  loading,
+  error,
+  selfUserId,
+  onClose,
+  userId,
+  topicId,
+}: PostViewProps) {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
+  const [posts, setPosts] = React.useState<PostOut[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    getPosts(topicId!, userId!).then(data => setPosts(data));
+  }, [topicId, userId]);
+
+  const handleDeletePost = async (postId: number) => {
+    Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost(postId);
+            setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+            } else {
+              Alert.alert('エラー', '削除中に不明なエラーが発生しました。');
+            }
+          }
+        },
+      },
+    ]);
+  };
 
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('投稿メニュー', '', [
@@ -65,7 +103,7 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     <View style={styles.post}>
       <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(item.id)}>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
             <Text style={styles.deleteButtonText}>削除</Text>
           </TouchableOpacity>
         ) : (
@@ -95,9 +133,6 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
   if (error) {
     return <Text style={styles.centered}>エラー: {error}</Text>;
   }
-  if (posts.length === 0) {
-    return <Text style={styles.centered}>まだ投稿がありません。</Text>;
-  }
   return (
     <View style={{ flex: 1, padding: 10 }}>
       <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
@@ -116,6 +151,18 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
           setReportTargetPost(null);
         }}
       />
+      {selfUserId === userId && (
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.7}
+          onPress={() => {
+            onClose();
+            router.push(`/create-post?topicId=${topicId}&selfUserId=${selfUserId}`);
+          }}
+        >
+          <Text style={styles.fabText}>＋</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -164,5 +211,27 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    lineHeight: 36,
   },
 });
