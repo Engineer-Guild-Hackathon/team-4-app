@@ -26,10 +26,9 @@ const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
 // 親から渡されるpropsの型
 interface CreatePostFormProps {
   topicId: string;
-  onPostSuccess: () => void; // 投稿成功時に親に通知するための関数
 }
 
-export default function CreatePostForm({ topicId, onPostSuccess }: CreatePostFormProps) {
+export default function CreatePostForm({ topicId }: CreatePostFormProps) {
   const { accessToken } = useAuth();
   const [content, setContent] = useState('');
   const [mediaAssets, setMediaAssets] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -90,7 +89,8 @@ export default function CreatePostForm({ topicId, onPostSuccess }: CreatePostFor
         throw await response.json();
       }
       Alert.alert('成功', '投稿が完了しました！');
-      onPostSuccess(); // 親コンポーネントに成功を通知
+      setContent('');
+      setMediaAssets([]);
     } catch (error: any) {
       Alert.alert('投稿エラー', error?.detail || '投稿に失敗しました。');
     } finally {

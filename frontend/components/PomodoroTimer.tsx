@@ -176,7 +176,7 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
               <Text style={styles.outputTimerText}>{formatTime(secondsLeft)}</Text>
             </View>
             {topicId ? (
-              <CreatePostForm topicId={topicId} onPostSuccess={handlePostSuccess} />
+              <CreatePostForm topicId={topicId} />
             ) : (
               <Text style={{textAlign: 'center', marginTop: 20}}>投稿先のトピックが選択されていません。</Text>
             )}
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 56,
     fontWeight: 'bold',
-    color: '#111',
+    color: '#ffffffff',
     fontFamily: 'Courier New',
     letterSpacing: 2,
   },
