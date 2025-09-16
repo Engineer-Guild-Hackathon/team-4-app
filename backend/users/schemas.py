@@ -1,6 +1,7 @@
-from ninja import Schema, ModelSchema
 from django.contrib.auth import get_user_model
 from typing import List, Optional
+
+from ninja import ModelSchema, Schema
 from topics.schemas import TopicOut
 
 User = get_user_model()
@@ -24,6 +25,15 @@ class UserOut(ModelSchema):
         if hasattr(obj, 'profile'):
             return obj.profile.bio
         return None
+    
+class UserDetail(Schema):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    is_staff: bool
+    blocked: bool   # 自分がこのユーザーにブロックされているか
+    blocking: bool
 
 class UserCreateOut(Schema):
     access: str
