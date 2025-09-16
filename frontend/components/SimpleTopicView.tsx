@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
-import { TreeViewer } from './TreeViewer';
+import { TreeViewer } from './TreeViewer/TreeViewer';
 
 interface Topic {
   id: string;
