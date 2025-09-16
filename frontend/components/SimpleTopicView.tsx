@@ -1,8 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
-import { getMyTopics } from '@/services/api/topic';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
+import { getMyTopics } from '@/services/api/topic';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
