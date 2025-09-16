@@ -1,6 +1,6 @@
 import { getTopicTree } from '@/services/api/topic';
 import { TreeUserNodeOut } from '@/types/topic';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const useTreeData = (topicId: string | null) => {
   const [data, setData] = useState<TreeUserNodeOut[]>([]);
@@ -30,7 +30,7 @@ export const useTreeData = (topicId: string | null) => {
       }
     };
     fetchTreeData();
-  }, [fetchTreeData]);
+  }, [topicId]);
 
   return { data, loading, max_level, min_level };
 };
