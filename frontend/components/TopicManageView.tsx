@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic } from '@/services/api/topic';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
+import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -89,9 +90,44 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
   };
 
-  // トピックに参加する（画面遷移）
-  const handleJoinTopic = (topicId: string) => {
-    router.push({ pathname: '/select-level-mentor', params: { topicId } });
+  // トピックに参加する
+  const handleJoinTopic = async (topicId: string) => {
+    try {
+      // 直接トピックに参加（レベル1で参加）
+      await joinTopic(topicId, 1);
+      await fetchMyTopics();
+      await fetchAllTopics();
+      
+      // 師匠選択が必要かチェック
+      const selectionResponse = await checkMentorSelectionRequired(topicId) as {
+        required: boolean;
+      };
+      
+      if (selectionResponse.required) {
+        // 師匠選択が必要な場合
+        Alert.alert('参加完了', '師匠選択が必要です', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.push({ pathname: '/select-level-mentor', params: { topicId } });
+            },
+          },
+        ]);
+      } else {
+        // 師匠選択が不要な場合（最初のユーザーなど）
+        Alert.alert('参加完了', 'トピックに参加しました', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.replace('/');
+            },
+          },
+        ]);
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || '参加に失敗しました';
+      Alert.alert('エラー', errorMessage);
+    }
   };
 
   // トピック作成モーダルを開く
@@ -113,7 +149,15 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             await leaveTopic(topicId, userResponse.id);
             await fetchMyTopics();
             await fetchAllTopics();
-            Alert.alert('成功', 'トピックから抜けました');
+            Alert.alert('成功', 'トピックから抜けました', [
+              {
+                text: 'OK',
+                onPress: () => {
+                  // 画面全体をリロードも兼ねてメインへ遷移
+                  router.replace('/');
+                },
+              },
+            ]);
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
           }
@@ -245,15 +289,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#6b7280',
-  },
   manageContainer: {
     flex: 1,
     paddingHorizontal: 20,
@@ -372,17 +407,6 @@ const styles = StyleSheet.create({
   },
   joinSection: {
     marginBottom: 30,
-  },
-  joinButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  joinButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,

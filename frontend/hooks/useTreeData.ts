@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 export const useTreeData = (topicId: string | null) => {
   const [data, setData] = useState<TreeUserNodeOut[]>([]);
   const [loading, setLoading] = useState(true);
-  const [max_level, setMaxLevel] = useState<number | null>(null); // 追加
-  const [min_level, setMinLevel] = useState<number | null>(null); // 追加
+  const [max_level, setMaxLevel] = useState<number | null>(null); 
+  const [min_level, setMinLevel] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTreeData = async () => {
@@ -19,8 +19,8 @@ export const useTreeData = (topicId: string | null) => {
         setLoading(true);
         const response = await getTopicTree(topicId);
         setData(response.tree || []);
-        setMaxLevel(response.max_level ?? null); // 追加
-        setMinLevel(response.min_level ?? null); // 追加
+        setMaxLevel(response.max_level ?? null);
+        setMinLevel(response.min_level ?? null);
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error('ツリーデータ取得エラー:', error.message);
@@ -32,5 +32,5 @@ export const useTreeData = (topicId: string | null) => {
     fetchTreeData();
   }, [topicId]);
 
-  return { data, loading, max_level, min_level }; // 追加
+  return { data, loading, max_level, min_level };
 };

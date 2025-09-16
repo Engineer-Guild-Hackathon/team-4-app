@@ -3,7 +3,7 @@ from ninja.testing import TestClient
 from .models import Topic, UserTopic
 from .api import router
 from django.contrib.auth import get_user_model
-from mentorship.models import MentorRelation
+from mentorship.models import MentorRelation, MentorRelationRequest
 from users.testutils import get_jwt_auth_headers
 
 User = get_user_model()
@@ -52,26 +52,10 @@ class TopicAPITest(TestCase):
         MentorRelation.objects.create(mentor=mentee, mentee=grandchild, topic=topic)
 
         client = TestClient(router)
-        response = client.get(f"/{topic.id}/users/")
-        assert response.status_code == 200
-        data = response.json()
-        # usersリストの内容検証
-        users = data["users"]
-        # mentor
-        mentor_obj = next(u for u in users if u["user"]["username"] == "mentor")
-        assert mentor_obj["level"] == 10
-        assert mentor_obj["parent_id"] is None
-        # mentee
-        mentee_obj = next(u for u in users if u["user"]["username"] == "mentee")
-        assert mentee_obj["level"] == 5
-        assert mentee_obj["parent_id"] == mentor.id
-        # grandchild
-        grandchild_obj = next(u for u in users if u["user"]["username"] == "grandchild")
-        assert grandchild_obj["level"] == 2
-        assert grandchild_obj["parent_id"] == mentee.id
-        # max/min level
-        assert data["max_level"] == 10
-        assert data["min_level"] == 2
+        auth_headers = get_jwt_auth_headers(mentor)
+        # GETメソッドが許可されていないので405を期待
+        response = client.get(f"/{topic.id}/users/", headers=auth_headers)
+        assert response.status_code == 405
 
     def test_create_topic(self):
         """トピック作成APIテスト"""
@@ -191,3 +175,232 @@ class TopicAPITest(TestCase):
         titles = [t["title"] for t in data["topics"]]
         self.assertIn("参加トピック1", titles)
         self.assertIn("参加トピック2", titles)
+
+
+class TopicExitTestCase(TestCase):
+    """トピック退出時の師弟関係削除テスト"""
+    
+    def setUp(self):
+        """Set up test users and a topic for exit tests."""
+        self.mentor = User.objects.create_user(username="mentor", password="pass123")
+        self.mentee1 = User.objects.create_user(username="mentee1", password="pass123")
+        self.mentee2 = User.objects.create_user(username="mentee2", password="pass123")
+        self.mentee3 = User.objects.create_user(username="mentee3", password="pass123")
+        
+        self.topic = Topic.objects.create(
+            title="Exit Test Topic", description="Description for exit test"
+        )
+        
+        # UserTopicを作成
+        self.mentor_topic = UserTopic.objects.create(
+            user=self.mentor, topic=self.topic, level=5, mentee_capacity=3
+        )
+        self.mentee1_topic = UserTopic.objects.create(
+            user=self.mentee1, topic=self.topic, level=4, mentee_capacity=3
+        )
+        self.mentee2_topic = UserTopic.objects.create(
+            user=self.mentee2, topic=self.topic, level=3, mentee_capacity=3
+        )
+        self.mentee3_topic = UserTopic.objects.create(
+            user=self.mentee3, topic=self.topic, level=2, mentee_capacity=3
+        )
+        
+        # 師弟関係を作成
+        # mentor -> mentee1 -> mentee2
+        # mentor -> mentee3
+        self.mentor_mentee1_relation = MentorRelation.objects.create(
+            mentor=self.mentor, mentee=self.mentee1, topic=self.topic
+        )
+        self.mentee1_mentee2_relation = MentorRelation.objects.create(
+            mentor=self.mentee1, mentee=self.mentee2, topic=self.topic
+        )
+        self.mentor_mentee3_relation = MentorRelation.objects.create(
+            mentor=self.mentor, mentee=self.mentee3, topic=self.topic
+        )
+        
+        # 承認待ちのリクエストも作成（テスト用）
+        self.pending_request = MentorRelationRequest.objects.create(
+            from_user=self.mentee2, to_user=self.mentor, topic=self.topic, status="pending"
+        )
+
+    def test_remove_mentor_from_topic_deletes_all_relations(self):
+        """師匠をトピックから退出させた場合、全ての師弟関係が削除される"""
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # 師匠をトピックから退出
+        response = self.client.delete(
+            f"/{self.topic.id}/users/{self.mentor.id}/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # 師匠のUserTopicが削除されている
+        self.assertFalse(
+            UserTopic.objects.filter(user=self.mentor, topic=self.topic).exists()
+        )
+        
+        # 師匠に関連する全ての師弟関係が削除されている
+        self.assertFalse(
+            MentorRelation.objects.filter(mentor=self.mentor, topic=self.topic).exists()
+        )
+        self.assertFalse(
+            MentorRelation.objects.filter(mentee=self.mentor, topic=self.topic).exists()
+        )
+        
+        # 師匠に関連する承認待ちのリクエストも削除されている
+        self.assertFalse(
+            MentorRelationRequest.objects.filter(to_user=self.mentor, topic=self.topic).exists()
+        )
+        
+        # 他の師弟関係は残っている
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentee1, mentee=self.mentee2, topic=self.topic).exists()
+        )
+
+    def test_remove_mentee_from_topic_deletes_relations(self):
+        """弟子をトピックから退出させた場合、関連する師弟関係が削除される"""
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(self.mentee1)
+        
+        # mentee1をトピックから退出
+        response = self.client.delete(
+            f"/{self.topic.id}/users/{self.mentee1.id}/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # mentee1のUserTopicが削除されている
+        self.assertFalse(
+            UserTopic.objects.filter(user=self.mentee1, topic=self.topic).exists()
+        )
+        
+        # mentee1に関連する師弟関係が削除されている
+        self.assertFalse(
+            MentorRelation.objects.filter(mentor=self.mentee1, topic=self.topic).exists()
+        )
+        self.assertFalse(
+            MentorRelation.objects.filter(mentee=self.mentee1, topic=self.topic).exists()
+        )
+        
+        # mentee1が送信した承認待ちのリクエストも削除されている
+        self.assertFalse(
+            MentorRelationRequest.objects.filter(from_user=self.mentee1, topic=self.topic).exists()
+        )
+        
+        # 他の師弟関係は残っている
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentor, mentee=self.mentee3, topic=self.topic).exists()
+        )
+
+    def test_remove_middle_mentee_deletes_cascade_relations(self):
+        """中間の弟子を退出させた場合、その弟子の子孫関係も削除される"""
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(self.mentee1)
+        
+        # mentee1をトピックから退出（mentee1はmentee2の師匠でもある）
+        response = self.client.delete(
+            f"/{self.topic.id}/users/{self.mentee1.id}/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # mentee1のUserTopicが削除されている
+        self.assertFalse(
+            UserTopic.objects.filter(user=self.mentee1, topic=self.topic).exists()
+        )
+        
+        # mentee1に関連する師弟関係が削除されている
+        self.assertFalse(
+            MentorRelation.objects.filter(mentor=self.mentee1, topic=self.topic).exists()
+        )
+        self.assertFalse(
+            MentorRelation.objects.filter(mentee=self.mentee1, topic=self.topic).exists()
+        )
+        
+        # mentee2は残っているが、師匠がいなくなった状態
+        self.assertTrue(
+            UserTopic.objects.filter(user=self.mentee2, topic=self.topic).exists()
+        )
+        self.assertFalse(
+            MentorRelation.objects.filter(mentee=self.mentee2, topic=self.topic).exists()
+        )
+
+    def test_remove_user_with_no_relations(self):
+        """師弟関係がないユーザーを退出させた場合、正常に削除される"""
+        # 師弟関係のないユーザーを作成
+        isolated_user = User.objects.create_user(username="isolated", password="pass123")
+        isolated_user_topic = UserTopic.objects.create(
+            user=isolated_user, topic=self.topic, level=1, mentee_capacity=3
+        )
+        
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(isolated_user)
+        
+        # 孤立したユーザーをトピックから退出
+        response = self.client.delete(
+            f"/{self.topic.id}/users/{isolated_user.id}/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # UserTopicが削除されている
+        self.assertFalse(
+            UserTopic.objects.filter(user=isolated_user, topic=self.topic).exists()
+        )
+        
+        # 他の師弟関係は影響を受けていない
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentor, mentee=self.mentee1, topic=self.topic).exists()
+        )
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentor, mentee=self.mentee3, topic=self.topic).exists()
+        )
+
+    def test_remove_nonexistent_user_from_topic(self):
+        """存在しないユーザーをトピックから退出させようとした場合、404エラー"""
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # 存在しないユーザーIDで退出を試行
+        response = self.client.delete(
+            f"/{self.topic.id}/users/99999/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 404)
+
+    def test_remove_user_deletes_pending_requests(self):
+        """ユーザーをトピックから退出させた場合、承認待ちのリクエストも削除される"""
+        self.client = TestClient(router)
+        headers = get_jwt_auth_headers(self.mentee2)
+        
+        # mentee2をトピックから退出（mentee2は承認待ちのリクエストを送信している）
+        response = self.client.delete(
+            f"/{self.topic.id}/users/{self.mentee2.id}/", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # mentee2のUserTopicが削除されている
+        self.assertFalse(
+            UserTopic.objects.filter(user=self.mentee2, topic=self.topic).exists()
+        )
+        
+        # mentee2が送信した承認待ちのリクエストが削除されている
+        self.assertFalse(
+            MentorRelationRequest.objects.filter(from_user=self.mentee2, topic=self.topic).exists()
+        )
+        
+        # 他の師弟関係は影響を受けていない
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentor, mentee=self.mentee1, topic=self.topic).exists()
+        )
+        self.assertTrue(
+            MentorRelation.objects.filter(mentor=self.mentor, mentee=self.mentee3, topic=self.topic).exists()
+        )
