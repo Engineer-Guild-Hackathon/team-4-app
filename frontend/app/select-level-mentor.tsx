@@ -1,7 +1,7 @@
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { getPosts } from '@/services/api/post';
-import { joinTopic, leaveTopic } from '@/services/api/topic';
+import { joinTopic, leaveTopic, getTopicLevelInfo } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { 
   checkMentorSelectionRequired, 
@@ -97,10 +97,23 @@ export default function SelectLevelMentorScreen() {
         setLevel(userLevelResponse.level); // 現在のレベルをセット
       } catch (error) {
         console.error('ユーザーレベル取得エラー:', error);
-        // エラーの場合はデフォルト値を設定
-        setUserLevel(1);
-        setUserStatus('active');
-        setLevel(1);
+        // エラーの場合はトピックのレベル情報を取得してデフォルト値を設定
+        try {
+          const levelInfo = await getTopicLevelInfo(topicId) as {
+            max_level: number;
+            min_level: number;
+            user_count: number;
+          };
+          const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
+          setUserLevel(defaultLevel);
+          setUserStatus('active');
+          setLevel(defaultLevel);
+        } catch (levelError) {
+          // レベル情報も取得できない場合は1をデフォルトに
+          setUserLevel(1);
+          setUserStatus('active');
+          setLevel(1);
+        }
       }
     };
     

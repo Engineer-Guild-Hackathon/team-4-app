@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic } from '@/services/api/topic';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic, getTopicLevelInfo } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
@@ -93,8 +93,18 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // トピックに参加する
   const handleJoinTopic = async (topicId: string) => {
     try {
-      // 直接トピックに参加（レベル1で参加）
-      await joinTopic(topicId, 1);
+      // トピックのレベル情報を取得
+      const levelInfo = await getTopicLevelInfo(topicId) as {
+        max_level: number;
+        min_level: number;
+        user_count: number;
+      };
+      
+      // デフォルトレベルを設定（最低レベル-1、誰もいない場合は1）
+      const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
+      
+      // トピックに参加
+      await joinTopic(topicId, defaultLevel);
       await fetchMyTopics();
       await fetchAllTopics();
       

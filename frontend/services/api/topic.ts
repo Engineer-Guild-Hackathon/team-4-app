@@ -39,3 +39,8 @@ export const getTopicTree = async (topicId: string) => {
   const res = await authedApiClient<TreeOut>(`/api/topics/${topicId}/tree/`);
   return res;
 };
+
+export const getTopicLevelInfo = async (topicId: string) => {
+  const res = await authedApiClient(`/api/topics/${topicId}/level-info/`);
+  return res;
+};

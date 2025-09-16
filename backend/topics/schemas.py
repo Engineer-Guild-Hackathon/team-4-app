@@ -35,6 +35,13 @@ class UserTopicCreateIn(Schema):
     level: Optional[int] = 1
 
 
+class JoinTopicIn(Schema):
+    """トピック参加時のスキーマ"""
+
+    level: Optional[int] = 1
+    mentor_id: Optional[int] = None
+
+
 class UserTopicUpdateIn(Schema):
     """ユーザーのトピック参加レベルを更新するスキーマ"""
 
