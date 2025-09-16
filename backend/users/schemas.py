@@ -26,25 +26,23 @@ class UserOut(ModelSchema):
             return obj.profile.bio
         return None
     
-class UserDetail(Schema):
-    id: int
-    username: str
-    email: str
-    is_active: bool
-    is_staff: bool
-    blocked: bool   # 自分がこのユーザーにブロックされているか
-    blocking: bool
+class UserDetail(ModelSchema):
+    blocking: bool   # 自分がこのユーザーにブロックされているか
+    blocked: bool   # このユーザーが自分をブロックしているか
+
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+
+    class Config:
+        model = User
+        model_fields = ["id", "username", "is_active", "is_staff"]
 
 class UserCreateOut(Schema):
     access: str
     refresh: str
     user: UserOut
 
-class UserWithTopicsOut(Schema):
-    id: int
-    username: str
-    is_active: bool
-    is_staff: bool
+class UserWithTopicsOut(UserOut):
     topics: List[TopicOut]
 
 class UserIn(Schema):
