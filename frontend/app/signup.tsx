@@ -3,7 +3,8 @@ import { apiClient } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
+import { theme } from '@/styles/theme';
 
 export default function UserCreateScreen() {
   const router = useRouter();
@@ -60,7 +61,9 @@ export default function UserCreateScreen() {
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {success ? <Text style={styles.success}>{success}</Text> : null}
-      <Button title="ユーザー作成" onPress={handleCreate} />
+      <TouchableOpacity style={styles.button} onPress={handleCreate}>
+        <Text style={styles.buttonText}>ユーザー作成</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -70,32 +73,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
+    padding: theme.spacing[8], // Corresponds to 32px
+    backgroundColor: theme.colors.white,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    marginBottom: theme.spacing[8], // Corresponds to 32px
+    color: theme.colors.textDark,
   },
   input: {
     width: '100%',
     maxWidth: 320,
     height: 48,
-    borderColor: '#ccc',
+    borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing[4], // Corresponds to 16px
+    paddingHorizontal: theme.spacing[4], // Corresponds to 16px
+    fontSize: theme.typography.fontSize.base,
+    backgroundColor: theme.colors.backgroundLighter,
   },
   error: {
-    color: 'red',
-    marginBottom: 12,
+    color: theme.colors.danger,
+    marginBottom: theme.spacing.md,
   },
   success: {
-    color: 'green',
-    marginBottom: 12,
+    color: theme.colors.success,
+    marginBottom: theme.spacing.md,
+  },
+  button: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing[4], // Corresponds to 16px
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center',
+    marginTop: theme.spacing[2], // Corresponds to 8px
+  },
+  buttonText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeights.bold,
   },
 });

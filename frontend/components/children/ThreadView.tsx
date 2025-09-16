@@ -1,7 +1,8 @@
 import { getThreads, sendMessageToThread } from '@/services/api/thread';
 import { ThreadOut } from '@/types/thread';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { theme } from '@/styles/theme';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
@@ -17,17 +18,17 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const reloadThreads = useCallback(async () => {
+  const reloadThreads = async () => {
     try {
       setThreads(await getThreads(topicId, userId));
-    } catch {
+    } catch (e) {
       setError('スレッドの取得に失敗しました');
     }
-  }, [topicId, userId]);
+  };
 
   useEffect(() => {
     reloadThreads();
-  }, [topicId, userId, reloadThreads]);
+  }, [topicId, userId]);
 
   // 詳細ページを表示する場合
   if (selectedThread) {
@@ -93,127 +94,119 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 
 const styles = StyleSheet.create({
   pageContainer: {
-    padding: 20,
-    backgroundColor: '#f3f4f6',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.backgroundLighter, // Assuming f3f4f6 is similar
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1f2937',
+    fontSize: theme.typography.fontSizes['2xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    marginBottom: theme.spacing.lg,
+    color: theme.colors.textDark,
   },
   threadCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.layout.radius.lg,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.sm,
   },
   threadTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.link,
+    marginBottom: theme.spacing.xs,
   },
   threadDate: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textGray,
+    marginBottom: theme.spacing.xs,
   },
   threadMsgCount: {
-    fontSize: 13,
-    color: '#10b981',
-    fontWeight: 'bold',
+    fontSize: theme.typography.fontSizes.sm + 1,
+    color: theme.colors.green,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   emptyText: {
-    color: '#6b7280',
+    color: theme.colors.textGray,
     textAlign: 'center',
-    marginTop: 40,
-    fontSize: 16,
+    marginTop: theme.spacing['4xl'],
+    fontSize: theme.typography.fontSizes.base,
   },
   errorText: {
-    color: '#ef4444',
+    color: theme.colors.error,
     textAlign: 'center',
-    marginTop: 40,
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginTop: theme.spacing['4xl'],
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   detailContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.white,
   },
   backButton: {
-    marginBottom: 12,
+    marginBottom: theme.spacing.md,
     alignSelf: 'flex-start',
-    backgroundColor: '#e5e7eb',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: theme.colors.borderExtraLight,
+    borderRadius: theme.layout.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm - 2,
   },
   backButtonText: {
-    color: '#2563eb',
-    fontWeight: 'bold',
-    fontSize: 15,
+    color: theme.colors.link,
+    fontWeight: theme.typography.fontWeights.bold,
+    fontSize: theme.typography.fontSizes.md + 1,
   },
   detailTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#1f2937',
+    fontSize: theme.typography.fontSizes.xl,
+    fontWeight: theme.typography.fontWeights.bold,
+    marginBottom: theme.spacing.md - 2,
+    color: theme.colors.textDark,
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textMedium,
+    marginBottom: theme.spacing.xs,
   },
   messagesContainer: {
-    marginTop: 16,
+    marginTop: theme.spacing.lg,
   },
   messageCard: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: theme.layout.radius.md,
+    padding: theme.spacing.md - 2,
+    marginBottom: theme.spacing.md - 2,
   },
   messageAuthor: {
-    fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 2,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.link,
+    marginBottom: theme.spacing.xxs,
   },
   messageContent: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 2,
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textMedium,
+    marginBottom: theme.spacing.xxs,
   },
   messageDate: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textGray,
   },
   fab: {
     position: 'absolute',
-    right: 24,
-    bottom: 32,
+    right: theme.spacing.xxl,
+    bottom: theme.spacing['4xl'] - 8,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    ...theme.shadows.lg,
   },
   fabText: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 36,
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes['4xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    lineHeight: theme.typography.lineHeights.loose,
   },
 });

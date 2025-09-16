@@ -1,4 +1,6 @@
+import { deletePost, getPosts } from '@/services/api/post';
 import { blockUser, getUser, unblockUser } from '@/services/api/user';
+import { PostOut } from '@/types/post';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import {
@@ -43,6 +45,7 @@ export default function UserDetailModal({
   userId,
   selfUserId,
 }: UserDetailModalProps) {
+  const [posts, setPosts] = useState<PostOut[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +60,9 @@ export default function UserDetailModal({
       const fetchAllData = async () => {
         try {
           const profileData = await getUser(userId);
+          const postsData = await getPosts(topicId!, profileData.id);
           setProfile(profileData);
+          setPosts(postsData);
         } catch (e: unknown) {
           if (e instanceof Error) {
             setError(e.message);
@@ -72,6 +77,28 @@ export default function UserDetailModal({
       fetchAllData();
     }
   }, [visible, topicId, userId]);
+
+  const handleDeletePost = async (postId: number) => {
+    Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost(postId);
+            await getPosts(topicId!, userId!);
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+            } else {
+              Alert.alert('エラー', '削除中に不明なエラーが発生しました。');
+            }
+          }
+        },
+      },
+    ]);
+  };
 
   const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
     setSelectedTab(e.nativeEvent.position);
@@ -204,12 +231,11 @@ export default function UserDetailModal({
           >
             {/* 投稿一覧ページ */}
             <PostView
+              posts={posts}
               loading={loading}
               error={error}
               selfUserId={selfUserId}
-              onClose={onClose}
-              userId={userId!}
-              topicId={topicId!}
+              onDelete={handleDeletePost}
             />
             {/* 掲示板ページ */}
             <ThreadView userId={userId!} topicId={topicId!} />

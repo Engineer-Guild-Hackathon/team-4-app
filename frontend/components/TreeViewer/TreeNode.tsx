@@ -1,5 +1,6 @@
 import { HierarchyPointNode } from 'd3-hierarchy';
 import React, { useEffect } from 'react';
+import { theme } from '@/styles/theme';
 import Animated, {
   interpolateColor,
   useAnimatedProps,
@@ -34,7 +35,7 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   }, [isFocused, focusAnimation]);
 
   const animatedCircleProps = useAnimatedProps(() => {
-    const stroke = interpolateColor(focusAnimation.value, [0, 1], ['#573cfa', '#ff6b6b']);
+    const stroke = interpolateColor(focusAnimation.value, [0, 1], [theme.colors.purple, theme.colors.pinkRed]);
     const strokeWidth = 2 + focusAnimation.value * 1.5;
     return {
       stroke,
@@ -71,10 +72,10 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
       <AnimatedCircle r={NODE_RADIUS} fill="transparent" animatedProps={animatedCircleProps} />
 
       {/* テキスト表示部分は変更なし */}
-      <SvgText y={NODE_RADIUS + 14} fill="#1f2937" fontSize={12} textAnchor="middle">
+      <SvgText y={NODE_RADIUS + 14} fill={theme.colors.textDark} fontSize={theme.typography.fontSizes.sm} textAnchor="middle">
         {mainLabel}
       </SvgText>
-      <SvgText y={NODE_RADIUS + 28} fill="#6b7280" fontSize={10} textAnchor="middle">
+      <SvgText y={NODE_RADIUS + 28} fill={theme.colors.textGray} fontSize={theme.typography.fontSizes.xs} textAnchor="middle">
         {subLabel}
       </SvgText>
     </G>

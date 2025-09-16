@@ -1,13 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
-import {
-  createTopic,
-  getAllTopics,
-  getMyTopics,
-  leaveTopic,
-  joinTopic,
-} from '@/services/api/topic';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic } from '@/services/api/topic';
+import { theme } from '@/styles/theme';
 import { getMe } from '@/services/api/user';
-import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -72,10 +66,11 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   }, [accessToken]);
 
   // 参加可能なトピックを更新するuseEffect
-  useEffect(() => {
-    const myTopicIds = myTopics.map(topic => topic.id);
-    setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+  useEffect(() => { 
+      const myTopicIds = myTopics.map(topic => topic.id);
+      setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
   }, [allTopics, myTopics]);
+
 
   // トピック作成
   const handleCreateTopic = async () => {
@@ -96,44 +91,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     }
   };
 
-  // トピックに参加する
-  const handleJoinTopic = async (topicId: string) => {
-    try {
-      // 直接トピックに参加（レベル1で参加）
-      await joinTopic(topicId, 1);
-      await fetchMyTopics();
-      await fetchAllTopics();
-
-      // 師匠選択が必要かチェック
-      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
-        required: boolean;
-      };
-
-      if (selectionResponse.required) {
-        // 師匠選択が必要な場合
-        Alert.alert('参加完了', '師匠選択が必要です', [
-          {
-            text: 'OK',
-            onPress: () => {
-              router.push({ pathname: '/select-level-mentor', params: { topicId } });
-            },
-          },
-        ]);
-      } else {
-        // 師匠選択が不要な場合（最初のユーザーなど）
-        Alert.alert('参加完了', 'トピックに参加しました', [
-          {
-            text: 'OK',
-            onPress: () => {
-              router.replace('/');
-            },
-          },
-        ]);
-      }
-    } catch (error: any) {
-      const errorMessage = error.message || '参加に失敗しました';
-      Alert.alert('エラー', errorMessage);
-    }
+  // トピックに参加する（画面遷移）
+  const handleJoinTopic = (topicId: string) => {
+    router.push({ pathname: '/select-level-mentor', params: { topicId } });
   };
 
   // トピック作成モーダルを開く
@@ -155,15 +115,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             await leaveTopic(topicId, userResponse.id);
             await fetchMyTopics();
             await fetchAllTopics();
-            Alert.alert('成功', 'トピックから抜けました', [
-              {
-                text: 'OK',
-                onPress: () => {
-                  // 画面全体をリロードも兼ねてメインへ遷移
-                  router.replace('/');
-                },
-              },
-            ]);
+            Alert.alert('成功', 'トピックから抜けました');
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
           }
@@ -293,192 +245,212 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.white,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: theme.typography.fontSizes.lg,
+    color: theme.colors.textGray,
   },
   manageContainer: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing['6xl'],
+    paddingBottom: theme.spacing.xl,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: theme.spacing['3xl'],
   },
   manageTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    fontSize: theme.typography.fontSizes['2xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textDark,
   },
   backButton: {
-    backgroundColor: '#6b7280',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: theme.colors.textGray,
+    borderRadius: theme.layout.radius.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
   },
   backButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   createSection: {
-    marginBottom: 30,
+    marginBottom: theme.spacing['3xl'],
   },
   listSection: {
-    marginBottom: 30,
+    marginBottom: theme.spacing['3xl'],
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#374151',
-    marginBottom: 15,
+    fontSize: theme.typography.fontSizes.lg,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textMedium,
+    marginBottom: theme.spacing.lg - 1,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 10,
-    backgroundColor: '#ffffff',
+    borderColor: theme.colors.border,
+    borderRadius: theme.layout.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md - 2,
+    fontSize: theme.typography.fontSizes.base,
+    marginBottom: theme.spacing.md - 2,
+    backgroundColor: theme.colors.white,
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
   },
   createButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: theme.colors.info,
+    borderRadius: theme.layout.radius.md,
+    paddingVertical: theme.spacing.md,
     alignItems: 'center',
   },
   createButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   topicItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: theme.layout.radius.md,
+    padding: theme.spacing.lg - 1,
+    marginBottom: theme.spacing.md - 2,
   },
   topicInfo: {
     flex: 1,
   },
   topicItemTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textDark,
+    marginBottom: theme.spacing.xs,
   },
   topicItemDescription: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textGray,
   },
   leaveButton: {
-    backgroundColor: '#f59e0b',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: theme.colors.warning,
+    borderRadius: theme.layout.radius.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
   },
   leaveButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   emptyTopicsContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 20,
+    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: theme.layout.radius.md,
+    padding: theme.spacing.xl,
     alignItems: 'center',
   },
   emptyTopicsText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6b7280',
-    marginBottom: 8,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textGray,
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },
   emptyTopicsSubText: {
-    fontSize: 14,
-    color: '#9ca3af',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textLightGray,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: theme.typography.lineHeights.tight,
   },
   joinSection: {
-    marginBottom: 30,
+    marginBottom: theme.spacing['3xl'],
+  },
+  joinButton: {
+    backgroundColor: theme.colors.green,
+    borderRadius: theme.layout.radius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  joinButtonText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.white,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: theme.colors.borderExtraLight,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    fontSize: theme.typography.fontSizes.xl,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textDark,
   },
   modalCloseButton: {
-    backgroundColor: '#6b7280',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: theme.colors.textGray,
+    borderRadius: theme.layout.radius.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
   },
   modalCloseButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.bold,
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
   },
   availableTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+    backgroundColor: theme.colors.backgroundLighter,
+    borderRadius: theme.layout.radius.md,
+    padding: theme.spacing.lg - 1,
+    marginBottom: theme.spacing.md - 2,
   },
   availableTopicInfo: {
     flex: 1,
   },
   availableTopicTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textDark,
+    marginBottom: theme.spacing.xs,
   },
   availableTopicDescription: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textGray,
   },
   joinTopicButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: theme.colors.info,
+    borderRadius: theme.layout.radius.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
   },
   joinTopicButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.bold,
   },
 });

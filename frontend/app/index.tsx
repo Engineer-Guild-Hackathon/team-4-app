@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import { theme } from '@/styles/theme';
 import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 // ★ 修正点 1: useState をインポート
 import React, { useCallback, useEffect, useState } from 'react';
@@ -26,6 +27,7 @@ export default function HomeScreen() {
   // ★ 修正点 3: 画面がフォーカスされるたびにキーを更新し、再レンダリングをトリガーする
   useFocusEffect(
     useCallback(() => {
+      console.log('画面がフォーカスされたため、SimpleTopicViewを再描画します。');
       // キーの値を更新することで、keyプロップを持つコンポーネントが再マウントされる
       setRenderKey(prevKey => prevKey + 1);
     }, [])
@@ -33,11 +35,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (params.openModal === 'true') {
-      setSelectedTopicId(params.topicId as string);
-      setSelectedUserId(Number(params.selfUserId));
       setModalVisible(true);
     }
-  }, [params.openModal, params.topicId, params.selfUserId]);
+  }, [params.openModal]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
@@ -70,17 +70,17 @@ export default function HomeScreen() {
         <>
           <Link href="/edit-profile" asChild>
             <TouchableOpacity style={styles.editButton}>
-              <Feather name="user" size={24} color="white" />
+              <Feather name="user" size={24} color={theme.colors.white} />
             </TouchableOpacity>
           </Link>
           <TouchableOpacity
             onPress={() => setMentorDashboardVisible(true)}
             style={styles.mentorshipButton}
           >
-            <Feather name="user-plus" size={24} color="white" />
+            <Feather name="user-plus" size={24} color={theme.colors.white} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <AntDesign name="logout" size={24} color="white" />
+            <AntDesign name="logout" size={24} color={theme.colors.white} />
           </TouchableOpacity>
         </>
       )}
@@ -113,104 +113,51 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  // ... (以下、stylesの変更なし)
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  mentorDashboardButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  mentorDashboardButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    backgroundColor: theme.colors.white,
   },
   logoutButton: {
     position: 'absolute',
-    top: 240,
-    right: 24,
+    top: theme.spacing['7xl'] * 3,
+    right: theme.spacing.xxl,
     height: 60,
     width: 60,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: theme.layout.radius.full,
     zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    ...theme.shadows.lg,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.white,
   },
   editButton: {
     position: 'absolute',
-    top: 60,
-    right: 24,
+    top: theme.spacing['6xl'],
+    right: theme.spacing.xxl,
     height: 60,
     width: 60,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: theme.layout.radius.full,
     zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
+    ...theme.shadows.lg,
   },
   mentorshipButton: {
     position: 'absolute',
-    top: 150,
-    right: 24,
+    top: theme.spacing['7xl'] + theme.spacing['6xl'],
+    right: theme.spacing.xxl,
     height: 60,
     width: 60,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: theme.layout.radius.full,
     zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  editButtonText: {
-    color: '#333',
-    fontWeight: '600',
-    fontSize: 14,
+    ...theme.shadows.lg,
   },
 });

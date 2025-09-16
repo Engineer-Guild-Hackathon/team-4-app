@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
+import { theme } from '@/styles/theme';
 
 interface Topic {
   id: string;
@@ -130,47 +131,39 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 10,
-    paddingTop: 10,
+    paddingVertical: theme.spacing.md,
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT + 30,
-    marginHorizontal: ITEM_SPACING / 2,
+    marginHorizontal: theme.spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderRadius: 25,
-    backgroundColor: '#1f2937',
+    borderRadius: theme.layout.radius.full,
+    backgroundColor: theme.colors.textDark,
     borderWidth: 2,
-    borderColor: '#374151',
+    borderColor: theme.colors.borderMedium,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
-    elevation: 5,
+    paddingHorizontal: theme.spacing.lg,
+    ...theme.shadows.lg,
+    shadowOpacity: 0.6, // Keep custom opacity
   },
   topicIconActive: {
-    backgroundColor: '#374151',
-    borderColor: '#374151',
-    shadowColor: '#374151',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
-    elevation: 5,
+    backgroundColor: theme.colors.textMedium,
+    borderColor: theme.colors.textMedium,
+    shadowColor: theme.colors.textMedium,
   },
   topicIconText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9ca3af',
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textLightGray,
   },
   topicIconTextActive: {
-    color: '#ffffff',
+    color: theme.colors.white,
   },
 });

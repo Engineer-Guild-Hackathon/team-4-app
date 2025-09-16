@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  Button,
   Image,
   TouchableOpacity,
   Alert,
@@ -15,6 +14,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { theme } from '@/styles/theme';
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
@@ -144,11 +144,13 @@ export default function EditProfileScreen() {
 
         <View style={styles.spacer} />
 
-        <Button
-          title={isSubmitting ? '保存中...' : '保存する'}
+        <TouchableOpacity
+          style={styles.saveButton}
           onPress={handleSave}
           disabled={isSubmitting}
-        />
+        >
+          <Text style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</Text>
+        </TouchableOpacity>
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
       </View>
     </ScrollView>
@@ -158,52 +160,67 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
   },
   innerContainer: {
-    padding: 20,
+    padding: theme.spacing.xl,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.white,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: theme.typography.fontSizes['2xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    marginBottom: theme.spacing.xl,
+    color: theme.colors.textDark,
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: theme.spacing['3xl'],
   },
   avatar: {
     width: 128,
     height: 128,
-    borderRadius: 64,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 64, // Keep as is for perfect circle
+    backgroundColor: theme.colors.backgroundLight,
   },
   avatarEditText: {
-    marginTop: 8,
-    color: '#007AFF',
-    fontWeight: '600',
+    marginTop: theme.spacing.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeights.semibold,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.semibold,
+    marginBottom: theme.spacing.sm,
+    color: theme.colors.textMedium,
   },
   bioInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.layout.radius.md,
+    padding: theme.spacing.md,
     height: 100,
     textAlignVertical: 'top',
-    fontSize: 16,
+    fontSize: theme.typography.fontSizes.base,
+    color: theme.colors.textPrimary,
   },
   spacer: {
     flex: 1,
-    minHeight: 40,
+    minHeight: theme.spacing['4xl'],
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.layout.radius.md,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.base,
+    fontWeight: theme.typography.fontWeights.bold,
   },
 });

@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
-import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
+import { theme } from '@/styles/theme';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
@@ -17,34 +17,16 @@ interface Topic {
 }
 
 interface SimpleTopicViewProps {
+  topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
-  onMentorSelectionRequired?: (topicId: string) => void; // 師匠選択が必要な場合のコールバック
-  onTopicChange?: (topicId: string | null) => void; // トピック変更時のコールバック
 }
 
-export function SimpleTopicView({
-  onUserPress,
-  onMentorSelectionRequired,
-  onTopicChange,
-}: SimpleTopicViewProps) {
+export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopicViewProps) {
   const [currentIndex, setCurrentIndex] = useState(1);
   const pagerRef = useRef<PagerView>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const { accessToken } = useAuth();
-
-  // 師匠選択が必要かチェック
-  const checkMentorSelection = async (topicId: string) => {
-    try {
-      const response = (await checkMentorSelectionRequired(topicId)) as { required: boolean };
-      if (response.required) {
-        // 師匠選択が必要な場合、コールバックを呼び出し
-        onMentorSelectionRequired?.(topicId);
-      }
-    } catch (error) {
-      console.error('師匠選択判定エラー:', error);
-    }
-  };
 
   const refreshMyTopics = async (switchToLastTopic = false) => {
     try {
@@ -67,31 +49,25 @@ export function SimpleTopicView({
   };
 
   useEffect(() => {
+    if (propTopics) {
+      setTopics(propTopics);
+      setLoading(false);
+      return;
+    }
     if (accessToken) {
       refreshMyTopics();
     } else {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [propTopics, accessToken]);
 
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
-
-    // トピックが選択された時に師匠選択判定を実行
-    if (index > 0 && topics[index - 1]) {
-      const topicId = topics[index - 1].id;
-      checkMentorSelection(topicId);
-      // 現在のトピックIDを親コンポーネントに通知
-      onTopicChange?.(topicId);
-    } else {
-      // トピックが未選択（管理ページ）の場合はnullを通知
-      onTopicChange?.(null);
-    }
   };
-
+  
   const [isPagerScrollEnabled, setIsPagerScrollEnabled] = useState(true);
-
+  
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => {
@@ -100,17 +76,7 @@ export function SimpleTopicView({
 
       return () => clearTimeout(timer);
     }
-  }, [loading]);
-
-  // 初期表示時にも師匠選択判定を実行
-  useEffect(() => {
-    if (topics.length > 0 && currentIndex > 0 && topics[currentIndex - 1]) {
-      const topicId = topics[currentIndex - 1].id;
-      checkMentorSelection(topicId);
-      // 初期表示時にも現在のトピックIDを親コンポーネントに通知
-      onTopicChange?.(topicId);
-    }
-  }, [topics, currentIndex]);
+  }, [loading]); 
 
   if (loading) {
     return (
@@ -120,20 +86,22 @@ export function SimpleTopicView({
     );
   }
 
-  if (topics.length === 0) {
+  if (topics.length === 0 && !propTopics) {
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
+
 
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
         <PagerView
+
           ref={pagerRef}
           style={{ flex: 1 }}
           scrollEnabled={isPagerScrollEnabled}
           initialPage={currentIndex}
           onPageSelected={e => {
-            setCurrentIndex(e.nativeEvent.position);
+            setCurrentIndex(e.nativeEvent.position)
             if (!isPagerScrollEnabled) {
               return;
             }
@@ -176,55 +144,54 @@ export function SimpleTopicView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
-  },
-  pageView: {
-    flex: 1,
+    backgroundColor: theme.colors.backgroundWhite,
   },
   indicatorContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: 'transparent',
   },
   topicPageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.backgroundWhite,
   },
   descriptionContainer: {
     position: 'absolute',
-    top: 30,
+    top: theme.spacing['3xl'],
     left: 0,
     right: 0,
     zIndex: 1,
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: theme.spacing['4xl'],
   },
   treeContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 100, // Make space for TopicCarousel
   },
   topicTitle: {
-    marginBottom: 20,
+    marginBottom: theme.spacing.xl,
     textAlign: 'center',
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    textShadowColor: 'rgba(255, 255, 255, 1)',
+    fontSize: theme.typography.fontSizes['3xl'],
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.textDark,
+    textShadowColor: theme.colors.white,
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
   topicDescription: {
     textAlign: 'center',
-    fontSize: 18,
-    lineHeight: 26,
-    color: '#1f2937',
+    fontSize: theme.typography.fontSizes.lg,
+    lineHeight: theme.typography.lineHeights.normal,
+    color: theme.colors.textDark,
     maxWidth: 300,
-    textShadowColor: 'rgba(255, 255, 255, 0.7)',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
@@ -234,7 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 18,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSizes.lg,
+    color: theme.colors.textGray,
   },
 });

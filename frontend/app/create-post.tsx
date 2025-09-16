@@ -1,20 +1,21 @@
-import { useAuth } from '@/hooks/useAuth';
-import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Button,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
   View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Image,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '@/hooks/useAuth';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { theme } from '@/styles/theme';
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
@@ -116,10 +117,7 @@ export default function CreatePostScreen() {
       }
 
       Alert.alert('成功', '投稿が完了しました！');
-      router.replace({
-        pathname: '/',
-        params: { openModal: 'true', topicId, selfUserId: params.selfUserId },
-      });
+      router.replace({ pathname: '/', params: { openModal: 'true' } });
     } catch (error: any) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage =
@@ -143,11 +141,13 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <Button
-        title={isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
-        onPress={pickMedia}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={pickMedia} 
         disabled={isPickingMedia}
-      />
+      >
+        <Text style={styles.buttonText}>{isPickingMedia ? "メディアを読み込み中..." : "画像・動画を選択"}</Text>
+      </TouchableOpacity>
 
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset => {
@@ -166,11 +166,13 @@ export default function CreatePostScreen() {
 
       <View style={{ flex: 1 }} />
 
-      <Button
-        title={isSubmitting ? '投稿中...' : '投稿する'}
+      <TouchableOpacity
+        style={[styles.button, styles.submitButton]}
         onPress={handlePost}
         disabled={isSubmitting}
-      />
+      >
+        <Text style={[styles.buttonText, styles.submitButtonText]}>{isSubmitting ? '投稿中...' : '投稿する'}</Text>
+      </TouchableOpacity>
       {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
     </View>
   );
