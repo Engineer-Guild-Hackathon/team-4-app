@@ -1,3 +1,4 @@
+from users.models import Block
 from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut
 from ninja import Router
 from django.contrib.auth import get_user_model
@@ -73,3 +74,17 @@ def delete_user(request, user_id: int):
     user = User.objects.get(id=user_id)
     user.delete()
     return {"success": True}
+
+@router.post("/{user_id}/block/", response={200: dict, 400: dict, 404: dict}, auth=JWTAuth())
+def block_user(request, user_id: int):
+    if request.user.id == user_id:
+        return 400, {"message": "You cannot block yourself."}
+    user_to_block = get_object_or_404(User, id=user_id)
+    Block.objects.get_or_create(blocker=request.user, blocked=user_to_block)
+    return {"message": f"User {user_to_block.username} has been blocked."}
+
+@router.post("/{user_id}/unblock/", response={200: dict, 400: dict, 404: dict}, auth=JWTAuth())
+def unblock_user(request, user_id: int):
+    user_to_unblock = get_object_or_404(User, id=user_id)
+    Block.objects.filter(blocker=request.user, blocked=user_to_unblock).delete()
+    return {"message": f"User {user_to_unblock.username} has been unblocked."}
