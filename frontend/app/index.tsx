@@ -7,6 +7,7 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import MentorDashboard from '../components/MentorDashboard';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+import PomodoroTimer from '../components/PomodoroTimer'; 
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -16,7 +17,7 @@ export default function HomeScreen() {
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
   const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
   const router = useRouter();
-
+  const [pomodoroVisible, setPomodoroVisible] = useState(false);
   const params = useLocalSearchParams();
 
   const [renderKey, setRenderKey] = useState(0);
@@ -64,6 +65,9 @@ export default function HomeScreen() {
               <Feather name="user" size={24} color="white" />
             </TouchableOpacity>
           </Link>
+          <TouchableOpacity style={styles.headerCenterButton} onPress={() => setPomodoroVisible(true)}>
+            <Text style={styles.pomodoroButtonText}>集中</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setMentorDashboardVisible(true)}
             style={styles.mentorshipButton}
@@ -97,7 +101,13 @@ export default function HomeScreen() {
         onClose={() => setMentorDashboardVisible(false)}
         topicId={currentTopicId!}
       />
+      <PomodoroTimer 
+        visible={pomodoroVisible}
+        onClose={() => setPomodoroVisible(false)}
+        topicId={currentTopicId!}
+      />
     </View>
+      
   );
 }
 
@@ -203,5 +213,26 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '600',
     fontSize: 14,
+  },
+    headerCenterButton: {
+    position: 'absolute',
+    top: 60,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pomodoroButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
 });
