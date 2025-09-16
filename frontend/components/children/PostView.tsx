@@ -2,7 +2,16 @@ import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
@@ -60,9 +69,9 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
             <Text style={styles.deleteButtonText}>削除</Text>
           </TouchableOpacity>
         ) : (
-            <TouchableOpacity onPress={() => handleOpenMenu(item)} style={styles.menuButton}>
-                <Text style={styles.menuButtonText}>⋮</Text>
-            </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleOpenMenu(item)} style={styles.menuButton}>
+            <Text style={styles.menuButtonText}>⋮</Text>
+          </TouchableOpacity>
         )}
       </View>
       <View>
@@ -90,12 +99,15 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     return <Text style={styles.centered}>まだ投稿がありません。</Text>;
   }
   return (
-    <>
+    <View style={{ flex: 1, padding: 10 }}>
       <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
       {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
         visible={showReportModal}
-        onClose={() => { setShowReportModal(false); setReportTargetPost(null); }}
+        onClose={() => {
+          setShowReportModal(false);
+          setReportTargetPost(null);
+        }}
         onSubmit={async (reason: string) => {
           if (!reportTargetPost) return;
           const { reportPost } = await import('@/services/api/report');
@@ -104,7 +116,7 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
           setReportTargetPost(null);
         }}
       />
-    </>
+    </View>
   );
 }
 

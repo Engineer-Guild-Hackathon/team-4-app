@@ -9,6 +9,11 @@ export type UserOut = {
   bio?: string;
 };
 
+export type UserDetailOut = UserOut & {
+  blocking: boolean;
+  blocked: boolean;
+};
+
 export type UserEasyOut = {
   id: number;
   username: string;
