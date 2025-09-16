@@ -11,10 +11,14 @@ from .schemas import (
     TopicUpdateIn,
     TopicOut,
     TopicListOut,
+    MyTopicOut,
+    MyTopicListOut,
     UserTopicCreateIn,
     UserTopicUpdateIn,
     UserTopicOut,
     TreeOut,
+    JoinTopicIn,
+    MenteeCapacityUpdateIn,
 )
 
 
@@ -45,14 +49,27 @@ def list_topics(request):
     }
 
 
-@router.get("/me/", response=TopicListOut, auth=JWTAuth())
+@router.get("/me/", response=MyTopicListOut, auth=JWTAuth())
 def get_my_topics(request):
     """
     自分が参加しているトピック一覧を取得する
     """
     user = request.user
-    topics = user.topics.all()
-    return {"topics": list(topics), "count": topics.count()}
+    user_topics = UserTopic.objects.filter(user=user).select_related('topic')
+    
+    topics_data = []
+    for user_topic in user_topics:
+        topic = user_topic.topic
+        topics_data.append({
+            "id": topic.id,
+            "title": topic.title,
+            "description": topic.description,
+            "created_at": topic.created_at,
+            "updated_at": topic.updated_at,
+            "mentee_capacity": user_topic.mentee_capacity,
+        })
+    
+    return {"topics": topics_data, "count": len(topics_data)}
 
 
 @router.get("/{topic_id}/", response=TopicOut)
@@ -180,7 +197,7 @@ def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
 
 # completed: この際に何らかの指定関係を結ぶ場合は、MentorRelationも同時に作成する。引数にmentor_idを追加するのがいいと思う。transaction.atomicデコレータは必須です。
 @router.post("/{topic_id}/me/", response=UserTopicOut, auth=JWTAuth())
-def join_topic(request, topic_id: uuid.UUID, mentor_id: int = None, level: int = 1):
+def join_topic(request, topic_id: uuid.UUID, data: JoinTopicIn):
     """
     現在のユーザーをトピックに参加させる
     mentor_idが指定された場合は、師弟関係も同時に作成する
@@ -197,12 +214,12 @@ def join_topic(request, topic_id: uuid.UUID, mentor_id: int = None, level: int =
         user_topic = UserTopic.objects.create(
             user=user,
             topic=topic,
-            level=level,
+            level=data.level,
         )
 
         # mentor_idが指定された場合は師弟関係を作成
-        if mentor_id:
-            mentor = get_object_or_404(User, id=mentor_id)
+        if data.mentor_id:
+            mentor = get_object_or_404(User, id=data.mentor_id)
             
             # 既に師弟関係が存在するかチェック
             if MentorRelation.objects.filter(mentee=user, topic=topic).exists():
@@ -262,5 +279,72 @@ def get_topic_tree(request, topic_id: uuid.UUID):
     min_level = min(levels) if levels else 0
 
     return {"tree": tree_data, "max_level": max_level, "min_level": min_level}
+
+
+@router.get("/{topic_id}/level-info/", response=dict)
+def get_topic_level_info(request, topic_id: uuid.UUID):
+    """
+    指定されたトピックのレベル情報（最高レベル、最低レベル）を取得
+    """
+    topic = get_object_or_404(Topic, id=topic_id)
+    
+    user_topics = UserTopic.objects.filter(topic=topic)
+    levels = [ut.level for ut in user_topics]
+    
+    max_level = max(levels) if levels else 0
+    min_level = min(levels) if levels else 0
+    
+    return {
+        "max_level": max_level,
+        "min_level": min_level,
+        "user_count": len(levels)
+    }
+
+
+@router.patch("/{topic_id}/me/mentee-capacity/", response={200: UserTopicOut, 400: dict, 404: dict}, auth=JWTAuth())
+def update_mentee_capacity(request, topic_id: uuid.UUID, data: MenteeCapacityUpdateIn):
+    """
+    現在のユーザーの弟子定員を更新する
+    現在の弟子数より少なくはできない
+    """
+    topic = get_object_or_404(Topic, id=topic_id)
+    user = request.user
+    
+    # ユーザーがトピックに参加しているかチェック
+    user_topic = get_object_or_404(UserTopic, user=user, topic=topic)
+    
+    # 定員の範囲チェック
+    if data.mentee_capacity < 1 or data.mentee_capacity > 100:
+        return 400, {
+            "detail": "弟子定員は1人から100人の範囲で設定してください"
+        }
+    
+    # 現在の弟子数を取得
+    current_mentee_count = MentorRelation.objects.filter(
+        mentor=user, 
+        topic=topic
+    ).count()
+    
+    # 新しい定員が現在の弟子数より少ない場合はエラー
+    if data.mentee_capacity < current_mentee_count:
+        return 400, {
+            "detail": f"現在{current_mentee_count}人の弟子がいるため、定員を{data.mentee_capacity}人にすることはできません"
+        }
+    
+    # 弟子定員を更新
+    user_topic.mentee_capacity = data.mentee_capacity
+    user_topic.save()
+    
+    return UserTopicOut(
+        id=user_topic.id,
+        user_id=user_topic.user.id,
+        username=user_topic.user.username,
+        topic_id=user_topic.topic.id,
+        topic_title=user_topic.topic.title,
+        level=user_topic.level,
+        status=user_topic.status,
+        created_at=user_topic.created_at,
+        updated_at=user_topic.updated_at,
+    )
 
 

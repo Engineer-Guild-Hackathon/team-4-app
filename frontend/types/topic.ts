@@ -8,6 +8,15 @@ export type TopicOut = {
   updated_at: string;
 };
 
+export type MyTopicOut = {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  mentee_capacity: number;
+};
+
 export type TreeUserNodeOut = {
   user: UserEasyOut;
   level: number;
@@ -22,5 +31,10 @@ export type TreeOut = {
 
 export type TopicListOut = {
   topics: TopicOut[];
+  count: number;
+};
+
+export type MyTopicListOut = {
+  topics: MyTopicOut[];
   count: number;
 };

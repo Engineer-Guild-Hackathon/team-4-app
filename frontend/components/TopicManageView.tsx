@@ -1,11 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import {
-  createTopic,
-  getAllTopics,
-  getMyTopics,
-  leaveTopic,
-  joinTopic,
-} from '@/services/api/topic';
+import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic, getTopicLevelInfo, updateMenteeCapacity } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { useRouter } from 'expo-router';
@@ -20,14 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+import { MyTopicOut, TopicOut } from '@/types/topic';
 
 interface TopicManageViewProps {
   onBack: () => void;
@@ -36,10 +23,11 @@ interface TopicManageViewProps {
 export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicDescription, setNewTopicDescription] = useState('');
-  const [myTopics, setMyTopics] = useState<Topic[]>([]);
-  const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
-  const [allTopics, setAllTopics] = useState<Topic[]>([]);
+  const [myTopics, setMyTopics] = useState<MyTopicOut[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<TopicOut[]>([]);
+  const [allTopics, setAllTopics] = useState<TopicOut[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [capacityInputs, setCapacityInputs] = useState<{[topicId: string]: string}>({});
   const { accessToken } = useAuth();
   const router = useRouter();
 
@@ -48,6 +36,12 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     try {
       const response = await getMyTopics();
       setMyTopics(response.topics || []);
+      // 弟子定員の入力値を初期化
+      const initialCapacityInputs: {[topicId: string]: string} = {};
+      (response.topics || []).forEach(topic => {
+        initialCapacityInputs[topic.id] = topic.mentee_capacity.toString();
+      });
+      setCapacityInputs(initialCapacityInputs);
     } catch {
       setMyTopics([]);
     }
@@ -99,8 +93,18 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // トピックに参加する
   const handleJoinTopic = async (topicId: string) => {
     try {
-      // 直接トピックに参加（レベル1で参加）
-      await joinTopic(topicId, 1);
+      // トピックのレベル情報を取得
+      const levelInfo = await getTopicLevelInfo(topicId) as {
+        max_level: number;
+        min_level: number;
+        user_count: number;
+      };
+      
+      // デフォルトレベルを設定（最低レベル-1、誰もいない場合は1）
+      const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
+      
+      // トピックに参加
+      await joinTopic(topicId, defaultLevel);
       await fetchMyTopics();
       await fetchAllTopics();
 
@@ -139,6 +143,54 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   // トピック作成モーダルを開く
   const openCreateModal = () => {
     setShowCreateModal(true);
+  };
+
+  // 弟子定員を更新
+  const handleUpdateCapacity = async (topicId: string, newCapacity: number) => {
+    try {
+      await updateMenteeCapacity(topicId, newCapacity);
+      Alert.alert('更新完了', `弟子定員を${newCapacity}人に設定しました`);
+      fetchMyTopics(); // トピック一覧を再取得
+    } catch (error: any) {
+      Alert.alert('エラー', error.message || '弟子定員の更新に失敗しました');
+      // エラー時は元の値に戻す
+      const topic = myTopics.find(t => t.id === topicId);
+      if (topic) {
+        setCapacityInputs(prev => ({
+          ...prev,
+          [topicId]: topic.mentee_capacity.toString()
+        }));
+      }
+    }
+  };
+
+  // 弟子定員入力値の変更を処理
+  const handleCapacityInputChange = (topicId: string, value: string) => {
+    setCapacityInputs(prev => ({
+      ...prev,
+      [topicId]: value
+    }));
+  };
+
+  // 弟子定員入力完了時の処理
+  const handleCapacityInputSubmit = (topicId: string) => {
+    const value = capacityInputs[topicId];
+    const numValue = parseInt(value);
+    
+    if (isNaN(numValue) || numValue < 1 || numValue > 100) {
+      // 無効な値の場合は元の値に戻す
+      const topic = myTopics.find(t => t.id === topicId);
+      if (topic) {
+        setCapacityInputs(prev => ({
+          ...prev,
+          [topicId]: topic.mentee_capacity.toString()
+        }));
+      }
+      Alert.alert('エラー', '弟子定員は1〜100の範囲で入力してください');
+      return;
+    }
+    
+    handleUpdateCapacity(topicId, numValue);
   };
 
   // トピックから抜ける
@@ -233,6 +285,21 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                 <View style={styles.topicInfo}>
                   <Text style={styles.topicItemTitle}>{topic.title}</Text>
                   <Text style={styles.topicItemDescription}>{topic.description}</Text>
+                  <View style={styles.capacitySection}>
+                    <Text style={styles.capacityLabel}>弟子定員:</Text>
+                    <View style={styles.capacityInputContainer}>
+                      <TextInput
+                        style={styles.capacityInput}
+                        value={capacityInputs[topic.id] || topic.mentee_capacity.toString()}
+                        keyboardType="numeric"
+                        maxLength={3}
+                        onChangeText={(text) => handleCapacityInputChange(topic.id, text)}
+                        onBlur={() => handleCapacityInputSubmit(topic.id)}
+                        onSubmitEditing={() => handleCapacityInputSubmit(topic.id)}
+                      />
+                      <Text style={styles.capacityUnit}>人</Text>
+                    </View>
+                  </View>
                 </View>
                 <TouchableOpacity
                   style={styles.leaveButton}
@@ -480,5 +547,36 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  capacitySection: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  capacityLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginRight: 8,
+  },
+  capacityInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  capacityInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+    color: '#374151',
+    backgroundColor: '#ffffff',
+    minWidth: 40,
+    textAlign: 'center',
+  },
+  capacityUnit: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
   },
 });
