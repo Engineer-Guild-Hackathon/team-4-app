@@ -63,17 +63,11 @@ export default function RootLayout() {
             <Stack.Screen name="signup" options={{ headerShown: false }} />
             <Stack.Screen 
             name="password-reset-request" 
-            options={{ 
-              title: "パスワードリセット",
-              headerShown: true 
-            }} 
+            options={{ headerShown: false }} 
           />
           <Stack.Screen 
             name="password-reset-confirm" 
-            options={{ 
-              title: "新しいパスワード",
-              headerShown: true 
-            }} 
+            options={{ headerShown: false }} 
           />
             <Stack.Screen 
               name="create-post" 
