@@ -17,8 +17,8 @@ Notifications.setNotificationHandler({
 });
 
 const STUDY_DURATION = 5; // 22分
-const OUTPUT_DURATION = 20; // 3分
-const BREAK_DURATION = 20;  // 5分
+const OUTPUT_DURATION = 5; // 3分
+const BREAK_DURATION = 5;  // 5分
 
 const CIRCLE_RADIUS = 120;
 const CIRCLE_STROKE_WIDTH = 15;
@@ -186,7 +186,7 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
         )}
         
         {/* 閉じるボタン (学習中は非表示) */}
-        {phase === 'idle' && (
+        {(phase === 'idle' || phase === 'studying') && (
           <Pressable style={styles.closeButton} onPress={handleClose}>
             <Text style={styles.closeText}>×</Text>
           </Pressable>
