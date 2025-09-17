@@ -1,8 +1,9 @@
 import { useAuth } from '@/hooks/useAuth';
-import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
+import { theme } from '@/styles/theme';
 import React, { useEffect, useRef, useState } from 'react';
 // ★ 修正点 1: ActivityIndicator をインポート
+import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
@@ -18,12 +19,14 @@ interface Topic {
 }
 
 interface SimpleTopicViewProps {
+  topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void;
   onTopicChange?: (topicId: string | null) => void;
 }
 
 export function SimpleTopicView({
+  topics: propTopics,
   onUserPress,
   onMentorSelectionRequired,
   onTopicChange,
@@ -164,31 +167,32 @@ export function SimpleTopicView({
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
-  },
-  pageView: {
-    flex: 1,
+    backgroundColor: theme.colors.background.primary,
   },
   indicatorContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: 'transparent',
   },
   topicPageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.background.primary,
   },
   treeContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 100, // Space for TopicCarousel
   },
   // ★ 修正点 4: ローディングコンテナ用のスタイルを追加
   loadingContainer: {
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff', // 必要に応じて背景色を設定
   },
   loadingText: {
-    fontSize: 18,
-    color: '#6b7280',
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.text.tertiary,
   },
 });

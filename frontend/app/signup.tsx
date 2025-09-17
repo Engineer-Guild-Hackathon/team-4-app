@@ -3,7 +3,10 @@ import { apiClient } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
+import { theme } from '@/styles/theme';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function UserCreateScreen() {
   const router = useRouter();
@@ -29,8 +32,8 @@ export default function UserCreateScreen() {
       setEmail('');
       setPassword('');
       router.replace('/'); // index.tsxに遷移
-    } catch (e: any) {
-      setError(e.message || 'ユーザー作成に失敗しました');
+    } catch (e: unknown) {
+      setError((e as Error).message || 'ユーザー作成に失敗しました');
     }
   };
 
@@ -60,7 +63,9 @@ export default function UserCreateScreen() {
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {success ? <Text style={styles.success}>{success}</Text> : null}
-      <Button title="ユーザー作成" onPress={handleCreate} />
+      <TouchableOpacity style={styles.button} onPress={handleCreate}>
+        <Text style={styles.buttonText}>ユーザー作成</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -70,32 +75,53 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
+    padding: remToPx(theme.spacing[8]), // 2rem → 32px
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[8]),
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   input: {
     width: '100%',
     maxWidth: 320,
     height: 48,
-    borderColor: '#ccc',
+    borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginBottom: remToPx(theme.spacing[4]),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    backgroundColor: theme.colors.background.secondary,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   error: {
-    color: 'red',
-    marginBottom: 12,
+    color: theme.colors.semantic.error.main,
+    marginBottom: remToPx(theme.spacing[4]),
+    fontFamily: 'Klee One',
   },
   success: {
-    color: 'green',
-    marginBottom: 12,
+    color: theme.colors.semantic.success.main,
+    marginBottom: remToPx(theme.spacing[4]),
+    fontFamily: 'Klee One',
+  },
+  button: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+    marginTop: remToPx(theme.spacing[2]),
+  },
+  buttonText: {
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
 });

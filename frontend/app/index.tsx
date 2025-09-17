@@ -1,13 +1,24 @@
+import { Button } from '@/components/Shared/Button';
 import { useAuth } from '@/hooks/AuthProvider';
+import { theme } from '@/styles/theme';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
 import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -30,26 +41,10 @@ export default function HomeScreen() {
     }
   }, [params.profileUpdatedm, router, params.profileUpdated]);
 
-  useEffect(() => {
-    if (params.openModal === 'true') {
-      setSelectedTopicId(params.topicId as string);
-      setSelectedUserId(Number(params.selfUserId));
-      setModalVisible(true);
-    }
-  }, [params.openModal, params.topicId, params.selfUserId]);
-
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
     setModalVisible(true);
-  };
-
-  const handleTopicChange = (topicId: string | null) => {
-    setCurrentTopicId(topicId);
-  };
-
-  const handleMentorSelectionRequired = (topicId: string) => {
-    router.push(`/select-level-mentor?topicId=${topicId}`);
   };
 
   if (authLoading || !user) {
@@ -61,32 +56,31 @@ export default function HomeScreen() {
       {currentTopicId && (
         <>
           <Link href="/edit-profile" asChild>
-            <TouchableOpacity style={styles.editButton}>
+            <Button variant="icon" size="icon" style={styles.editButton}>
               <Feather name="user" size={24} color="white" />
-            </TouchableOpacity>
+            </Button>
           </Link>
-          <TouchableOpacity style={styles.headerCenterButton} onPress={() => setPomodoroVisible(true)}>
+          <TouchableOpacity
+            style={styles.headerCenterButton}
+            onPress={() => setPomodoroVisible(true)}
+          >
             <Text style={styles.pomodoroButtonText}>集中</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          <Button
+            variant="icon"
+            size="icon"
             onPress={() => setMentorDashboardVisible(true)}
             style={styles.mentorshipButton}
           >
             <Feather name="user-plus" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          </Button>
+          <Button variant="icon" size="icon" style={styles.logoutButton} onPress={logout}>
             <AntDesign name="logout" size={24} color="white" />
-          </TouchableOpacity>
+          </Button>
         </>
       )}
 
-      {/* ★ 修正点 4: SimpleTopicViewにkeyプロップを渡す */}
-      <SimpleTopicView
-        key={renderKey}
-        onUserPress={handleUserPress}
-        onMentorSelectionRequired={handleMentorSelectionRequired}
-        onTopicChange={handleTopicChange}
-      />
+      <SimpleTopicView key={renderKey} onUserPress={handleUserPress} />
 
       <UserDetailModal
         visible={modalVisible}
@@ -101,120 +95,93 @@ export default function HomeScreen() {
         onClose={() => setMentorDashboardVisible(false)}
         topicId={currentTopicId!}
       />
-      <PomodoroTimer 
+      <PomodoroTimer
         visible={pomodoroVisible}
         onClose={() => setPomodoroVisible(false)}
         topicId={currentTopicId!}
       />
     </View>
-      
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  // ... (以下、stylesの変更なし)
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  mentorDashboardButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  mentorDashboardButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    position: 'absolute',
-    top: 240,
-    right: 24,
-    height: 60,
-    width: 60,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    backgroundColor: theme.colors.background.primary,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
+  infoText: {
+    fontFamily: 'Klee One',
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.text.primary,
+  },
+  fabBase: {
+    // This style is now defined in the fabBaseStyle constant below
+    // and is no longer needed here.
+  },
+  logoutButton: {
+    // This will be defined using the fabBaseStyle constant
   },
   editButton: {
-    position: 'absolute',
-    top: 60,
-    right: 24,
-    height: 60,
-    width: 60,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
+    // This will be defined using the fabBaseStyle constant
   },
   mentorshipButton: {
+    // This will be defined using the fabBaseStyle constant
+  },
+  headerCenterButton: {
     position: 'absolute',
-    top: 150,
-    right: 24,
-    height: 60,
-    width: 60,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30,
+    top: 60,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
     zIndex: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
-  editButtonText: {
-    color: '#333',
+  pomodoroButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
     fontWeight: '600',
-    fontSize: 14,
   },
-    headerCenterButton: {
+});
+
+const fabBaseStyle: ViewStyle = {
+  position: 'absolute',
+  right: remToPx(theme.spacing[20]), // xxl
+  zIndex: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 6,
+  elevation: 5,
+  borderWidth: 0, // Override default border from Button
+};
+
+Object.assign(styles, {
+  logoutButton: {
+    ...fabBaseStyle,
+    top: remToPx(theme.spacing[24]) * 3, // Approximating "7xl" × 3
+  },
+  editButton: {
+    ...fabBaseStyle,
+    top: remToPx(theme.spacing[24]), // Approximating "6xl"
+  },
+  mentorshipButton: {
+    ...fabBaseStyle,
+    top: remToPx(theme.spacing[24]) + remToPx(theme.spacing[24]), // "7xl" + "6xl"
+  },
+  headerCenterButton: {
     position: 'absolute',
     top: 60,
     left: '50%',

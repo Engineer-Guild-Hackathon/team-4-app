@@ -18,7 +18,7 @@ Notifications.setNotificationHandler({
 
 const STUDY_DURATION = 5; // 22分
 const OUTPUT_DURATION = 20; // 3分
-const BREAK_DURATION = 20;  // 5分
+const BREAK_DURATION = 20; // 5分
 
 const CIRCLE_RADIUS = 120;
 const CIRCLE_STROKE_WIDTH = 15;
@@ -40,7 +40,13 @@ const formatTime = (seconds: number) => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
-const BreakTimerOverlay = ({ secondsLeft, onClose }: { secondsLeft: number; onClose: () => void; }) => (
+const BreakTimerOverlay = ({
+  secondsLeft,
+  onClose,
+}: {
+  secondsLeft: number;
+  onClose: () => void;
+}) => (
   <Pressable style={styles.breakOverlay} onPress={onClose}>
     <Text style={styles.breakText}>休憩中: {formatTime(secondsLeft)}</Text>
   </Pressable>
@@ -61,15 +67,24 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
       }, 1000);
     } else if (isActive && secondsLeft === 0) {
       if (phase === 'studying') {
-        Notifications.scheduleNotificationAsync({ content: { title: "集中お疲れ様でした！", body: '3分間のアウトプットを始めましょう。' }, trigger: null });
+        Notifications.scheduleNotificationAsync({
+          content: { title: '集中お疲れ様でした！', body: '3分間のアウトプットを始めましょう。' },
+          trigger: null,
+        });
         setPhase('output');
         setSecondsLeft(OUTPUT_DURATION);
       } else if (phase === 'output') {
-        Notifications.scheduleNotificationAsync({ content: { title: "アウトプット完了！", body: '5分間の休憩です。' }, trigger: null });
+        Notifications.scheduleNotificationAsync({
+          content: { title: 'アウトプット完了！', body: '5分間の休憩です。' },
+          trigger: null,
+        });
         setPhase('break');
         setSecondsLeft(BREAK_DURATION);
       } else if (phase === 'break') {
-        Notifications.scheduleNotificationAsync({ content: { title: "休憩終了", body: 'よく頑張りました！' }, trigger: null });
+        Notifications.scheduleNotificationAsync({
+          content: { title: '休憩終了', body: 'よく頑張りました！' },
+          trigger: null,
+        });
         setIsActive(false);
         setPhase('idle');
         setSecondsLeft(STUDY_DURATION);
@@ -109,18 +124,19 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
   }
 
   const getPhaseText = () => {
-    switch(phase) {
-      case 'studying': return '学習時間';
-      case 'output': return 'アウトプット';
-      default: return '準備中';
+    switch (phase) {
+      case 'studying':
+        return '学習時間';
+      case 'output':
+        return 'アウトプット';
+      default:
+        return '準備中';
     }
   };
-  
-  const totalDuration = 
-    phase === 'studying' ? STUDY_DURATION :
-    phase === 'output' ? OUTPUT_DURATION :
-    STUDY_DURATION;
-  
+
+  const totalDuration =
+    phase === 'studying' ? STUDY_DURATION : phase === 'output' ? OUTPUT_DURATION : STUDY_DURATION;
+
   const progress = secondsLeft / totalDuration;
   const strokeDashoffset = CIRCLE_CIRCUMFERENCE * (1 - progress);
 
@@ -137,13 +153,15 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
             <View style={styles.timerUiContainer}>
               <Svg height={CIRCLE_RADIUS * 2} width={CIRCLE_RADIUS * 2}>
                 <Circle
-                  cx={CIRCLE_RADIUS} cy={CIRCLE_RADIUS}
+                  cx={CIRCLE_RADIUS}
+                  cy={CIRCLE_RADIUS}
                   r={CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2}
                   stroke="rgba(0,0,0,0.1)"
                   strokeWidth={CIRCLE_STROKE_WIDTH}
                 />
                 <Circle
-                  cx={CIRCLE_RADIUS} cy={CIRCLE_RADIUS}
+                  cx={CIRCLE_RADIUS}
+                  cy={CIRCLE_RADIUS}
                   r={CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2}
                   stroke="#007AFF"
                   strokeWidth={CIRCLE_STROKE_WIDTH}
@@ -180,11 +198,13 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
             {topicId ? (
               <CreatePostForm topicId={topicId} />
             ) : (
-              <Text style={{textAlign: 'center', marginTop: 20}}>投稿先のトピックが選択されていません。</Text>
+              <Text style={{ textAlign: 'center', marginTop: 20 }}>
+                投稿先のトピックが選択されていません。
+              </Text>
             )}
           </View>
         )}
-        
+
         {/* 閉じるボタン (学習中は非表示) */}
         {phase === 'idle' && (
           <Pressable style={styles.closeButton} onPress={handleClose}>
@@ -293,4 +313,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
