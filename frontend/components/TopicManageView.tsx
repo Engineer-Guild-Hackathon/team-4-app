@@ -1,20 +1,21 @@
 import { useAuth } from '@/hooks/useAuth';
-import { createTopic, getAllTopics, getMyTopics, leaveTopic, joinTopic, getTopicLevelInfo, updateMenteeCapacity } from '@/services/api/topic';
-import { getMe } from '@/services/api/user';
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
+import {
+  createTopic,
+  getAllTopics,
+  getMyTopics,
+  getTopicLevelInfo,
+  joinTopic,
+  leaveTopic,
+  updateMenteeCapacity,
+} from '@/services/api/topic';
+import { getMe } from '@/services/api/user';
+import { theme } from '@/styles/theme';
+import { MyTopicOut, TopicOut } from '@/types/topic';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { MyTopicOut, TopicOut } from '@/types/topic';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button } from './Shared/Button';
 
 interface TopicManageViewProps {
   onBack: () => void;
@@ -27,7 +28,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const [availableTopics, setAvailableTopics] = useState<TopicOut[]>([]);
   const [allTopics, setAllTopics] = useState<TopicOut[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [capacityInputs, setCapacityInputs] = useState<{[topicId: string]: string}>({});
+  const [capacityInputs, setCapacityInputs] = useState<{ [topicId: string]: string }>({});
   const { accessToken } = useAuth();
   const router = useRouter();
 
@@ -37,7 +38,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       const response = await getMyTopics();
       setMyTopics(response.topics || []);
       // 弟子定員の入力値を初期化
-      const initialCapacityInputs: {[topicId: string]: string} = {};
+      const initialCapacityInputs: { [topicId: string]: string } = {};
       (response.topics || []).forEach(topic => {
         initialCapacityInputs[topic.id] = topic.mentee_capacity.toString();
       });
@@ -48,14 +49,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   }, []);
 
   // 全トピック一覧を取得
-  const fetchAllTopics = async () => {
+  const fetchAllTopics = useCallback(async () => {
     try {
       const response = await getAllTopics();
       setAllTopics(response.topics || []);
     } catch {
       setAllTopics([]);
     }
-  };
+  }, []);
 
   // 初期データ取得
   useEffect(() => {
@@ -63,7 +64,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       fetchMyTopics();
       fetchAllTopics();
     }
-  }, [accessToken]);
+  }, [accessToken, fetchMyTopics, fetchAllTopics]);
 
   // 参加可能なトピックを更新するuseEffect
   useEffect(() => {
@@ -84,8 +85,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       await fetchMyTopics();
       await fetchAllTopics();
       Alert.alert('成功', 'トピックを作成しました');
-    } catch (error: any) {
-      const errorMessage = error?.message || 'トピックの作成に失敗しました';
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { message?: string })?.message || 'トピックの作成に失敗しました';
       Alert.alert('エラー', errorMessage);
     }
   };
@@ -94,25 +96,25 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleJoinTopic = async (topicId: string) => {
     try {
       // トピックのレベル情報を取得
-      const levelInfo = await getTopicLevelInfo(topicId) as {
+      const levelInfo = (await getTopicLevelInfo(topicId)) as {
         max_level: number;
         min_level: number;
         user_count: number;
       };
-      
+
       // デフォルトレベルを設定（最低レベル-1、誰もいない場合は1）
       const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
-      
+
       // トピックに参加
       await joinTopic(topicId, defaultLevel);
       await fetchMyTopics();
       await fetchAllTopics();
-      
+
       // 師匠選択が必要かチェック
-      const selectionResponse = await checkMentorSelectionRequired(topicId) as {
+      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
         required: boolean;
       };
-      
+
       if (selectionResponse.required) {
         // 師匠選択が必要な場合
         Alert.alert('参加完了', '師匠選択が必要です', [
@@ -158,7 +160,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       if (topic) {
         setCapacityInputs(prev => ({
           ...prev,
-          [topicId]: topic.mentee_capacity.toString()
+          [topicId]: topic.mentee_capacity.toString(),
         }));
       }
     }
@@ -168,7 +170,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleCapacityInputChange = (topicId: string, value: string) => {
     setCapacityInputs(prev => ({
       ...prev,
-      [topicId]: value
+      [topicId]: value,
     }));
   };
 
@@ -176,20 +178,20 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   const handleCapacityInputSubmit = (topicId: string) => {
     const value = capacityInputs[topicId];
     const numValue = parseInt(value);
-    
+
     if (isNaN(numValue) || numValue < 1 || numValue > 100) {
       // 無効な値の場合は元の値に戻す
       const topic = myTopics.find(t => t.id === topicId);
       if (topic) {
         setCapacityInputs(prev => ({
           ...prev,
-          [topicId]: topic.mentee_capacity.toString()
+          [topicId]: topic.mentee_capacity.toString(),
         }));
       }
       Alert.alert('エラー', '弟子定員は1〜100の範囲で入力してください');
       return;
     }
-    
+
     handleUpdateCapacity(topicId, numValue);
   };
 
@@ -207,15 +209,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
             await leaveTopic(topicId, userResponse.id);
             await fetchMyTopics();
             await fetchAllTopics();
-            Alert.alert('成功', 'トピックから抜けました', [
-              {
-                text: 'OK',
-                onPress: () => {
-                  // 画面全体をリロードも兼ねてメインへ遷移
-                  router.replace('/');
-                },
-              },
-            ]);
+            Alert.alert('成功', 'トピックから抜けました');
           } catch {
             Alert.alert('エラー', 'トピックからの退出に失敗しました');
           }
@@ -229,18 +223,18 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       <ScrollView style={styles.manageContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.manageTitle}>トピック管理</Text>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backButtonText}>戻る</Text>
-          </TouchableOpacity>
+          <Button variant="secondary" size="sm" onPress={onBack}>
+            戻る
+          </Button>
         </View>
 
         {/* 新規トピック作成 */}
 
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
-          <TouchableOpacity style={styles.createButton} onPress={openCreateModal}>
-            <Text style={styles.createButtonText}>新規トピック作成</Text>
-          </TouchableOpacity>
+          <Button variant="primary" onPress={openCreateModal}>
+            新規トピック作成
+          </Button>
         </View>
 
         {/* トピック参加 */}
@@ -260,12 +254,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                   <Text style={styles.availableTopicTitle}>{topic.title}</Text>
                   <Text style={styles.availableTopicDescription}>{topic.description}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.joinTopicButton}
-                  onPress={() => handleJoinTopic(topic.id)}
-                >
-                  <Text style={styles.joinTopicButtonText}>参加</Text>
-                </TouchableOpacity>
+                <Button variant="primary" size="sm" onPress={() => handleJoinTopic(topic.id)}>
+                  参加
+                </Button>
               </View>
             ))
           )}
@@ -293,7 +284,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                         value={capacityInputs[topic.id] || topic.mentee_capacity.toString()}
                         keyboardType="numeric"
                         maxLength={3}
-                        onChangeText={(text) => handleCapacityInputChange(topic.id, text)}
+                        onChangeText={text => handleCapacityInputChange(topic.id, text)}
                         onBlur={() => handleCapacityInputSubmit(topic.id)}
                         onSubmitEditing={() => handleCapacityInputSubmit(topic.id)}
                       />
@@ -301,12 +292,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                     </View>
                   </View>
                 </View>
-                <TouchableOpacity
-                  style={styles.leaveButton}
-                  onPress={() => handleLeaveTopic(topic.id)}
-                >
-                  <Text style={styles.leaveButtonText}>抜ける</Text>
-                </TouchableOpacity>
+                <Button variant="secondary" size="sm" onPress={() => handleLeaveTopic(topic.id)}>
+                  抜ける
+                </Button>
               </View>
             ))
           )}
@@ -324,12 +312,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>新規トピック作成</Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowCreateModal(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>閉じる</Text>
-            </TouchableOpacity>
+            <Button variant="secondary" size="sm" onPress={() => setShowCreateModal(false)}>
+              閉じる
+            </Button>
           </View>
 
           <View style={styles.modalContent}>
@@ -347,9 +332,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               multiline
               numberOfLines={3}
             />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateTopic}>
-              <Text style={styles.createButtonText}>作成</Text>
-            </TouchableOpacity>
+            <Button variant="primary" onPress={handleCreateTopic}>
+              作成
+            </Button>
           </View>
         </View>
       </Modal>
@@ -357,196 +342,164 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background.primary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   manageContainer: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingHorizontal: remToPx(theme.spacing[8]), // xl
+    paddingTop: remToPx(theme.spacing[32]), // 6xl
+    paddingBottom: remToPx(theme.spacing[8]),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: remToPx(theme.spacing[12]), // 3xl
   },
   manageTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  backButton: {
-    backgroundColor: '#6b7280',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  backButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   createSection: {
-    marginBottom: 30,
+    marginBottom: remToPx(theme.spacing[12]),
   },
   listSection: {
-    marginBottom: 30,
+    marginBottom: remToPx(theme.spacing[12]),
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#374151',
-    marginBottom: 15,
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.secondary,
+    marginBottom: remToPx(theme.spacing[6]) - 1,
+    fontFamily: 'Klee One',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 10,
-    backgroundColor: '#ffffff',
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: remToPx(theme.spacing[4]), // md
+    paddingVertical: remToPx(theme.spacing[4]) - 2,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: remToPx(theme.spacing[4]) - 2,
+    backgroundColor: theme.colors.background.primary,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
   },
-  createButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  createButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   topicItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: remToPx(theme.spacing[6]) - 1,
+    marginBottom: remToPx(theme.spacing[4]) - 2,
   },
   topicInfo: {
     flex: 1,
   },
   topicItemTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]), // xs
+    fontFamily: 'Klee One',
   },
   topicItemDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  leaveButton: {
-    backgroundColor: '#f59e0b',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  leaveButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   emptyTopicsContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 20,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: remToPx(theme.spacing[8]),
     alignItems: 'center',
   },
   emptyTopicsText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6b7280',
-    marginBottom: 8,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.tertiary,
+    marginBottom: remToPx(theme.spacing[3]),
     textAlign: 'center',
+    fontFamily: 'Klee One',
   },
   emptyTopicsSubText: {
-    fontSize: 14,
-    color: '#9ca3af',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.placeholder,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: remToPx(theme.typography.lineHeight.tight),
+    fontFamily: 'Klee One',
   },
   joinSection: {
-    marginBottom: 30,
+    marginBottom: remToPx(theme.spacing[12]),
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background.primary,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: remToPx(theme.spacing[6]),
+    paddingTop: remToPx(theme.spacing[6]),
+    paddingBottom: remToPx(theme.spacing[8]),
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: theme.colors.background.tertiary,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  modalCloseButton: {
-    backgroundColor: '#6b7280',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  modalCloseButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: remToPx(theme.spacing[8]),
+    paddingTop: remToPx(theme.spacing[8]),
   },
   availableTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: remToPx(theme.spacing[6]) - 1,
+    marginBottom: remToPx(theme.spacing[4]) - 2,
   },
   availableTopicInfo: {
     flex: 1,
   },
   availableTopicTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]),
+    fontFamily: 'Klee One',
   },
   availableTopicDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  joinTopicButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  joinTopicButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.tertiary,
+    fontFamily: 'Klee One',
   },
   capacitySection: {
     marginTop: 8,

@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { theme } from '@/styles/theme';
 
 interface VerticalLevelSelectorProps {
   min: number;
@@ -26,12 +27,15 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
   const gestureStartPosition = useRef(0);
   const lastNotifiedLevel = useRef(value);
 
-  const valueToY = (level: number) => {
-    const range = max - min;
-    if (range === 0) return 0;
-    const percentage = (max - level) / range;
-    return percentage * (BAR_HEIGHT - KNOB_HEIGHT);
-  };
+  const valueToY = useCallback(
+    (level: number) => {
+      const range = max - min;
+      if (range === 0) return 0;
+      const percentage = (max - level) / range;
+      return percentage * (BAR_HEIGHT - KNOB_HEIGHT);
+    },
+    [max, min]
+  );
 
   const yToValue = (y: number) => {
     const percentage = y / (BAR_HEIGHT - KNOB_HEIGHT);
@@ -48,14 +52,14 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
       friction: 20,
       useNativeDriver: false,
     }).start();
-  }, [value, min, max]);
+  }, [value, min, max, panY, valueToY]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        gestureStartPosition.current = (panY as any)._value;
+        gestureStartPosition.current = (panY as Animated.Value & { _value: number })._value;
       },
       onPanResponderMove: (_, gestureState) => {
         const newY = gestureStartPosition.current + gestureState.dy;
@@ -81,7 +85,7 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
 
       <Animated.View style={[styles.knobContainer, { top: panY }]} {...panResponder.panHandlers}>
         <LinearGradient
-          colors={['#000000ff', '#000000ff']} // グラデーションを少し変更
+          colors={[theme.colors.primary[300], theme.colors.primary[500]]}
           style={styles.knobGradient}
         >
           <Text style={styles.levelText}></Text>
@@ -91,14 +95,13 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
   );
 };
 
-// ★ 2. スタイルシートを修正
 const styles = StyleSheet.create({
   container: {
-    width: KNOB_WIDTH, // コンテナの幅を、より広い「つまみ」の幅に合わせる
+    width: KNOB_WIDTH,
     height: BAR_HEIGHT,
     justifyContent: 'center',
-    alignItems: 'center', // これにより、細いバーがコンテナの中央に配置される
-    shadowColor: '#000',
+    alignItems: 'center',
+    shadowColor: theme.colors.shadow.strong,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -108,24 +111,24 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   barBackground: {
-    width: BAR_WIDTH, // 棒はコンテナより細い
+    width: BAR_WIDTH,
     height: BAR_HEIGHT,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: theme.colors.neutral[200],
     borderRadius: BAR_WIDTH / 2,
   },
   barTrack: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#d1d5db',
+    backgroundColor: theme.colors.neutral[300],
     margin: 3,
     borderRadius: (BAR_WIDTH - 6) / 2,
   },
   knobContainer: {
     position: 'absolute',
-    left: 0, // コンテナの左端に合わせる（コンテナ自体が中央揃えの基準）
+    left: 0,
     width: KNOB_WIDTH,
     height: KNOB_HEIGHT,
     borderRadius: KNOB_HEIGHT / 2,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow.strong,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -141,8 +144,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   levelText: {
-    color: '#fff',
+    color: theme.colors.text.inverse, // replaces #fff
     fontWeight: 'bold',
-    fontSize: 18, // 少し小さく調整
+    fontSize: 18,
   },
 });

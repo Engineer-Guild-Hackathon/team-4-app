@@ -1,27 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Button,
-  Image,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-} from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/styles/theme';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
-  const { user, accessToken, refreshUser } = useAuth();
+  const { user, accessToken } = useAuth();
   const router = useRouter();
 
-  // 編集対象のstateを初期化
   const [bio, setBio] = useState(user?.bio || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(user?.avatar || null);
   const [newAvatarAsset, setNewAvatarAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -34,14 +35,16 @@ export default function EditProfileScreen() {
     }
   }, [user]);
 
-  // 画像ピッカーで新しいアバターを選択する関数
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('許可が必要です', 'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。');
+      Alert.alert(
+        '許可が必要です',
+        'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。'
+      );
       return;
     }
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
@@ -49,36 +52,32 @@ export default function EditProfileScreen() {
     });
     if (!result.canceled) {
       const asset = result.assets[0];
-      setAvatarUri(asset.uri); // プレビュー用のURIを更新
-      setNewAvatarAsset(asset); // 送信用のファイル情報を保存
+      setAvatarUri(asset.uri);
+      setNewAvatarAsset(asset);
     }
   };
 
-  // 変更を保存する関数
   const handleSave = async () => {
     if (!user || !accessToken) return;
     setIsSubmitting(true);
 
     try {
-      // 投稿の時と同じように、FormDataを作成
       const formData = new FormData();
       formData.append('bio', bio);
 
-      // 新しいアバターが選択されている場合のみ、ファイルを追加
       if (newAvatarAsset) {
-        const uri = Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
+        const uri =
+          Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
         const filename = newAvatarAsset.fileName || `avatar_${user.id}.jpg`;
         const mimeType = newAvatarAsset.mimeType || 'image/jpeg';
-        formData.append('avatar_file', { uri, name: filename, type: mimeType } as any);
+        formData.append('avatar_file', { uri, name: filename, type: mimeType } as unknown as Blob);
       }
-      
+
       const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-      // プロフィール更新APIにPOSTリクエストを送信
       const response = await fetch(`${API_BASE_URL}/api/users/me/profile/`, {
-        method: 'POST', // 投稿の時と同じPOSTメソッドを使用
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          // 'Content-Type'はfetchがFormDataを使う際に自動で設定するため、指定しない
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });
@@ -89,24 +88,20 @@ export default function EditProfileScreen() {
       }
 
       Alert.alert('成功', 'プロフィールを更新しました。');
-      
-      // ユーザー情報を再取得して、アプリ全体に変更を反映させる
-      if (refreshUser) {
-        await refreshUser();
-      }
-      
-      // 前の画面に戻る
-      router.back();
 
+      // 前の画面に戻る
+      router.push('/?profileUpdated=true');
     } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
-      Alert.alert('エラー', error.detail || 'プロフィールの更新に失敗しました。');
+      Alert.alert(
+        'エラー',
+        (error as { detail?: string })?.detail || 'プロフィールの更新に失敗しました。'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // user情報が読み込まれるまでローディング表示
   if (!user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
@@ -115,19 +110,20 @@ export default function EditProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
         <Text style={styles.title}>プロフィール編集</Text>
-        
+
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-          <Image 
-            source={
-              avatarUri
-                ? { uri: avatarUri }
-                : { uri: `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}` }
-            }
+          <Image
+            source={{
+              uri: avatarUri
+                ? avatarUri
+                : `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
+              cacheKey: avatarUri ? avatarUri.split('?')[0] : undefined,
+            }}
             style={styles.avatar}
           />
           <Text style={styles.avatarEditText}>画像を変更</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.label}>自己紹介</Text>
         <TextInput
           style={styles.bioInput}
@@ -136,14 +132,12 @@ export default function EditProfileScreen() {
           placeholder="自己紹介を入力..."
           multiline
         />
-        
+
         <View style={styles.spacer} />
-        
-        <Button 
-          title={isSubmitting ? "保存中..." : "保存する"}
-          onPress={handleSave} 
-          disabled={isSubmitting}
-        />
+
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSubmitting}>
+          <Text style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</Text>
+        </TouchableOpacity>
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
       </View>
     </ScrollView>
@@ -151,55 +145,74 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    innerContainer: {
-        padding: 20,
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    avatarContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    avatar: {
-        width: 128,
-        height: 128,
-        borderRadius: 64,
-        backgroundColor: '#f0f0f0',
-    },
-    avatarEditText: {
-        marginTop: 8,
-        color: '#007AFF',
-        fontWeight: '600',
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 8,
-    },
-    bioInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        height: 100,
-        textAlignVertical: 'top',
-        fontSize: 16,
-    },
-    spacer: {
-        flex: 1,
-        minHeight: 40,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background.primary,
+  },
+  innerContainer: {
+    padding: remToPx(theme.spacing[8]), // xl
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
+  title: {
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: remToPx(theme.spacing[8]), // xl
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: remToPx(theme.spacing[12]), // 3xl
+  },
+  avatar: {
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: theme.colors.background.secondary,
+  },
+  avatarEditText: {
+    marginTop: remToPx(theme.spacing[2]), // sm
+    color: theme.colors.primary[300],
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
+  },
+  label: {
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: remToPx(theme.spacing[2]), // sm
+    color: theme.colors.text.secondary,
+    fontFamily: 'Klee One',
+  },
+  bioInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: remToPx(theme.borderRadius.md),
+    padding: remToPx(theme.spacing[4]), // md
+    height: 100,
+    textAlignVertical: 'top',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
+  },
+  spacer: {
+    flex: 1,
+    minHeight: remToPx(theme.spacing[16]), // 4xl
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[4]), // md
+    borderRadius: remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
+  },
 });
-

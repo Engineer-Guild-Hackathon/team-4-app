@@ -2,9 +2,11 @@ import { getThreads, sendMessageToThread } from '@/services/api/thread';
 import { ThreadOut } from '@/types/thread';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useState } from 'react';
+import { theme } from '@/styles/theme';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
+import { Button } from '../Shared/Button';
 
 type ThreadViewProps = {
   topicId: string;
@@ -27,7 +29,7 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 
   useEffect(() => {
     reloadThreads();
-  }, [topicId, userId, reloadThreads]);
+  }, [reloadThreads]);
 
   // 詳細ページを表示する場合
   if (selectedThread) {
@@ -47,13 +49,17 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={styles.pageContainer}>
-        {error ? (
+      {error ? (
+        <View style={styles.centered}>
           <Text style={styles.errorText}>{error}</Text>
-        ) : threads.length === 0 ? (
+        </View>
+      ) : threads.length === 0 ? (
+        <View style={styles.centered}>
           <Text style={styles.emptyText}>まだスレッドがありません</Text>
-        ) : (
-          threads.map(thread => (
+        </View>
+      ) : (
+        <ScrollView style={styles.pageContainer}>
+          {threads.map(thread => (
             <TouchableOpacity
               key={thread.id}
               style={styles.threadCard}
@@ -69,16 +75,17 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
               <Text style={styles.threadDate}>{new Date(thread.created_at).toLocaleString()}</Text>
               <Text style={styles.threadMsgCount}>メッセージ数: {thread.messages.length}</Text>
             </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
-      <TouchableOpacity
+          ))}
+        </ScrollView>
+      )}
+      <Button
+        variant="icon"
         style={styles.fab}
-        activeOpacity={0.7}
+        textStyle={styles.fabText}
         onPress={() => setShowCreateModal(true)}
       >
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
+        ＋
+      </Button>
 
       <ThreadCreateModal
         visible={showCreateModal}
@@ -91,129 +98,137 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   pageContainer: {
-    padding: 20,
-    backgroundColor: '#f3f4f6',
+    padding: remToPx(theme.spacing[8]), // xl
+    backgroundColor: theme.colors.background.primary,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1f2937',
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[6]), // lg
+    color: theme.colors.text.primary,
   },
+  // --- Thread List ---
   threadCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[6]), // lg
+    marginBottom: remToPx(theme.spacing[6]),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   threadTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.link,
+    fontFamily: theme.typography.fontFamily.primary,
+    marginBottom: remToPx(theme.spacing[2]), // xs
   },
   threadDate: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.tertiary,
+    fontFamily: theme.typography.fontFamily.primary,
+    marginBottom: remToPx(theme.spacing[2]),
   },
   threadMsgCount: {
-    fontSize: 13,
-    color: '#10b981',
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize.sm) + 1,
+    color: theme.colors.semantic.success.main,
+    fontWeight: theme.typography.fontWeight.bold,
   },
   emptyText: {
-    color: '#6b7280',
+    color: theme.colors.text.tertiary,
     textAlign: 'center',
-    marginTop: 40,
-    fontSize: 16,
+    marginTop: remToPx(theme.spacing[16]), // 4xl
+    fontFamily: theme.typography.fontFamily.primary,
+    fontSize: remToPx(theme.typography.fontSize.base),
   },
   errorText: {
-    color: '#ef4444',
+    color: theme.colors.semantic.error.main,
     textAlign: 'center',
-    marginTop: 40,
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginTop: remToPx(theme.spacing[16]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontFamily: theme.typography.fontFamily.primary,
+    fontWeight: theme.typography.fontWeight.bold,
   },
   detailContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: remToPx(theme.spacing[8]),
+    fontFamily: theme.typography.fontFamily.primary,
+    backgroundColor: theme.colors.background.primary,
   },
   backButton: {
-    marginBottom: 12,
+    marginBottom: remToPx(theme.spacing[4]), // md
     alignSelf: 'flex-start',
-    backgroundColor: '#e5e7eb',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: remToPx(theme.borderRadius.md),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    paddingVertical: remToPx(theme.spacing[3]) - 2,
   },
   backButtonText: {
-    color: '#2563eb',
-    fontWeight: 'bold',
-    fontSize: 15,
+    color: theme.colors.text.link,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontFamily: theme.typography.fontFamily.primary,
+    fontSize: remToPx(theme.typography.fontSize.base) + 1,
   },
   detailTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#1f2937',
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[4]) - 2,
+    fontFamily: theme.typography.fontFamily.primary,
+    color: theme.colors.text.primary,
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginBottom: remToPx(theme.spacing[2]),
+    fontFamily: theme.typography.fontFamily.primary,
   },
   messagesContainer: {
-    marginTop: 16,
+    marginTop: remToPx(theme.spacing[6]),
   },
   messageCard: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: remToPx(theme.borderRadius.md),
+    padding: remToPx(theme.spacing[4]) - 2,
+    marginBottom: remToPx(theme.spacing[4]) - 2,
   },
   messageAuthor: {
-    fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 2,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.link,
+    fontFamily: theme.typography.fontFamily.primary,
+    marginBottom: remToPx(theme.spacing[1]), // xxs
   },
   messageContent: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 2,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.primary,
+    marginBottom: remToPx(theme.spacing[1]),
   },
   messageDate: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.tertiary,
+    fontFamily: theme.typography.fontFamily.primary,
   },
   fab: {
     position: 'absolute',
-    right: 24,
-    bottom: 32,
+    right: remToPx(theme.spacing[8]),
+    bottom: remToPx(theme.spacing[8]),
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#111',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
   },
   fabText: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 36,
+    fontSize: remToPx(theme.typography.fontSize['3xl']),
+    lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },
 });

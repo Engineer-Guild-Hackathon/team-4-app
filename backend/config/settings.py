@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 import dotenv
 """
@@ -25,7 +26,7 @@ dotenv.load_dotenv(os.path.join(BASE_DIR, '.env'))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-lkqgn#)pnw#&9%a8i)cj72+meb@$50^!=5phltp8e&2j2n7t5w'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -122,6 +123,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+NINJA_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+}
 
 
 # Internationalization

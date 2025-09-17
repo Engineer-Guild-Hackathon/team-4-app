@@ -1,12 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import { theme } from '@/styles/theme';
+import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
   Animated,
-  TouchableOpacity,
+  Dimensions,
   FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface Topic {
@@ -26,6 +27,7 @@ const ITEM_HEIGHT = 50;
 const ITEM_SPACING = 8;
 const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
+type DisplayTopic = { id: string; title?: string };
 
 export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   topics,
@@ -35,9 +37,9 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList>(null);
 
-  const displayData = [
+  const displayData: DisplayTopic[] = [
     { id: 'left-spacer' },
-    { id: 'manage', title: '+' },
+    { id: 'manage', title: '＋' },
     ...topics,
     { id: 'right-spacer' },
   ];
@@ -53,7 +55,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     }
   }, [currentIndex]);
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
+  const renderItem = ({ item, index }: { item: DisplayTopic; index: number }) => {
     if (!item.title) {
       return <View style={{ width: SPACER_ITEM_WIDTH }} />;
     }
@@ -128,49 +130,47 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   );
 };
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 10,
-    paddingTop: 10,
+    paddingVertical: remToPx(theme.spacing[4]), // md
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT + 30,
-    marginHorizontal: ITEM_SPACING / 2,
+    marginHorizontal: remToPx(theme.spacing[2]), // xs
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderRadius: 25,
-    backgroundColor: '#1f2937',
+    borderRadius: remToPx(theme.borderRadius.full),
+    backgroundColor: theme.colors.primary[300],
+    borderColor: theme.colors.primary[300],
     borderWidth: 2,
-    borderColor: '#374151',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowRadius: 10,
+    elevation: 6,
   },
   topicIconActive: {
-    backgroundColor: '#374151',
-    borderColor: '#374151',
-    shadowColor: '#374151',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
-    elevation: 5,
+    backgroundColor: theme.colors.primary[500],
+    borderColor: theme.colors.primary[500],
+    shadowColor: theme.colors.text.secondary,
   },
   topicIconText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9ca3af',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.primary,
   },
   topicIconTextActive: {
-    color: '#ffffff',
+    color: theme.colors.white,
   },
 });

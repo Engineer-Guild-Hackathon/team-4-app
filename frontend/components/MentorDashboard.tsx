@@ -1,13 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  Modal,
-} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
+import { theme } from '@/styles/theme';
+import { Button } from './Shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getReceivedMentorRequests,
@@ -55,26 +49,26 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [activeTab, setActiveTab] = useState<'requests' | 'mentees'>('requests');
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
-      const data = await getReceivedMentorRequests() as MentorRequest[];
+      const data = (await getReceivedMentorRequests()) as MentorRequest[];
       setRequests(data);
     } catch (error) {
       console.error('リクエスト取得エラー:', error);
       Alert.alert('エラー', 'リクエストの取得に失敗しました');
     }
-  };
+  }, []);
 
-  const fetchMentees = async () => {
+  const fetchMentees = useCallback(async () => {
     if (!topicId) return;
     try {
-      const data = await getMentees(topicId) as Mentee[];
+      const data = (await getMentees(topicId)) as Mentee[];
       setMentees(data);
     } catch (error) {
       console.error('弟子一覧取得エラー:', error);
       Alert.alert('エラー', '弟子一覧の取得に失敗しました');
     }
-  };
+  }, [topicId]);
 
   useEffect(() => {
     if (accessToken && visible) {
@@ -83,14 +77,11 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         fetchMentees();
       }
     }
-  }, [accessToken, visible, topicId]);
+  }, [accessToken, visible, topicId, fetchRequests, fetchMentees]);
 
-
-  const handleApprove = async (requestId: number, fromUserName: string) => {
-    Alert.alert(
-      '承認確認',
-      `${fromUserName}さんの師匠選択リクエストを承認しますか？`,
-      [
+  const handleApprove = useCallback(
+    (requestId: number, fromUserName: string) => {
+      Alert.alert('承認確認', `${fromUserName}さんの師匠選択リクエストを承認しますか？`, [
         { text: 'キャンセル', style: 'cancel' },
         {
           text: '承認',
@@ -105,15 +96,14 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             }
           },
         },
-      ]
-    );
-  };
+      ]);
+    },
+    [fetchRequests]
+  );
 
-  const handleReject = async (requestId: number, fromUserName: string) => {
-    Alert.alert(
-      '拒否確認',
-      `${fromUserName}さんの師匠選択リクエストを拒否しますか？`,
-      [
+  const handleReject = useCallback(
+    (requestId: number, fromUserName: string) => {
+      Alert.alert('拒否確認', `${fromUserName}さんの師匠選択リクエストを拒否しますか？`, [
         { text: 'キャンセル', style: 'cancel' },
         {
           text: '拒否',
@@ -129,61 +119,67 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             }
           },
         },
-      ]
-    );
-  };
+      ]);
+    },
+    [fetchRequests]
+  );
 
-  const handleExpelMentee = async (menteeId: number, menteeName: string) => {
-    if (!topicId) return;
-    
-    Alert.alert(
-      '破門確認',
-      `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '破門',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await expelMentee(menteeId, topicId);
-              Alert.alert('破門完了', '弟子を破門しました');
-              fetchMentees(); // リストを更新
-            } catch (error) {
-              console.error('破門エラー:', error);
-              Alert.alert('エラー', '破門に失敗しました');
-            }
+  const handleExpelMentee = useCallback(
+    (menteeId: number, menteeName: string) => {
+      if (!topicId) return;
+
+      Alert.alert(
+        '破門確認',
+        `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '破門',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await expelMentee(menteeId, topicId);
+                Alert.alert('破門完了', '弟子を破門しました');
+                fetchMentees(); // リストを更新
+              } catch (error) {
+                console.error('破門エラー:', error);
+                Alert.alert('エラー', '破門に失敗しました');
+              }
+            },
           },
-        },
-      ]
-    );
-  };
+        ]
+      );
+    },
+    [topicId, fetchMentees]
+  );
 
-  const handleGraduateMentee = async (menteeId: number, menteeName: string) => {
-    if (!topicId) return;
-    
-    Alert.alert(
-      '卒業確認',
-      `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '卒業',
-          onPress: async () => {
-            try {
-              await graduateMentee(menteeId, topicId);
-              Alert.alert('卒業完了', '弟子を卒業させました');
-              fetchMentees(); // リストを更新
-            } catch (error) {
-              console.error('卒業エラー:', error);
-              Alert.alert('エラー', '卒業に失敗しました');
-            }
+  const handleGraduateMentee = useCallback(
+    (menteeId: number, menteeName: string) => {
+      if (!topicId) return;
+
+      Alert.alert(
+        '卒業確認',
+        `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '卒業',
+            onPress: async () => {
+              try {
+                await graduateMentee(menteeId, topicId);
+                Alert.alert('卒業完了', '弟子を卒業させました');
+                fetchMentees(); // リストを更新
+              } catch (error) {
+                console.error('卒業エラー:', error);
+                Alert.alert('エラー', '卒業に失敗しました');
+              }
+            },
           },
-        },
-      ]
-    );
-  };
-
+        ]
+      );
+    },
+    [topicId, fetchMentees]
+  );
 
   const renderRequest = ({ item }: { item: MentorRequest }) => (
     <View style={styles.requestCard}>
@@ -193,23 +189,24 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         </Text>
         <Text style={styles.username}>@{item.from_user.username}</Text>
       </View>
-      
+
       <Text style={styles.topicTitle}>トピック: {item.topic.title}</Text>
-      
+
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.approveButton]}
+        <Button
+          variant="primary"
           onPress={() => handleApprove(item.id, item.from_user.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.approveButtonText}>承認</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.button, styles.rejectButton]}
+          承認
+        </Button>
+        <Button
+          variant="secondary"
           onPress={() => handleReject(item.id, item.from_user.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.rejectButtonText}>拒否</Text>
-        </TouchableOpacity>
+          拒否
+        </Button>
       </View>
     </View>
   );
@@ -222,28 +219,30 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         </Text>
         <Text style={styles.menteeUsername}>@{item.username}</Text>
       </View>
-      
+
       <Text style={styles.menteeLevel}>レベル: {item.level}</Text>
-      <Text style={styles.menteeDate}>入門日: {new Date(item.created_at).toLocaleDateString()}</Text>
-      
+      <Text style={styles.menteeDate}>
+        入門日: {new Date(item.created_at).toLocaleDateString()}
+      </Text>
+
       <View style={styles.menteeButtonContainer}>
-        <TouchableOpacity
-          style={[styles.menteeButton, styles.graduateButton]}
+        <Button
+          variant="primary"
           onPress={() => handleGraduateMentee(item.id, item.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.graduateButtonText}>卒業</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.menteeButton, styles.expelButton]}
+          卒業
+        </Button>
+        <Button
+          variant="secondary"
           onPress={() => handleExpelMentee(item.id, item.username)}
+          style={styles.actionButton}
         >
-          <Text style={styles.expelButtonText}>破門</Text>
-        </TouchableOpacity>
+          破門
+        </Button>
       </View>
     </View>
   );
-
 
   return (
     <Modal
@@ -254,12 +253,14 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.closeButton}
+          <Button
+            variant="ghost"
             onPress={onClose}
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
           >
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
+            ✕
+          </Button>
           <Text style={styles.title}>師匠ダッシュボード</Text>
         </View>
 
@@ -289,15 +290,13 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {requests.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    現在、師匠選択リクエストはありません
-                  </Text>
+                  <Text style={styles.emptyText}>現在、師匠選択リクエストはありません</Text>
                 </View>
               ) : (
                 <FlatList
                   data={requests}
                   renderItem={renderRequest}
-                  keyExtractor={(item) => item.id.toString()}
+                  keyExtractor={item => item.id.toString()}
                   showsVerticalScrollIndicator={false}
                 />
               )}
@@ -309,15 +308,13 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {mentees.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    現在、弟子はいません
-                  </Text>
+                  <Text style={styles.emptyText}>現在、弟子はいません</Text>
                 </View>
               ) : (
                 <FlatList
                   data={mentees}
                   renderItem={renderMentee}
-                  keyExtractor={(item) => item.id.toString()}
+                  keyExtractor={item => item.id.toString()}
                   showsVerticalScrollIndicator={false}
                 />
               )}
@@ -329,44 +326,39 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   );
 }
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    paddingTop: remToPx(theme.spacing[24]), // 5xl
+    paddingBottom: remToPx(theme.spacing[6]),
+    backgroundColor: theme.colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.background.tertiary,
   },
   closeButton: {
-    marginRight: 16,
-    padding: 8,
+    marginRight: remToPx(theme.spacing[6]),
   },
   closeButtonText: {
-    fontSize: 18,
-    color: '#007AFF',
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    color: theme.colors.primary[300],
+    fontWeight: theme.typography.fontWeight.bold,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   content: {
     flex: 1,
-    padding: 16,
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
+    padding: remToPx(theme.spacing[6]),
   },
   emptyContainer: {
     flex: 1,
@@ -374,166 +366,114 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   requestCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[6]),
+    marginBottom: remToPx(theme.spacing[4]),
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   requestHeader: {
-    marginBottom: 8,
+    marginBottom: remToPx(theme.spacing[3]),
   },
   userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   username: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginTop: remToPx(theme.spacing[1]), // xxs
   },
   topicTitle: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]), // xs
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  button: {
+  actionButton: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    marginHorizontal: remToPx(theme.spacing[2]), // xs
   },
-  approveButton: {
-    backgroundColor: '#4CAF50',
-  },
-  rejectButton: {
-    backgroundColor: '#f44336',
-  },
-  approveButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  rejectButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  // タブ関連のスタイル
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 4,
+    marginBottom: remToPx(theme.spacing[6]),
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: remToPx(theme.spacing[2]), // xs
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    paddingVertical: remToPx(theme.spacing[3]), // sm
+    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    borderRadius: remToPx(theme.borderRadius.sm),
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background.primary,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     elevation: 2,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.regular,
+    color: theme.colors.text.secondary,
   },
   activeTabText: {
-    color: '#333',
-    fontWeight: '600',
+    color: theme.colors.text.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
-  // 弟子関連のスタイル
   menteeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.lg),
+    padding: remToPx(theme.spacing[6]),
+    marginBottom: remToPx(theme.spacing[4]),
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   menteeHeader: {
-    marginBottom: 8,
+    marginBottom: remToPx(theme.spacing[3]),
   },
   menteeName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   menteeUsername: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.secondary,
+    marginTop: remToPx(theme.spacing[1]),
   },
   menteeLevel: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    marginBottom: remToPx(theme.spacing[2]),
   },
   menteeDate: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 12,
+    fontSize: remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.tertiary,
+    marginBottom: remToPx(theme.spacing[4]),
   },
   menteeButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  menteeButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginHorizontal: 4,
-  },
-  graduateButton: {
-    backgroundColor: '#4CAF50',
-  },
-  expelButton: {
-    backgroundColor: '#f44336',
-  },
-  graduateButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  expelButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 14,
   },
 });

@@ -1,5 +1,6 @@
 import { createThread } from '@/services/api/thread';
 import React, { useState } from 'react';
+import { theme } from '@/styles/theme';
 import {
   Alert,
   Keyboard,
@@ -7,10 +8,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { Button } from '../Shared/Button';
 
 interface ThreadCreateModalProps {
   visible: boolean;
@@ -81,18 +82,25 @@ export default function ThreadCreateModal({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreate} disabled={loading}>
-              <Text style={styles.createButtonText}>{loading ? '作成中...' : '作成'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>閉じる</Text>
-            </TouchableOpacity>
+            <Button
+              variant="primary"
+              onPress={handleCreate}
+              loading={loading}
+              style={styles.button}
+            >
+              {loading ? '作成中...' : '作成'}
+            </Button>
+            <Button variant="secondary" onPress={onClose} style={styles.button}>
+              閉じる
+            </Button>
           </View>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
 }
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -103,59 +111,35 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: remToPx(theme.borderRadius.xl),
+    padding: remToPx(theme.spacing[20]), // xxl
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1f2937',
+    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[8]), // lg
+    color: theme.colors.text.primary,
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: '#f9fafb',
+    borderColor: theme.colors.border,
+    borderRadius: remToPx(theme.borderRadius.md),
+    padding: remToPx(theme.spacing[4]), // md
+    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: remToPx(theme.spacing[8]), // lg
+    backgroundColor: theme.colors.background.secondary,
     minHeight: 60,
     textAlignVertical: 'top',
+    color: theme.colors.text.primary,
   },
-  createButton: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    backgroundColor: '#e5e7eb',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#374151',
-    fontSize: 15,
-    fontWeight: 'bold',
+  button: {
+    marginBottom: remToPx(theme.spacing[3]),
   },
 });
