@@ -1,5 +1,6 @@
 import { ACCESS_KEY, REFRESH_KEY } from '@/constants';
 import { UserCreateOut, UserOut } from '@/types/user';
+import { apiClient } from '@/utils/apiClient';
 import { authedApiClient } from '@/utils/authedApiClient';
 import { usePathname, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -34,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ログイン
   const login = async (username: string, password: string) => {
-    const res = await authedApiClient<UserCreateOut>('/api/token/pair', {
+    const res = await apiClient<UserCreateOut>('/api/token/pair', {
       method: 'POST',
       body: { username, password },
     });
