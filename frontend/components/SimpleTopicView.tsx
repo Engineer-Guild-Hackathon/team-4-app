@@ -4,7 +4,7 @@ import { theme } from '@/styles/theme';
 import React, { useEffect, useRef, useState } from 'react';
 // ★ 修正点 1: ActivityIndicator をインポート
 import { checkMentorSelectionRequired } from '@/services/api/mentorship';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
@@ -152,10 +152,6 @@ export function SimpleTopicView({
                   }}
                 />
               </View>
-              <View style={styles.descriptionContainer} pointerEvents="box-none">
-                <Text style={styles.topicTitle}>{topic.title}</Text>
-                <Text style={styles.topicDescription}>{topic.description}</Text>
-              </View>
             </View>
           ))}
         </PagerView>
@@ -191,43 +187,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background.primary,
   },
-  descriptionContainer: {
-    position: 'absolute',
-    top: remToPx(theme.spacing[12]), // 3xl
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    alignItems: 'center',
-    paddingHorizontal: remToPx(theme.spacing[16]), // 4xl
-  },
   treeContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 100, // Space for TopicCarousel
-  },
-  topicTitle: {
-    marginBottom: remToPx(theme.spacing[8]), // xl
-    textAlign: 'center',
-    fontSize: remToPx(theme.typography.fontSize['3xl']),
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.primary,
-    textShadowColor: theme.colors.background.primary,
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-  },
-  topicDescription: {
-    textAlign: 'center',
-    fontSize: remToPx(theme.typography.fontSize.lg),
-    lineHeight: remToPx(theme.typography.lineHeight.normal),
-    color: theme.colors.text.primary,
-    maxWidth: 300,
-    fontFamily: theme.typography.fontFamily.primary,
-    textShadowColor: 'rgba(255, 255, 255, 0.8)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
   },
   // ★ 修正点 4: ローディングコンテナ用のスタイルを追加
   loadingContainer: {
