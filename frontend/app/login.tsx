@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/AuthProvider';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
 
@@ -43,6 +43,16 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</Text>
       </TouchableOpacity>
+      
+      {/* パスワードリセットリンク */}
+      <TouchableOpacity 
+        style={styles.linkButton}
+        onPress={() => router.push('/password-reset-request')}
+      >
+        <Text style={styles.linkText}>パスワードを忘れた方</Text>
+      </TouchableOpacity>
+      
+      {/* ユーザー作成画面へのリンク */}
       <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/signup')}>
         <Text style={styles.linkButtonText}>新規ユーザー登録はこちら</Text>
       </TouchableOpacity>
@@ -99,11 +109,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Klee One',
   },
   linkButton: {
-    marginTop: remToPx(theme.spacing[20]), // xxl
+    marginTop: remToPx(theme.spacing[4]), // md
+    paddingVertical: 8,
   },
   linkButtonText: {
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontFamily: 'Klee One',
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 16,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });

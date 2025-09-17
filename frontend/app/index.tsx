@@ -39,7 +39,6 @@ export default function HomeScreen() {
       router.setParams({ profileUpdated: undefined });
     }
   }, [params.profileUpdated, router]);
-
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
