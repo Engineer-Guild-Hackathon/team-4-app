@@ -124,9 +124,7 @@ export default function CreatePostScreen() {
       router.replace({ pathname: '/', params: { openModal: 'true' } });
     } catch (error: unknown) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
-      const errorMessage =
-        (error as { detail?: string })?.detail ||
-        '投稿に失敗しました';
+      const errorMessage = (error as { detail?: string })?.detail || '投稿に失敗しました';
       Alert.alert('エラー', errorMessage);
     } finally {
       setIsSubmitting(false);

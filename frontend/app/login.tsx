@@ -43,15 +43,15 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</Text>
       </TouchableOpacity>
-      
+
       {/* パスワードリセットリンク */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.linkButton}
         onPress={() => router.push('/password-reset-request')}
       >
         <Text style={styles.linkText}>パスワードを忘れた方</Text>
       </TouchableOpacity>
-      
+
       {/* ユーザー作成画面へのリンク */}
       <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/signup')}>
         <Text style={styles.linkButtonText}>新規ユーザー登録はこちら</Text>

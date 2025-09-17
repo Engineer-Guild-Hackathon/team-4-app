@@ -161,7 +161,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         errorMessage = error.message;
       }
       Alert.alert('エラー', errorMessage);
-      
+
       // エラー時は元の値に戻す
       const topic = myTopics.find(t => t.id === topicId);
       if (topic) {

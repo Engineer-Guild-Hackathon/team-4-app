@@ -61,31 +61,31 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen 
-            name="password-reset-request" 
-            options={{ 
-              title: "パスワードリセット",
-              headerShown: true 
-            }} 
-          />
-          <Stack.Screen 
-            name="password-reset-confirm" 
-            options={{ 
-              title: "新しいパスワード",
-              headerShown: true 
-            }} 
-          />
-            <Stack.Screen 
-              name="create-post" 
-              options={{ 
+            <Stack.Screen
+              name="password-reset-request"
+              options={{
+                title: 'パスワードリセット',
+                headerShown: true,
+              }}
+            />
+            <Stack.Screen
+              name="password-reset-confirm"
+              options={{
+                title: '新しいパスワード',
+                headerShown: true,
+              }}
+            />
+            <Stack.Screen
+              name="create-post"
+              options={{
                 presentation: 'modal',
-                title: '新規投稿' 
-              }} 
+                title: '新規投稿',
+              }}
             />
             <Stack.Screen
               name="edit-profile"
               options={{
-                presentation: 'modal', 
+                presentation: 'modal',
                 title: 'プロフィール編集',
               }}
             />
@@ -102,15 +102,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     alignSelf: 'center',
-    flexDirection: 'row', 
+    flexDirection: 'row',
     alignItems: 'center',
     zIndex: 9999,
-    gap: 12, 
+    gap: 12,
   },
   breakInfoCircle: {
     width: 110,
     height: 50,
-    borderRadius: 25, 
+    borderRadius: 25,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   breakCloseCircle: {
     width: 50,
     height: 50,
-    borderRadius: 25, 
+    borderRadius: 25,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -141,4 +141,3 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
 });
-

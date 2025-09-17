@@ -53,7 +53,6 @@ export default function HomeScreen() {
     router.push(`/select-level-mentor?topicId=${topicId}`);
   };
 
-
   const handleStartPomodoro = () => {
     // 現在選択中のトピックIDを引数にして、グローバルタイマーの設定画面を開く
     startTimerSession(currentTopicId!);
@@ -80,10 +79,10 @@ export default function HomeScreen() {
             </Button>
           </Link>
           {phase !== 'break' && (
-          <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
-            <Text style={styles.pomodoroButtonText}>集中</Text>
-          </TouchableOpacity>
-          )}         
+            <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
+              <Text style={styles.pomodoroButtonText}>集中</Text>
+            </TouchableOpacity>
+          )}
           <Button
             variant="icon"
             size="icon"

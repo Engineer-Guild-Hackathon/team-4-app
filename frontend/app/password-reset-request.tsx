@@ -48,7 +48,7 @@ export default function PasswordResetRequest() {
               setLoading(false);
               router.push({
                 pathname: '/password-reset-confirm',
-                params: { email: email.trim() }
+                params: { email: email.trim() },
               });
             },
           },
@@ -56,10 +56,7 @@ export default function PasswordResetRequest() {
       );
     } catch (error) {
       console.error('パスワードリセットリクエストエラー:', error);
-      Alert.alert(
-        'エラー',
-        'メール送信に失敗しました'
-      );
+      Alert.alert('エラー', 'メール送信に失敗しました');
       setLoading(false);
     }
   };
@@ -95,9 +92,7 @@ export default function PasswordResetRequest() {
           onPress={handleEmailSubmit}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? '送信中...' : 'コード送信'}
-          </Text>
+          <Text style={styles.buttonText}>{loading ? '送信中...' : 'コード送信'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

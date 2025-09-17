@@ -72,10 +72,7 @@ export default function PasswordResetConfirm() {
       );
     } catch (error) {
       console.error('パスワードリセット確認エラー:', error);
-      Alert.alert(
-        'エラー',
-        'パスワードリセットに失敗しました'
-      );
+      Alert.alert('エラー', 'パスワードリセットに失敗しました');
     } finally {
       setLoading(false);
     }
@@ -140,9 +137,7 @@ export default function PasswordResetConfirm() {
           onPress={handleCodeSubmit}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? '処理中...' : 'パスワード更新'}
-          </Text>
+          <Text style={styles.buttonText}>{loading ? '処理中...' : 'パスワード更新'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

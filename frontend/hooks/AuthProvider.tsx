@@ -76,14 +76,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {
           console.error('ユーザー情報の取得に失敗しました:', e);
           setUser(null);
-          if (pathname !== '/login' && pathname !== '/signup' && 
-              pathname !== '/password-reset-request' && pathname !== '/password-reset-confirm') {
+          if (
+            pathname !== '/login' &&
+            pathname !== '/signup' &&
+            pathname !== '/password-reset-request' &&
+            pathname !== '/password-reset-confirm'
+          ) {
             router.replace('/login');
           }
         }
       } else {
-        if (pathname !== '/login' && pathname !== '/signup' && 
-            pathname !== '/password-reset-request' && pathname !== '/password-reset-confirm') {
+        if (
+          pathname !== '/login' &&
+          pathname !== '/signup' &&
+          pathname !== '/password-reset-request' &&
+          pathname !== '/password-reset-confirm'
+        ) {
           router.replace('/login');
         }
       }

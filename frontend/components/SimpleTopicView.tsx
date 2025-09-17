@@ -3,7 +3,7 @@ import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
 import { theme } from '@/styles/theme';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ImageSourcePropType, StyleSheet, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
@@ -24,14 +24,14 @@ const BackgroundClouds = () => {
         textureSource={goldTexture}
         duration={24000}
         travelDistance={25}
-        style={{ width: 250, height: 120, top: 80, left: -50, opacity: 0.7 }}
+        style={{ width: 250, height: 120, top: 80, left: -50, opacity: 0.4 }}
       />
       <WafuCloud
         seed={456}
         textureSource={goldTexture}
         duration={42000}
         travelDistance={-20}
-        style={{ width: 200, height: 120, top: 110, right: -80, opacity: 0.5 }}
+        style={{ width: 200, height: 120, top: 110, right: -80, opacity: 0.4 }}
       />
       {/* 下部の雲 */}
       <WafuCloud
@@ -39,14 +39,14 @@ const BackgroundClouds = () => {
         textureSource={goldTexture}
         duration={38000}
         travelDistance={-22}
-        style={{ width: 220, height: 100, bottom: 130, left: -40, opacity: 0.9 }}
+        style={{ width: 220, height: 100, bottom: 130, left: -40, opacity: 0.4 }}
       />
       <WafuCloud
         seed={101}
         textureSource={goldTexture}
         duration={30000}
         travelDistance={18}
-        style={{ width: 320, height: 150, bottom: 50, right: -100, opacity: 0.9 }}
+        style={{ width: 320, height: 150, bottom: 50, right: -100, opacity: 0.4 }}
       />
     </View>
   );

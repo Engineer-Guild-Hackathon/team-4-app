@@ -140,8 +140,8 @@ export default function UserDetailModal({
                     {profile.bio}
                   </Text>
                 </View>
-                {selfUserId !== userId && (
-                  profile.blocking ? (
+                {selfUserId !== userId &&
+                  (profile.blocking ? (
                     <Button // Unblock
                       onPress={async () => {
                         Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
@@ -195,8 +195,7 @@ export default function UserDetailModal({
                     >
                       ブロック
                     </Button>
-                  )
-                )}
+                  ))}
               </View>
             ) : (
               <Text>プロフィールを読み込めませんでした</Text>
