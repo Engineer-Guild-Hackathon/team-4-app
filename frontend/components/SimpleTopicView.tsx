@@ -3,7 +3,7 @@ import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
 import React, { useEffect, useRef, useState } from 'react';
 // ★ 修正点 1: ActivityIndicator をインポート
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
