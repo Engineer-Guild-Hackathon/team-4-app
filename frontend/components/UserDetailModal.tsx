@@ -46,8 +46,6 @@ export default function UserDetailModal({
   userId,
   selfUserId,
 }: UserDetailModalProps) {
-  const remToPx = (rem: string) => parseFloat(rem) * 16;
-
   const [posts, setPosts] = useState<PostOut[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);

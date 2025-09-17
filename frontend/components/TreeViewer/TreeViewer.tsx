@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { theme } from '@/styles/theme';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,7 +19,6 @@ interface TreeViewerProps {
 
 export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
   const { data, loading } = useTreeData(topicId);
-  const [myNodeId, setMyNodeId] = useState<number | null>(null); // デモ用に自分のノードIDを管理
 
   // --- D3 レイアウト ---
   const layout = useMemo(() => {
@@ -66,8 +65,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   }, [data]);
 
   const rootNode = layout?.root ?? null;
-  const layoutBounds = layout?.bounds ?? null;
-  const initialScale = layout?.initialScale ?? 1;
 
   // --- ズーム・パン用の共有値 ---
   const scale = useSharedValue(1);
@@ -76,10 +73,6 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   const savedScale = useSharedValue(1);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
-
-  const findNodeById = (id: number | null): HierarchyPointNode<D3TreeNode> | undefined => {
-    return id !== null ? rootNode?.find(node => node.data.id === id) : undefined;
-  };
 
   const zoomIn = () => {
     scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
@@ -106,14 +99,14 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
       .onBegin(() => {
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
-      }),
+      })
   );
   const composedGesture = exploreGesture;
 
   // --- ボタン操作 ---
   const DURATION = 300;
 
-  const fitToNetwork = () => {
+  const fitToNetwork = useCallback(() => {
     if (!rootNode) return;
 
     const nodes = rootNode.descendants();
@@ -137,7 +130,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     scale.value = withTiming(newScale, { duration: DURATION });
     translateX.value = withTiming(0, { duration: DURATION });
     translateY.value = withTiming(0, { duration: DURATION });
-  };
+  }, [rootNode, scale, translateX, translateY]);
 
   // --- アニメーションスタイル ---
   const animatedStyle = useAnimatedStyle(() => ({
@@ -153,7 +146,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     if (rootNode) {
       fitToNetwork();
     }
-  }, [rootNode]);
+  }, [rootNode, fitToNetwork]);
 
   // --- ノードタップ処理 ---
   const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
@@ -163,12 +156,16 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   // --- レンダリング ---
   if (loading) {
     return (
-      <View style={styles.center}><Text style={styles.text}>読み込み中...</Text></View>
+      <View style={styles.center}>
+        <Text style={styles.text}>読み込み中...</Text>
+      </View>
     );
   }
   if (!rootNode) {
     return (
-      <View style={styles.center}><Text style={styles.text}>表示できるデータがありません。</Text></View>
+      <View style={styles.center}>
+        <Text style={styles.text}>表示できるデータがありません。</Text>
+      </View>
     );
   }
 
@@ -178,7 +175,11 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={() => fitToNetwork()}>
+        <Button
+          style={styles.controlButton}
+          textStyle={styles.controlButtonText}
+          onPress={() => fitToNetwork()}
+        >
           ⛶
         </Button>
         <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={zoomIn}>

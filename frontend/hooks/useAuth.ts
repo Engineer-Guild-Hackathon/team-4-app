@@ -93,7 +93,7 @@ export function useAuth() {
     };
 
     fetchUser();
-  }, [router, pathname]);
+  }, [router, pathname, loadTokens]);
 
   return { user, accessToken, refreshToken, login, logout, loading, refreshUser };
 }

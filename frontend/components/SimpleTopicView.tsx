@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { getMyTopics } from '@/services/api/topic';
 import { theme } from '@/styles/theme';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
@@ -28,7 +28,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
   const [loading, setLoading] = useState(true);
   const { accessToken } = useAuth();
 
-  const refreshMyTopics = async (switchToLastTopic = false) => {
+  const refreshMyTopics = useCallback(async (switchToLastTopic = false) => {
     try {
       setLoading(true);
       const response = await getMyTopics();
@@ -46,7 +46,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (propTopics) {
@@ -59,15 +59,15 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     } else {
       setLoading(false);
     }
-  }, [propTopics, accessToken]);
+  }, [propTopics, accessToken, refreshMyTopics]);
 
   const handleSelectIndex = (index: number) => {
     setCurrentIndex(index);
     pagerRef.current?.setPage(index);
   };
-  
+
   const [isPagerScrollEnabled, setIsPagerScrollEnabled] = useState(true);
-  
+
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => {
@@ -76,7 +76,7 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
 
       return () => clearTimeout(timer);
     }
-  }, [loading]); 
+  }, [loading]);
 
   if (loading) {
     return (
@@ -90,18 +90,16 @@ export function SimpleTopicView({ topics: propTopics, onUserPress }: SimpleTopic
     return <TopicManageView onBack={() => refreshMyTopics(true)} />;
   }
 
-
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
         <PagerView
-
           ref={pagerRef}
           style={{ flex: 1 }}
           scrollEnabled={isPagerScrollEnabled}
           initialPage={currentIndex}
           onPageSelected={e => {
-            setCurrentIndex(e.nativeEvent.position)
+            setCurrentIndex(e.nativeEvent.position);
             if (!isPagerScrollEnabled) {
               return;
             }

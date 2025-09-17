@@ -5,16 +5,7 @@ import { theme } from '@/styles/theme';
 import { getMe } from '@/services/api/user';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface Topic {
   id: string;
@@ -49,14 +40,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   }, []);
 
   // 全トピック一覧を取得
-  const fetchAllTopics = async () => {
+  const fetchAllTopics = useCallback(async () => {
     try {
       const response = await getAllTopics();
       setAllTopics(response.topics || []);
     } catch {
       setAllTopics([]);
     }
-  };
+  }, []);
 
   // 初期データ取得
   useEffect(() => {
@@ -64,14 +55,13 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       fetchMyTopics();
       fetchAllTopics();
     }
-  }, [accessToken]);
+  }, [accessToken, fetchMyTopics, fetchAllTopics]);
 
   // 参加可能なトピックを更新するuseEffect
-  useEffect(() => { 
-      const myTopicIds = myTopics.map(topic => topic.id);
-      setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
+  useEffect(() => {
+    const myTopicIds = myTopics.map(topic => topic.id);
+    setAvailableTopics(allTopics.filter(topic => !myTopicIds.includes(topic.id)));
   }, [allTopics, myTopics]);
-
 
   // トピック作成
   const handleCreateTopic = async () => {
@@ -86,8 +76,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       await fetchMyTopics();
       await fetchAllTopics();
       Alert.alert('成功', 'トピックを作成しました');
-    } catch (error: any) {
-      const errorMessage = error?.message || 'トピックの作成に失敗しました';
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { message?: string })?.message || 'トピックの作成に失敗しました';
       Alert.alert('エラー', errorMessage);
     }
   };
@@ -130,14 +121,18 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       <ScrollView style={styles.manageContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.manageTitle}>トピック管理</Text>
-          <Button variant="secondary" size="sm" onPress={onBack}>戻る</Button>
+          <Button variant="secondary" size="sm" onPress={onBack}>
+            戻る
+          </Button>
         </View>
 
         {/* 新規トピック作成 */}
 
         <View style={styles.createSection}>
           <Text style={styles.sectionTitle}>新規トピック作成</Text>
-          <Button variant="primary" onPress={openCreateModal}>新規トピック作成</Button>
+          <Button variant="primary" onPress={openCreateModal}>
+            新規トピック作成
+          </Button>
         </View>
 
         {/* トピック参加 */}

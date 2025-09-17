@@ -49,7 +49,12 @@ export default function ReportModal({ visible, onClose, onSubmit }: ReportModalP
             onChangeText={setReason}
             multiline
           />
-          <Button variant="secondary" onPress={handleSubmit} loading={loading} style={styles.button}>
+          <Button
+            variant="secondary"
+            onPress={handleSubmit}
+            loading={loading}
+            style={styles.button}
+          >
             {loading ? '報告中...' : '報告する'}
           </Button>
           <Button variant="secondary" onPress={onClose} style={styles.button}>

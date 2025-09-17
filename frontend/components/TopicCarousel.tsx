@@ -27,6 +27,7 @@ const ITEM_HEIGHT = 50;
 const ITEM_SPACING = 8;
 const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
+type DisplayTopic = { id: string; title?: string };
 
 export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   topics,
@@ -36,7 +37,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList>(null);
 
-  const displayData = [
+  const displayData: DisplayTopic[] = [
     { id: 'left-spacer' },
     { id: 'manage', title: '＋' },
     ...topics,
@@ -54,7 +55,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     }
   }, [currentIndex]);
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
+  const renderItem = ({ item, index }: { item: DisplayTopic; index: number }) => {
     if (!item.title) {
       return <View style={{ width: SPACER_ITEM_WIDTH }} />;
     }

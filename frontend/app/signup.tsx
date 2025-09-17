@@ -32,8 +32,8 @@ export default function UserCreateScreen() {
       setEmail('');
       setPassword('');
       router.replace('/'); // index.tsxに遷移
-    } catch (e: any) {
-      setError(e.message || 'ユーザー作成に失敗しました');
+    } catch (e: unknown) {
+      setError((e as Error).message || 'ユーザー作成に失敗しました');
     }
   };
 

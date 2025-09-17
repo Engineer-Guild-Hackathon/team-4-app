@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   TouchableOpacity,
+  ViewStyle,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -19,7 +20,7 @@ import { theme } from '@/styles/theme';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
-const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
+const VideoPreviewItem = ({ uri, style }: { uri: string; style: ViewStyle }) => {
   const player = useVideoPlayer(uri, player => {
     player.muted = true;
   });
@@ -64,7 +65,7 @@ export default function CreatePostScreen() {
       if (!result.canceled) {
         setMediaAssets(result.assets);
       }
-    } catch (error: any) {
+    } catch {
       Alert.alert(
         'メディアの読み込みに失敗しました',
         '選択されたメディアの処理中にエラーが発生しました。別のファイルを選択するか、デバイスにダウンロードしてから再度お試しください。'
@@ -99,7 +100,7 @@ export default function CreatePostScreen() {
         uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
         name: asset.fileName || 'media.jpg',
         type: asset.mimeType || 'image/jpeg',
-      } as any);
+      } as unknown as Blob);
     }
     formData.append('metadata', JSON.stringify(metadata));
 
@@ -120,10 +121,10 @@ export default function CreatePostScreen() {
 
       Alert.alert('成功', '投稿が完了しました！');
       router.replace({ pathname: '/', params: { openModal: 'true' } });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage =
-        error?.detail ||
+        (error as { detail?: string })?.detail ||
         '投稿に失敗しました。ネットワーク接続を確認するか、時間をおいて再試行してください。';
       Alert.alert('投稿エラー', errorMessage);
     } finally {
@@ -143,12 +144,10 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={pickMedia} 
-        disabled={isPickingMedia}
-      >
-        <Text style={styles.buttonText}>{isPickingMedia ? "メディアを読み込み中..." : "画像・動画を選択"}</Text>
+      <TouchableOpacity style={styles.button} onPress={pickMedia} disabled={isPickingMedia}>
+        <Text style={styles.buttonText}>
+          {isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
+        </Text>
       </TouchableOpacity>
 
       <ScrollView horizontal style={styles.previewContainer}>
@@ -173,7 +172,9 @@ export default function CreatePostScreen() {
         onPress={handlePost}
         disabled={isSubmitting}
       >
-        <Text style={[styles.buttonText, styles.submitButtonText]}>{isSubmitting ? '投稿中...' : '投稿する'}</Text>
+        <Text style={[styles.buttonText, styles.submitButtonText]}>
+          {isSubmitting ? '投稿中...' : '投稿する'}
+        </Text>
       </TouchableOpacity>
       {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
     </View>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
 import { theme } from '@/styles/theme';
 import { Button } from './Shared/Button';
@@ -49,7 +49,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [activeTab, setActiveTab] = useState<'requests' | 'mentees'>('requests');
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const data = (await getReceivedMentorRequests()) as MentorRequest[];
       setRequests(data);
@@ -57,9 +57,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
       console.error('リクエスト取得エラー:', error);
       Alert.alert('エラー', 'リクエストの取得に失敗しました');
     }
-  };
+  }, []);
 
-  const fetchMentees = async () => {
+  const fetchMentees = useCallback(async () => {
     if (!topicId) return;
     try {
       const data = (await getMentees(topicId)) as Mentee[];
@@ -68,7 +68,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
       console.error('弟子一覧取得エラー:', error);
       Alert.alert('エラー', '弟子一覧の取得に失敗しました');
     }
-  };
+  }, [topicId]);
 
   useEffect(() => {
     if (accessToken && visible) {
@@ -77,97 +77,109 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
         fetchMentees();
       }
     }
-  }, [accessToken, visible, topicId]);
+  }, [accessToken, visible, topicId, fetchRequests, fetchMentees]);
 
-  const handleApprove = async (requestId: number, fromUserName: string) => {
-    Alert.alert('承認確認', `${fromUserName}さんの師匠選択リクエストを承認しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '承認',
-        onPress: async () => {
-          try {
-            await approveMentorRequest(requestId);
-            Alert.alert('承認完了', '師匠選択リクエストを承認しました');
-            fetchRequests(); // リストを更新
-          } catch (error) {
-            console.error('承認エラー:', error);
-            Alert.alert('エラー', '承認に失敗しました');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleReject = async (requestId: number, fromUserName: string) => {
-    Alert.alert('拒否確認', `${fromUserName}さんの師匠選択リクエストを拒否しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '拒否',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await rejectMentorRequest(requestId);
-            Alert.alert('拒否完了', '師匠選択リクエストを拒否しました');
-            fetchRequests(); // リストを更新
-          } catch (error) {
-            console.error('拒否エラー:', error);
-            Alert.alert('エラー', '拒否に失敗しました');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleExpelMentee = async (menteeId: number, menteeName: string) => {
-    if (!topicId) return;
-
-    Alert.alert(
-      '破門確認',
-      `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
-      [
+  const handleApprove = useCallback(
+    (requestId: number, fromUserName: string) => {
+      Alert.alert('承認確認', `${fromUserName}さんの師匠選択リクエストを承認しますか？`, [
         { text: 'キャンセル', style: 'cancel' },
         {
-          text: '破門',
+          text: '承認',
+          onPress: async () => {
+            try {
+              await approveMentorRequest(requestId);
+              Alert.alert('承認完了', '師匠選択リクエストを承認しました');
+              fetchRequests(); // リストを更新
+            } catch (error) {
+              console.error('承認エラー:', error);
+              Alert.alert('エラー', '承認に失敗しました');
+            }
+          },
+        },
+      ]);
+    },
+    [fetchRequests]
+  );
+
+  const handleReject = useCallback(
+    (requestId: number, fromUserName: string) => {
+      Alert.alert('拒否確認', `${fromUserName}さんの師匠選択リクエストを拒否しますか？`, [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '拒否',
           style: 'destructive',
           onPress: async () => {
             try {
-              await expelMentee(menteeId, topicId);
-              Alert.alert('破門完了', '弟子を破門しました');
-              fetchMentees(); // リストを更新
+              await rejectMentorRequest(requestId);
+              Alert.alert('拒否完了', '師匠選択リクエストを拒否しました');
+              fetchRequests(); // リストを更新
             } catch (error) {
-              console.error('破門エラー:', error);
-              Alert.alert('エラー', '破門に失敗しました');
+              console.error('拒否エラー:', error);
+              Alert.alert('エラー', '拒否に失敗しました');
             }
           },
         },
-      ]
-    );
-  };
+      ]);
+    },
+    [fetchRequests]
+  );
 
-  const handleGraduateMentee = async (menteeId: number, menteeName: string) => {
-    if (!topicId) return;
+  const handleExpelMentee = useCallback(
+    (menteeId: number, menteeName: string) => {
+      if (!topicId) return;
 
-    Alert.alert(
-      '卒業確認',
-      `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '卒業',
-          onPress: async () => {
-            try {
-              await graduateMentee(menteeId, topicId);
-              Alert.alert('卒業完了', '弟子を卒業させました');
-              fetchMentees(); // リストを更新
-            } catch (error) {
-              console.error('卒業エラー:', error);
-              Alert.alert('エラー', '卒業に失敗しました');
-            }
+      Alert.alert(
+        '破門確認',
+        `${menteeName}さんを破門しますか？\n破門すると師弟関係が解消され、弟子のステータスが「破門済み」になります。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '破門',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await expelMentee(menteeId, topicId);
+                Alert.alert('破門完了', '弟子を破門しました');
+                fetchMentees(); // リストを更新
+              } catch (error) {
+                console.error('破門エラー:', error);
+                Alert.alert('エラー', '破門に失敗しました');
+              }
+            },
           },
-        },
-      ]
-    );
-  };
+        ]
+      );
+    },
+    [topicId, fetchMentees]
+  );
+
+  const handleGraduateMentee = useCallback(
+    (menteeId: number, menteeName: string) => {
+      if (!topicId) return;
+
+      Alert.alert(
+        '卒業確認',
+        `${menteeName}さんを卒業させますか？\n卒業すると師弟関係が解消され、弟子のレベルが上がります。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '卒業',
+            onPress: async () => {
+              try {
+                await graduateMentee(menteeId, topicId);
+                Alert.alert('卒業完了', '弟子を卒業させました');
+                fetchMentees(); // リストを更新
+              } catch (error) {
+                console.error('卒業エラー:', error);
+                Alert.alert('エラー', '卒業に失敗しました');
+              }
+            },
+          },
+        ]
+      );
+    },
+    [topicId, fetchMentees]
+  );
 
   const renderRequest = ({ item }: { item: MentorRequest }) => (
     <View style={styles.requestCard}>

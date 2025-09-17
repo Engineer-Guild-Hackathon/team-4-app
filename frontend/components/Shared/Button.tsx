@@ -54,12 +54,7 @@ export const Button: React.FC<ButtonProps> = ({
         <View style={styles.content}>
           {icon && <View style={styles.icon}>{icon}</View>}
           <Text
-            style={[
-              styles.textBase,
-              sizeTextStyles[size],
-              variantStyles[variant].text,
-              textStyle,
-            ]}
+            style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}
           >
             {children}
           </Text>

@@ -16,8 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
 
-// Helper to convert rem to px
-const rem = (value: string) => parseFloat(value) * 16;
+// Helper to convert rem to px.
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function EditProfileScreen() {
@@ -39,7 +38,10 @@ export default function EditProfileScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('許可が必要です', 'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。');
+      Alert.alert(
+        '許可が必要です',
+        'プロフィール画像を変更するには、写真ライブラリへのアクセスを許可してください。'
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,10 +66,11 @@ export default function EditProfileScreen() {
       formData.append('bio', bio);
 
       if (newAvatarAsset) {
-        const uri = Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
+        const uri =
+          Platform.OS === 'ios' ? newAvatarAsset.uri.replace('file://', '') : newAvatarAsset.uri;
         const filename = newAvatarAsset.fileName || `avatar_${user.id}.jpg`;
         const mimeType = newAvatarAsset.mimeType || 'image/jpeg';
-        formData.append('avatar_file', { uri, name: filename, type: mimeType } as any);
+        formData.append('avatar_file', { uri, name: filename, type: mimeType } as unknown as Blob);
       }
 
       const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -87,9 +90,12 @@ export default function EditProfileScreen() {
       Alert.alert('成功', 'プロフィールを更新しました。');
       if (refreshUser) await refreshUser();
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
-      Alert.alert('エラー', error.detail || 'プロフィールの更新に失敗しました。');
+      Alert.alert(
+        'エラー',
+        (error as { detail?: string })?.detail || 'プロフィールの更新に失敗しました。'
+      );
     } finally {
       setIsSubmitting(false);
     }

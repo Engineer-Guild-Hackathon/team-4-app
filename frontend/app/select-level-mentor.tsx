@@ -6,7 +6,15 @@ import { getMe } from '@/services/api/user';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import { theme } from '@/styles/theme';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
@@ -117,9 +125,7 @@ export default function SelectLevelMentorScreen() {
       {/* 下中央にOKボタン */}
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity style={styles.okButton} onPress={handleJoin} activeOpacity={0.8}>
-          <Text style={styles.okButtonText}>
-            OK
-          </Text>
+          <Text style={styles.okButtonText}>OK</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,12 +27,15 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
   const gestureStartPosition = useRef(0);
   const lastNotifiedLevel = useRef(value);
 
-  const valueToY = (level: number) => {
-    const range = max - min;
-    if (range === 0) return 0;
-    const percentage = (max - level) / range;
-    return percentage * (BAR_HEIGHT - KNOB_HEIGHT);
-  };
+  const valueToY = useCallback(
+    (level: number) => {
+      const range = max - min;
+      if (range === 0) return 0;
+      const percentage = (max - level) / range;
+      return percentage * (BAR_HEIGHT - KNOB_HEIGHT);
+    },
+    [max, min]
+  );
 
   const yToValue = (y: number) => {
     const percentage = y / (BAR_HEIGHT - KNOB_HEIGHT);
@@ -49,14 +52,14 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
       friction: 20,
       useNativeDriver: false,
     }).start();
-  }, [value, min, max]);
+  }, [value, min, max, panY, valueToY]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        gestureStartPosition.current = (panY as any)._value;
+        gestureStartPosition.current = (panY as Animated.Value & { _value: number })._value;
       },
       onPanResponderMove: (_, gestureState) => {
         const newY = gestureStartPosition.current + gestureState.dy;
@@ -82,10 +85,7 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
 
       <Animated.View style={[styles.knobContainer, { top: panY }]} {...panResponder.panHandlers}>
         <LinearGradient
-          colors={[
-            theme.colors.primary[300], 
-            theme.colors.primary[500], 
-          ]}
+          colors={[theme.colors.primary[300], theme.colors.primary[500]]}
           style={styles.knobGradient}
         >
           <Text style={styles.levelText}></Text>
@@ -113,12 +113,12 @@ const styles = StyleSheet.create({
   barBackground: {
     width: BAR_WIDTH,
     height: BAR_HEIGHT,
-    backgroundColor: theme.colors.neutral[200], 
+    backgroundColor: theme.colors.neutral[200],
     borderRadius: BAR_WIDTH / 2,
   },
   barTrack: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.neutral[300], 
+    backgroundColor: theme.colors.neutral[300],
     margin: 3,
     borderRadius: (BAR_WIDTH - 6) / 2,
   },

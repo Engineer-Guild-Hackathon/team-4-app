@@ -17,8 +17,8 @@ export default function LoginScreen() {
     setError('');
     try {
       await login(username, password);
-    } catch (e: any) {
-      setError(e.message || 'ログインに失敗しました');
+    } catch (e: unknown) {
+      setError((e as Error).message || 'ログインに失敗しました');
     }
   };
 

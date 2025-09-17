@@ -1,7 +1,16 @@
 import { createThread } from '@/services/api/thread';
 import React, { useState } from 'react';
 import { theme } from '@/styles/theme';
-import { Alert, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import {
+  Alert,
+  Keyboard,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import { Button } from '../Shared/Button';
 
 interface ThreadCreateModalProps {
@@ -73,7 +82,12 @@ export default function ThreadCreateModal({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />
-            <Button variant="primary" onPress={handleCreate} loading={loading} style={styles.button}>
+            <Button
+              variant="primary"
+              onPress={handleCreate}
+              loading={loading}
+              style={styles.button}
+            >
               {loading ? '作成中...' : '作成'}
             </Button>
             <Button variant="secondary" onPress={onClose} style={styles.button}>

@@ -2,7 +2,16 @@ import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  ImageStyle,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { theme } from '@/styles/theme';
 import ReportModal from './ReportModal';
 import { Button } from '../Shared/Button';
@@ -17,13 +26,13 @@ interface PostViewProps {
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
-const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
+const VideoItem = ({ uri, style }: { uri: string; style: ImageStyle }) => {
   const player = useVideoPlayer(uri, player => {
     player.loop = true;
     player.play();
   });
 
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+  useEvent(player, 'playingChange', { isPlaying: player.playing });
 
   return (
     <VideoView
@@ -60,11 +69,23 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
     <View style={styles.post}>
       <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <Button variant="secondary" size="sm" onPress={() => onDelete(item.id)} style={styles.actionButton}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => onDelete(item.id)}
+            style={styles.actionButton}
+          >
             削除
           </Button>
         ) : (
-          <Button variant="secondary" size="sm" onPress={() => handleOpenMenu(item)} style={styles.actionButton}>⋮</Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => handleOpenMenu(item)}
+            style={styles.actionButton}
+          >
+            ⋮
+          </Button>
         )}
       </View>
       <View>
@@ -101,7 +122,10 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
       {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
         visible={showReportModal}
-        onClose={() => { setShowReportModal(false); setReportTargetPost(null); }}
+        onClose={() => {
+          setShowReportModal(false);
+          setReportTargetPost(null);
+        }}
         onSubmit={async (reason: string) => {
           if (!reportTargetPost) return;
           const { reportPost } = await import('@/services/api/report');

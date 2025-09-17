@@ -10,10 +10,6 @@ interface ThreadDetailViewProps {
   onSendMessage: (content: string) => Promise<ThreadMessageOut>;
 }
 
-// ★ 1. モーダル用のキーボードオフセット値を定義
-// この値は実際の表示を見ながら微調整が必要な場合があります
-const MODAL_KEYBOARD_OFFSET = Platform.OS === 'ios' ? 200 : 0;
-
 export default function ThreadDetailView({ thread, onBack, onSendMessage }: ThreadDetailViewProps) {
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
@@ -31,28 +27,27 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
       // ★ 3. 送信後、すぐに一番下にスクロールする
       setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 100);
     } catch (error) {
-      console.error("Message send failed:", error);
-    } 
-    finally {
+      console.error('Message send failed:', error);
+    } finally {
       setSending(false);
     }
   };
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* ヘッダー部分は変更なし */}
       <View style={styles.header}>
         <Button variant="secondary" size="sm" onPress={onBack} style={styles.backButton}>
           ← 戻る
         </Button>
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>{thread.mentor.username} : {thread.starter.username}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {thread.mentor.username} : {thread.starter.username}
+          </Text>
         </View>
         <View style={{ width: styles.backButton.width }} />
       </View>
-      
+
       {/* ★ 4. FlatListにrefとcontentContainerStyleを追加 */}
       <FlatList
         ref={flatListRef}
@@ -80,7 +75,12 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           onChangeText={setContent}
           multiline
         />
-        <Button style={styles.sendButton} textStyle={styles.sendButtonText} onPress={handleSend} disabled={sending}>
+        <Button
+          style={styles.sendButton}
+          textStyle={styles.sendButtonText}
+          onPress={handleSend}
+          disabled={sending}
+        >
           {sending ? '...' : '➤'}
         </Button>
       </View>
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: remToPx(theme.spacing[6]), // lg
-    paddingVertical: remToPx(theme.spacing[4]),   // md
+    paddingVertical: remToPx(theme.spacing[4]), // md
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.background.tertiary,
     flexDirection: 'row',

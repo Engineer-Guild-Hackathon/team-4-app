@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { theme } from '@/styles/theme';
-import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
@@ -18,11 +18,7 @@ export default function HomeScreen() {
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
-  const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
-  const router = useRouter();
-
-  const params = useLocalSearchParams();
-
+  const [currentTopicId] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
 
   useFocusEffect(
@@ -37,14 +33,6 @@ export default function HomeScreen() {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
     setModalVisible(true);
-  };
-
-  const handleTopicChange = (topicId: string | null) => {
-    setCurrentTopicId(topicId);
-  };
-
-  const handleMentorSelectionRequired = (topicId: string) => {
-    router.push(`/select-level-mentor?topicId=${topicId}`);
   };
 
   if (authLoading || !user) {
@@ -81,10 +69,7 @@ export default function HomeScreen() {
         </>
       )}
 
-      <SimpleTopicView
-        key={renderKey}
-        onUserPress={handleUserPress}
-      />
+      <SimpleTopicView key={renderKey} onUserPress={handleUserPress} />
 
       <UserDetailModal
         visible={modalVisible}
