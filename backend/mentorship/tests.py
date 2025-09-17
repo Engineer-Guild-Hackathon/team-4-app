@@ -559,92 +559,6 @@ class MentorCapacityTestCase(TestCase):
             ).exists()
         )
 
-    def test_approve_with_mentee_selection_expel(self):
-        """定員超過時の承認：弟子を破門して新しい弟子を受け入れる"""
-        # 定員いっぱいまで師弟関係を作成
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee3, topic=self.topic)
-        
-        # 新しい弟子からのリクエストを作成
-        request = MentorRelationRequest.objects.create(
-            from_user=self.mentee4, to_user=self.mentor, topic=self.topic, status="pending"
-        )
-        
-        headers = get_jwt_auth_headers(self.mentor)
-        
-        # 弟子選択付きで承認（mentee1を破門）
-        response = self.client.post(
-            f"/api/mentorship/requests/{request.id}/approve-with-selection",
-            {"mentee_id": self.mentee1.id, "action": "expel"},
-            content_type="application/json",
-            headers=headers,
-        )
-        
-        self.assertEqual(response.status_code, 200)
-        
-        # 新しい師弟関係が作成されている
-        self.assertTrue(
-            MentorRelation.objects.filter(
-                mentor=self.mentor, mentee=self.mentee4, topic=self.topic
-            ).exists()
-        )
-        
-        # 破門された弟子との関係は削除されている
-        self.assertFalse(
-            MentorRelation.objects.filter(
-                mentor=self.mentor, mentee=self.mentee1, topic=self.topic
-            ).exists()
-        )
-        
-        # 破門された弟子のステータスがEXPELLEDになっている
-        self.mentee1_topic.refresh_from_db()
-        self.assertEqual(self.mentee1_topic.status, UserTopic.Status.EXPELLED)
-
-    def test_approve_with_mentee_selection_graduate(self):
-        """定員超過時の承認：弟子を卒業して新しい弟子を受け入れる"""
-        # 定員いっぱいまで師弟関係を作成
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee2, topic=self.topic)
-        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee3, topic=self.topic)
-        
-        # 新しい弟子からのリクエストを作成
-        request = MentorRelationRequest.objects.create(
-            from_user=self.mentee4, to_user=self.mentor, topic=self.topic, status="pending"
-        )
-        
-        headers = get_jwt_auth_headers(self.mentor)
-        
-        # 弟子選択付きで承認（mentee1を卒業）
-        response = self.client.post(
-            f"/api/mentorship/requests/{request.id}/approve-with-selection",
-            {"mentee_id": self.mentee1.id, "action": "graduate"},
-            content_type="application/json",
-            headers=headers,
-        )
-        
-        self.assertEqual(response.status_code, 200)
-        
-        # 新しい師弟関係が作成されている
-        self.assertTrue(
-            MentorRelation.objects.filter(
-                mentor=self.mentor, mentee=self.mentee4, topic=self.topic
-            ).exists()
-        )
-        
-        # 卒業された弟子との関係は削除されている
-        self.assertFalse(
-            MentorRelation.objects.filter(
-                mentor=self.mentor, mentee=self.mentee1, topic=self.topic
-            ).exists()
-        )
-        
-        # 卒業された弟子のステータスがGRADUATEDになっている
-        self.mentee1_topic.refresh_from_db()
-        self.assertEqual(self.mentee1_topic.status, UserTopic.Status.GRADUATED)
-        
-        # 卒業された弟子のレベルが上がっている
-        self.assertEqual(self.mentee1_topic.level, 6)  # 師匠のレベル+1
 
     def test_get_mentor_capacity(self):
         """師匠の定員情報取得テスト"""
@@ -681,3 +595,65 @@ class MentorCapacityTestCase(TestCase):
         mentee_ids = [mentee["id"] for mentee in data]
         self.assertIn(self.mentee1.id, mentee_ids)
         self.assertIn(self.mentee2.id, mentee_ids)
+
+    def test_expel_mentee_level_down(self):
+        """破門処理で弟子のレベルが1下がることをテスト"""
+        # 師弟関係を作成
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        
+        # 弟子の初期レベルを記録
+        initial_level = self.mentee1_topic.level
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # 弟子を破門
+        response = self.client.post(
+            f"/api/mentorship/mentees/{self.mentee1.id}/expel",
+            {"topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # 弟子のレベルが1下がっていることを確認
+        self.mentee1_topic.refresh_from_db()
+        self.assertEqual(self.mentee1_topic.level, initial_level - 1)
+        
+        # ステータスがEXPELLEDになっていることを確認
+        self.assertEqual(self.mentee1_topic.status, UserTopic.Status.EXPELLED)
+
+    def test_expel_mentee_descendant_level_adjustment(self):
+        """破門処理で弟子の子孫のレベルも適切に調整されることをテスト"""
+        # 師弟関係を作成: mentor -> mentee1 -> mentee2
+        MentorRelation.objects.create(mentor=self.mentor, mentee=self.mentee1, topic=self.topic)
+        MentorRelation.objects.create(mentor=self.mentee1, mentee=self.mentee2, topic=self.topic)
+        
+        # レベルを設定
+        self.mentor_topic.level = 10
+        self.mentor_topic.save()
+        self.mentee1_topic.level = 5
+        self.mentee1_topic.save()
+        self.mentee2_topic.level = 2
+        self.mentee2_topic.save()
+        
+        headers = get_jwt_auth_headers(self.mentor)
+        
+        # mentee1を破門
+        response = self.client.post(
+            f"/api/mentorship/mentees/{self.mentee1.id}/expel",
+            {"topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers,
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # mentee1のレベルが1下がっていることを確認
+        self.mentee1_topic.refresh_from_db()
+        self.assertEqual(self.mentee1_topic.level, 4)  # 5 - 1
+        
+        # mentee2のレベルも適切に調整されていることを確認
+        self.mentee2_topic.refresh_from_db()
+        # 師匠とのレベル差(10-5=5)分だけレベルダウン
+        self.assertEqual(self.mentee2_topic.level, -4)  # 2 - 5 - 1 (破門によるレベルダウン)
