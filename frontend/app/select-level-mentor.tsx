@@ -155,7 +155,7 @@ export default function SelectLevelMentorScreen() {
     fetchMentorData();
   }, [topicId]);
 
-  // 師匠選択リクエストの状態を取得
+  // 師匠選択リクエストの状態を取得（画面読み込み時に判断）
   useEffect(() => {
     const fetchRequestStatus = async () => {
       try {
@@ -164,7 +164,40 @@ export default function SelectLevelMentorScreen() {
           to_username?: string;
           message?: string;
         };
-        setRequestStatus(statusResponse);
+        
+        // 画面読み込み時にrejectされた場合は通知を表示してnoneにリセット
+        if (statusResponse.status === 'rejected') {
+          Alert.alert('承認が拒否されました', '師匠選択リクエストが拒否されました。再度師匠を選択してください。', [
+            {
+              text: 'OK',
+              onPress: async () => {
+                setRequestStatus({ status: 'none', message: '' });
+                // 師匠選択データを再取得
+                try {
+                  const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
+                    required: boolean;
+                    user_status?: string;
+                  };
+                  if (selectionResponse.required) {
+                    const mentors = (await getAvailableMentors(topicId)) as Mentor[];
+                    setMentorData({
+                      required: true,
+                      mentors,
+                      userStatus: selectionResponse.user_status,
+                    });
+                  } else {
+                    setMentorData({ required: false, mentors: [] });
+                  }
+                } catch (error) {
+                  console.error('師匠選択データ再取得エラー:', error);
+                  setMentorData({ required: false, mentors: [] });
+                }
+              },
+            },
+          ]);
+        } else {
+          setRequestStatus(statusResponse);
+        }
       } catch (error) {
         console.error('リクエスト状態取得エラー:', error);
         // エラーの場合はリクエストなしとして扱う

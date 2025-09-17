@@ -154,7 +154,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       Alert.alert('更新完了', `弟子定員を${newCapacity}人に設定しました`);
       fetchMyTopics(); // トピック一覧を再取得
     } catch (error: any) {
-      Alert.alert('エラー', error.message || '弟子定員の更新に失敗しました');
+      // エラーメッセージを分かりやすく表示
+      let errorMessage = '弟子定員の更新に失敗しました';
+      if (error.message) {
+        // バックエンドからのエラーメッセージをそのまま表示
+        errorMessage = error.message;
+      }
+      Alert.alert('エラー', errorMessage);
+      
       // エラー時は元の値に戻す
       const topic = myTopics.find(t => t.id === topicId);
       if (topic) {

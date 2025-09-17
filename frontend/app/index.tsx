@@ -45,6 +45,10 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
+  const handleMentorSelectionRequired = (topicId: string) => {
+    router.push(`/select-level-mentor?topicId=${topicId}`);
+  };
+
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
@@ -54,6 +58,7 @@ export default function HomeScreen() {
       <SimpleTopicView
         key={renderKey}
         onUserPress={handleUserPress}
+        onMentorSelectionRequired={handleMentorSelectionRequired}
         onTopicChange={topicId => setCurrentTopicId(topicId)}
       />
 

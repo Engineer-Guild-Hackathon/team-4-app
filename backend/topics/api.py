@@ -316,7 +316,7 @@ def update_mentee_capacity(request, topic_id: uuid.UUID, data: MenteeCapacityUpd
     # 定員の範囲チェック
     if data.mentee_capacity < 1 or data.mentee_capacity > 100:
         return 400, {
-            "detail": "弟子定員は1人から100人の範囲で設定してください"
+            "message": "弟子定員は1人から100人の範囲で設定してください"
         }
     
     # 現在の弟子数を取得
@@ -328,7 +328,7 @@ def update_mentee_capacity(request, topic_id: uuid.UUID, data: MenteeCapacityUpd
     # 新しい定員が現在の弟子数より少ない場合はエラー
     if data.mentee_capacity < current_mentee_count:
         return 400, {
-            "detail": f"現在{current_mentee_count}人の弟子がいるため、定員を{data.mentee_capacity}人にすることはできません"
+            "message": f"現在{current_mentee_count}人の弟子がいるため、定員を{data.mentee_capacity}人にすることはできません。\n\n先に弟子を破門または卒業させてから定員を変更してください。"
         }
     
     # 弟子定員を更新
