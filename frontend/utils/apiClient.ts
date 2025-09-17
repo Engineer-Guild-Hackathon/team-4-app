@@ -30,7 +30,8 @@ export async function apiClient<T = unknown>(
   if (!res.ok) {
     // 204 No Contentでもres.okはtrueなのでここは通らない
     const error = await res.json().catch(() => ({}));
-    throw new Error(error.detail || res.statusText);
+    const message = typeof error.message === 'string' ? error.message : JSON.stringify(error);
+    throw new Error(message || res.statusText);
   }
   if (res.status === 204) {
     // No Content: サーバーは空レスポンス
