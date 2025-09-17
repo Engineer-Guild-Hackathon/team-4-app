@@ -2,6 +2,9 @@
 from django.test import TestCase
 from ninja.testing import TestClient
 from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.cache import cache
+from unittest.mock import patch
 from config.urls import api
 from .api import router
 from .models import Block
@@ -136,3 +139,161 @@ class UserAPITest(TestCase):
 		data = response.json()
 		self.assertFalse(data["blocking"])
 		self.assertFalse(data["blocked"])
+
+class PasswordResetAPITest(TestCase):
+	def setUp(self):
+		self.client = TestClient(router)
+		self.user = User.objects.create_user(
+			username="testuser",
+			email="test@example.com",
+			password="testpass123"
+		)
+		# キャッシュをクリア
+		cache.clear()
+
+	@patch('users.api.send_mail')
+	def test_password_reset_request_success(self, mock_send_mail):
+		"""パスワードリセット要求が成功することをテスト"""
+		mock_send_mail.return_value = True
+		
+		data = {"email": "test@example.com"}
+		response = self.client.post("/password-reset/", json=data)
+		
+		self.assertEqual(response.status_code, 200)
+		response_data = response.json()
+		self.assertIn("パスワードリセットコードを送信しました", response_data["message"])
+		
+		# メール送信が呼ばれたことを確認
+		mock_send_mail.assert_called_once()
+		call_args = mock_send_mail.call_args
+		self.assertEqual(call_args[1]['recipient_list'], ['test@example.com'])
+		self.assertIn("パスワードリセットコードのご案内", call_args[1]['subject'])
+		
+		# キャッシュにコードが保存されていることを確認
+		cache_key = f"password_reset_test@example.com"
+		cached_code = cache.get(cache_key)
+		self.assertIsNotNone(cached_code)
+		self.assertEqual(len(cached_code), 6)
+
+	@patch('users.api.send_mail')
+	def test_password_reset_request_nonexistent_user(self, mock_send_mail):
+		"""存在しないユーザーのメールアドレスでも成功レスポンスを返すことをテスト"""
+		data = {"email": "nonexistent@example.com"}
+		response = self.client.post("/password-reset/", json=data)
+		
+		self.assertEqual(response.status_code, 200)
+		response_data = response.json()
+		self.assertIn("パスワードリセットコードを送信しました", response_data["message"])
+		
+		# メール送信は呼ばれない
+		mock_send_mail.assert_not_called()
+
+	@patch('users.api.send_mail')
+	def test_password_reset_request_duplicate_email(self, mock_send_mail):
+		"""同じメールアドレスを持つ複数のユーザーがいる場合のテスト"""
+		mock_send_mail.return_value = True
+		
+		# 同じメールアドレスを持つ2つのユーザーを作成
+		User.objects.create_user(
+			username="user1",
+			email="duplicate@example.com",
+			password="pass1"
+		)
+		User.objects.create_user(
+			username="user2",
+			email="duplicate@example.com",
+			password="pass2"
+		)
+		
+		data = {"email": "duplicate@example.com"}
+		response = self.client.post("/password-reset/", json=data)
+		
+		self.assertEqual(response.status_code, 200)
+		response_data = response.json()
+		self.assertIn("パスワードリセットコードを送信しました", response_data["message"])
+		
+		# メール送信が呼ばれたことを確認（最初のユーザーに対して）
+		mock_send_mail.assert_called_once()
+
+	@patch('users.api.send_mail')
+	def test_password_reset_request_email_send_failure(self, mock_send_mail):
+		"""メール送信に失敗した場合のエラーハンドリングをテスト"""
+		mock_send_mail.side_effect = Exception("SMTP Error")
+		
+		data = {"email": "test@example.com"}
+		response = self.client.post("/password-reset/", json=data)
+		
+		self.assertEqual(response.status_code, 400)
+		response_data = response.json()
+		self.assertIn("メール送信に失敗しました", response_data["message"])
+
+	def test_password_reset_confirm_success(self):
+		"""パスワードリセット確認が成功することをテスト"""
+		# キャッシュにコードを保存
+		test_code = "123456"
+		cache_key = f"password_reset_test@example.com"
+		cache.set(cache_key, test_code, 600)
+		
+		data = {
+			"email": "test@example.com",
+			"code": test_code,
+			"new_password": "newpassword123"
+		}
+		response = self.client.post("/password-reset/confirm/", json=data)
+		
+		self.assertEqual(response.status_code, 200)
+		response_data = response.json()
+		self.assertIn("パスワードが正常にリセットされました", response_data["message"])
+		
+		# パスワードが実際に変更されたことを確認
+		self.user.refresh_from_db()
+		self.assertTrue(self.user.check_password("newpassword123"))
+		
+		# 使用済みコードがキャッシュから削除されていることを確認
+		self.assertIsNone(cache.get(cache_key))
+
+	def test_password_reset_confirm_invalid_code(self):
+		"""無効なコードでのパスワードリセット確認をテスト"""
+		# キャッシュにコードを保存
+		test_code = "123456"
+		cache_key = f"password_reset_test@example.com"
+		cache.set(cache_key, test_code, 600)
+		
+		data = {
+			"email": "test@example.com",
+			"code": "654321",  # 間違ったコード
+			"new_password": "newpassword123"
+		}
+		response = self.client.post("/password-reset/confirm/", json=data)
+		
+		self.assertEqual(response.status_code, 400)
+		response_data = response.json()
+		self.assertIn("無効なコードです", response_data["message"])
+
+	def test_password_reset_confirm_expired_code(self):
+		"""期限切れのコードでのパスワードリセット確認をテスト"""
+		# キャッシュにコードを保存しない（期限切れをシミュレート）
+		
+		data = {
+			"email": "test@example.com",
+			"code": "123456",
+			"new_password": "newpassword123"
+		}
+		response = self.client.post("/password-reset/confirm/", json=data)
+		
+		self.assertEqual(response.status_code, 400)
+		response_data = response.json()
+		self.assertIn("コードが期限切れまたは無効です", response_data["message"])
+
+	def test_password_reset_confirm_nonexistent_user(self):
+		"""存在しないユーザーのメールアドレスでのパスワードリセット確認をテスト"""
+		data = {
+			"email": "nonexistent@example.com",
+			"code": "123456",
+			"new_password": "newpassword123"
+		}
+		response = self.client.post("/password-reset/confirm/", json=data)
+		
+		self.assertEqual(response.status_code, 400)
+		response_data = response.json()
+		self.assertIn("無効なメールアドレスです", response_data["message"])

@@ -3,11 +3,19 @@ from typing import Optional
 from ninja.files import UploadedFile
 from users.models import Block
 from .models import UserProfile
-from .schemas import UserCreateOut, UserIn, UserOut, UserWithTopicsOut, UserDetail
+from .schemas import (
+    UserCreateOut, UserIn, UserOut, UserWithTopicsOut, UserDetail,
+    PasswordResetRequestIn, PasswordResetConfirmIn, PasswordResetResponseOut
+)
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from django.conf import settings
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
+import random
+import string
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -22,6 +30,79 @@ def get_current_user(request):
     """現在のユーザー情報を取得する"""
     user = get_object_or_404(User.objects.select_related('profile'), id=request.auth.id)
     return user
+
+@router.post("/password-reset/", response={200: PasswordResetResponseOut, 400: dict})
+def request_password_reset(request, data: PasswordResetRequestIn):
+    try:
+        user = User.objects.filter(email=data.email).first()
+        if not user:
+            return PasswordResetResponseOut(message="パスワードリセットコードを送信しました。")
+    except Exception:
+        return PasswordResetResponseOut(message="パスワードリセットコードを送信しました。")
+    
+    # 6桁のランダムコード生成
+    reset_code = ''.join(random.choices(string.digits, k=6))
+    
+    # キャッシュに保存（10分間有効）
+    cache_key = f"password_reset_{data.email}"
+    cache.set(cache_key, reset_code, 600)  # 10分 = 600秒
+    
+    # メール送信
+    subject = "パスワードリセットコードのご案内"
+    message = f"""
+パスワードリセットコードのご案内
+
+パスワードリセットコード: {reset_code}
+
+このコードをアプリに入力してパスワードをリセットしてください。
+
+※このコードは10分間有効です
+※このメールに心当たりがない場合は、無視してください
+"""
+    
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        return 400, {"message": "メール送信に失敗しました。しばらく時間をおいて再度お試しください。"}
+    
+    return PasswordResetResponseOut(message="パスワードリセットコードを送信しました。")
+
+@router.post("/password-reset/confirm/", response={200: PasswordResetResponseOut, 400: dict})
+def confirm_password_reset(request, data: PasswordResetConfirmIn):
+    try:
+        # ユーザーを取得
+        user = User.objects.filter(email=data.email).first()
+        if not user:
+            return 400, {"message": "無効なメールアドレスです。"}
+        
+        # キャッシュからコードを取得
+        cache_key = f"password_reset_{data.email}"
+        stored_code = cache.get(cache_key)
+        
+        if not stored_code:
+            return 400, {"message": "コードが期限切れまたは無効です。"}
+        
+        # コードの検証
+        if stored_code != data.code:
+            return 400, {"message": "無効なコードです。"}
+        
+        # パスワード更新
+        user.set_password(data.new_password)
+        user.save()
+        
+        # 使用済みコードを削除
+        cache.delete(cache_key)
+        
+        return PasswordResetResponseOut(message="パスワードが正常にリセットされました。")
+        
+    except Exception:
+        return 400, {"message": "パスワードリセットに失敗しました。コードが無効または期限切れの可能性があります。"}
 
 @router.get("/{user_id}/", response={200: UserDetail, 403: dict}, auth=JWTAuth())
 def get_user(request, user_id: int):

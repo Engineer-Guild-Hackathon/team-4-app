@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/styles/theme';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,16 +8,18 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Platform,
   ScrollView,
   StyleProp,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: StyleProp<ViewStyle> }) => {
   const player = useVideoPlayer(uri, player => {
@@ -63,7 +66,7 @@ export default function CreatePostScreen() {
       if (!result.canceled) {
         setMediaAssets(result.assets);
       }
-    } catch (error: any) {
+    } catch {
       Alert.alert(
         'メディアの読み込みに失敗しました',
         '選択されたメディアの処理中にエラーが発生しました。別のファイルを選択するか、デバイスにダウンロードしてから再度お試しください。'
@@ -98,7 +101,7 @@ export default function CreatePostScreen() {
         uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
         name: asset.fileName || 'media.jpg',
         type: asset.mimeType || 'image/jpeg',
-      } as any);
+      } as unknown as Blob);
     }
     formData.append('metadata', JSON.stringify(metadata));
 
@@ -118,14 +121,11 @@ export default function CreatePostScreen() {
       }
 
       Alert.alert('成功', '投稿が完了しました！');
-      router.replace({
-        pathname: '/',
-        params: { openModal: 'true', topicId, selfUserId: params.selfUserId },
-      });
-    } catch (error: any) {
+      router.replace({ pathname: '/', params: { openModal: 'true' } });
+    } catch (error: unknown) {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage =
-        error?.detail ||
+        (error as { detail?: string })?.detail ||
         '投稿に失敗しました。ネットワーク接続を確認するか、時間をおいて再試行してください。';
       Alert.alert('投稿エラー', errorMessage);
     } finally {
@@ -145,11 +145,11 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <Button
-        title={isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
-        onPress={pickMedia}
-        disabled={isPickingMedia}
-      />
+      <TouchableOpacity style={styles.button} onPress={pickMedia} disabled={isPickingMedia}>
+        <Text style={styles.buttonText}>
+          {isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
+        </Text>
+      </TouchableOpacity>
 
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset => {
@@ -174,38 +174,77 @@ export default function CreatePostScreen() {
 
       <View style={{ flex: 1 }} />
 
-      <Button
-        title={isSubmitting ? '投稿中...' : '投稿する'}
+      <TouchableOpacity
+        style={[styles.button, styles.submitButton]}
         onPress={handlePost}
         disabled={isSubmitting}
-      />
+      >
+        <Text style={[styles.buttonText, styles.submitButtonText]}>
+          {isSubmitting ? '投稿中...' : '投稿する'}
+        </Text>
+      </TouchableOpacity>
       {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  container: {
+    flex: 1,
+    padding: remToPx(theme.spacing[5]), // 1.25rem → 20px
+    backgroundColor: theme.colors.background.primary,
+  },
+  title: {
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: remToPx(theme.spacing[5]),
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    padding: remToPx(theme.spacing[3]),
+    borderRadius: remToPx(theme.borderRadius.md),
     height: 150,
     textAlignVertical: 'top',
-    marginBottom: 20,
-    fontSize: 16,
+    marginBottom: remToPx(theme.spacing[5]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.background.secondary,
+    fontFamily: 'Klee One',
   },
   previewContainer: {
-    marginTop: 15,
+    marginTop: remToPx(theme.spacing[4]),
     maxHeight: 100,
   },
   previewImage: {
     width: 100,
     height: 100,
-    borderRadius: 8,
-    marginRight: 10,
-    backgroundColor: '#e0e0e0',
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginRight: remToPx(theme.spacing[3]),
+    backgroundColor: theme.colors.neutral[300],
+  },
+  button: {
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: remToPx(theme.spacing[3]),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: remToPx(theme.spacing[4]),
+  },
+  buttonText: {
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
+  },
+  submitButton: {
+    marginTop: remToPx(theme.spacing[4]),
+  },
+  submitButtonText: {
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
 });

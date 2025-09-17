@@ -1,37 +1,38 @@
-import { deletePost, getPosts } from '@/services/api/post';
+import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  ImageStyle,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { Button } from '../Shared/Button';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
+  posts: PostOut[];
   loading: boolean;
   error: string | null;
   selfUserId?: number;
-  onClose: () => void;
-  userId: number;
-  topicId: string;
+  onDelete: (postId: number) => void;
 }
 
-const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
+const VideoItem = ({ uri, style }: { uri: string; style: ImageStyle }) => {
   const player = useVideoPlayer(uri, player => {
     player.loop = true;
     player.play();
   });
 
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+  useEvent(player, 'playingChange', { isPlaying: player.playing });
 
   return (
     <VideoView
@@ -43,44 +44,9 @@ const VideoItem = ({ uri, style }: { uri: string; style: any }) => {
   );
 };
 
-export default function PostView({
-  loading,
-  error,
-  selfUserId,
-  onClose,
-  userId,
-  topicId,
-}: PostViewProps) {
+export default function PostView({ posts, loading, error, selfUserId, onDelete }: PostViewProps) {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
-  const [posts, setPosts] = React.useState<PostOut[]>([]);
-  const router = useRouter();
-
-  useEffect(() => {
-    getPosts(topicId!, userId!).then(data => setPosts(data));
-  }, [topicId, userId]);
-
-  const handleDeletePost = async (postId: number) => {
-    Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deletePost(postId);
-            setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-          } catch (e: unknown) {
-            if (e instanceof Error) {
-              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
-            } else {
-              Alert.alert('エラー', '削除中に不明なエラーが発生しました。');
-            }
-          }
-        },
-      },
-    ]);
-  };
 
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('投稿メニュー', '', [
@@ -103,13 +69,23 @@ export default function PostView({
     <View style={styles.post}>
       <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
-            <Text style={styles.deleteButtonText}>削除</Text>
-          </TouchableOpacity>
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => onDelete(item.id)}
+            style={styles.actionButton}
+          >
+            削除
+          </Button>
         ) : (
-          <TouchableOpacity onPress={() => handleOpenMenu(item)} style={styles.menuButton}>
-            <Text style={styles.menuButtonText}>⋮</Text>
-          </TouchableOpacity>
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => handleOpenMenu(item)}
+            style={styles.actionButton}
+          >
+            ⋮
+          </Button>
         )}
       </View>
       <View>
@@ -141,8 +117,15 @@ export default function PostView({
   if (error) {
     return <Text style={styles.centered}>エラー: {error}</Text>;
   }
+  if (posts.length === 0) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyText}>まだ投稿がありません。</Text>
+      </View>
+    );
+  }
   return (
-    <View style={{ flex: 1, padding: 10 }}>
+    <>
       <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
       {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
@@ -159,87 +142,47 @@ export default function PostView({
           setReportTargetPost(null);
         }}
       />
-      {selfUserId === userId && (
-        <TouchableOpacity
-          style={styles.fab}
-          activeOpacity={0.7}
-          onPress={() => {
-            onClose();
-            router.push(`/create-post?topicId=${topicId}&selfUserId=${selfUserId}`);
-          }}
-        >
-          <Text style={styles.fabText}>＋</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: remToPx(theme.spacing[16]),
+    fontFamily: 'Klee One',
+    fontSize: remToPx(theme.typography.fontSize.base),
+  },
   post: {
-    paddingVertical: 15,
+    paddingVertical: remToPx(theme.spacing[6]) - 1, // lg - 1px
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background.primary,
   },
   postContent: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: remToPx(theme.spacing[4]) - 2, // md - 2px
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   media: {
     width: '100%',
     height: 200,
-    marginTop: 5,
-    marginBottom: 5,
-    backgroundColor: '#f0f0f0',
+    marginTop: remToPx(theme.spacing[2]) + 1, // xs + 1px
+    marginBottom: remToPx(theme.spacing[2]) + 1,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: remToPx(theme.borderRadius.md),
   },
-  deleteButton: {
+  actionButton: {
     position: 'absolute',
-    top: 15,
-    right: 0,
-    backgroundColor: '#ff4d4d',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    top: remToPx(theme.spacing[6]) - 1, // lg - 1px
+    right: remToPx(theme.spacing[4]),
     zIndex: 1,
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  menuButton: {
-    backgroundColor: '#e5e7eb',
-    borderRadius: 16,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    marginRight: 4,
-  },
-  menuButtonText: {
-    color: '#374151',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  fab: {
-    position: 'absolute',
-    right: 24,
-    bottom: 32,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 36,
   },
 });

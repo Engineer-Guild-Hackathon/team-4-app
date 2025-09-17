@@ -52,3 +52,14 @@ class UserIn(Schema):
 
 class UserProfileUpdateIn(Schema):
     bio: Optional[str] = None
+
+class PasswordResetRequestIn(Schema):
+    email: str
+
+class PasswordResetConfirmIn(Schema):
+    email: str
+    code: str
+    new_password: str
+
+class PasswordResetResponseOut(Schema):
+    message: str

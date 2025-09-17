@@ -12,13 +12,13 @@ import { getPosts } from '@/services/api/post';
 import { getTopicLevelInfo, joinTopic, leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { PostMediaOut, PostOut } from '@/types/post';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -445,13 +445,7 @@ export default function SelectLevelMentorScreen() {
                       ? media.file
                       : `${process.env.EXPO_PUBLIC_API_URL}${media.file}`;
                     if (media.media_type === 'image') {
-                      return (
-                        <Image
-                          key={idx}
-                          source={{ uri: mediaUrl, cacheKey: mediaUrl.split('?')[0] }}
-                          style={styles.media}
-                        />
-                      );
+                      return <Image key={idx} source={{ uri: mediaUrl }} style={styles.media} />;
                     }
                     // 動画対応は今後
                     return null;
