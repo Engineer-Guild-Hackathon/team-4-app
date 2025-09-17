@@ -36,10 +36,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (params.profileUpdated === 'true') {
       setRenderKey(prevKey => prevKey + 1);
-
       router.setParams({ profileUpdated: undefined });
     }
-  }, [params.profileUpdatedm, router, params.profileUpdated]);
+  }, [params.profileUpdated, router]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
@@ -53,6 +52,12 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <SimpleTopicView
+        key={renderKey}
+        onUserPress={handleUserPress}
+        onTopicChange={topicId => setCurrentTopicId(topicId)}
+      />
+
       {currentTopicId && (
         <>
           <Link href="/edit-profile" asChild>
@@ -80,8 +85,6 @@ export default function HomeScreen() {
         </>
       )}
 
-      <SimpleTopicView key={renderKey} onUserPress={handleUserPress} />
-
       <UserDetailModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -104,6 +107,25 @@ export default function HomeScreen() {
   );
 }
 
+// ★ 修正点: スタイルの定義方法を改善
+const fabBaseStyle: ViewStyle = {
+  position: 'absolute',
+  right: 24,
+  height: 60,
+  width: 60,
+  backgroundColor: theme.colors.primary[400],
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderRadius: 30,
+  zIndex: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.5,
+  shadowRadius: 5,
+  elevation: 2,
+  borderWidth: 0,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -120,66 +142,17 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.primary,
   },
-  fabBase: {
-    // This style is now defined in the fabBaseStyle constant below
-    // and is no longer needed here.
-  },
-  logoutButton: {
-    // This will be defined using the fabBaseStyle constant
-  },
   editButton: {
-    // This will be defined using the fabBaseStyle constant
-  },
-  mentorshipButton: {
-    // This will be defined using the fabBaseStyle constant
-  },
-  headerCenterButton: {
-    position: 'absolute',
+    ...fabBaseStyle,
     top: 60,
-    left: '50%',
-    transform: [{ translateX: -30 }],
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  pomodoroButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-});
-
-const fabBaseStyle: ViewStyle = {
-  position: 'absolute',
-  right: remToPx(theme.spacing[20]), // xxl
-  zIndex: 10,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
-  shadowRadius: 6,
-  elevation: 5,
-  borderWidth: 0, // Override default border from Button
-};
-
-Object.assign(styles, {
-  logoutButton: {
-    ...fabBaseStyle,
-    top: remToPx(theme.spacing[24]) * 3, // Approximating "7xl" × 3
-  },
-  editButton: {
-    ...fabBaseStyle,
-    top: remToPx(theme.spacing[24]), // Approximating "6xl"
   },
   mentorshipButton: {
     ...fabBaseStyle,
-    top: remToPx(theme.spacing[24]) + remToPx(theme.spacing[24]), // "7xl" + "6xl"
+    top: 150,
+  },
+  logoutButton: {
+    ...fabBaseStyle,
+    top: 240,
   },
   headerCenterButton: {
     position: 'absolute',
