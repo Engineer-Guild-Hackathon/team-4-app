@@ -40,6 +40,26 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
   const [outputDuration, setOutputDuration] = useState(DEFAULT_OUTPUT_MINUTES * 60);
   const [breakDuration, setBreakDuration] = useState(DEFAULT_BREAK_MINUTES * 60);
 
+  useEffect(() => {
+    const requestNotificationPermission = async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        await Notifications.requestPermissionsAsync();
+      }
+    };
+    requestNotificationPermission();
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true, // 通知をアラートとして表示
+        shouldPlaySound: true, // 通知音の再生
+        shouldSetBadge: false, // アプリアイコンのバッジの設定
+        shouldShowBanner: true, // バナーの表示
+        shouldShowList: true, // 通知リストへの表示
+      }),
+    });
+  }, []);
+
   // タイマーの心臓部となるロジック
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -89,7 +109,7 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
 
   const endOutputAndBreak = () => {
     Notifications.scheduleNotificationAsync({
-      content: { title: 'アウトプット終了！', body: '5分間の休憩です。' },
+      content: { title: 'アウトプット終了！', body: '休憩です。' },
       trigger: null,
     });
     setPhase('break');
