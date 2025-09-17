@@ -76,11 +76,11 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
       const notificationContent = (title: string, body: string) => ({
         title,
         body,
-        sound: isSoundEnabled ? 'default' : null,
+        sound: isSoundEnabled,
       });
       // フェーズの切り替え
       if (phase === 'studying') {
-        Notifications.scheduleNotificationAsync({ content: notificationContent("集中お疲れ様でした！", 'アウトプットを始めましょう。'), trigger: null });
+        Notifications.scheduleNotificationAsync({ content: notificationContent("集中お疲れ様でした！", 'アウトプットを始めましょう'), trigger: null });
         setPhase('output');
         setSecondsLeft(outputDuration);
       } else if (phase === 'output') {
@@ -121,8 +121,8 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
     Notifications.scheduleNotificationAsync({
       content: { 
         title: 'アウトプット終了！', 
-        body: '5分間の休憩です。',
-        sound: isSoundEnabled ? 'default' : null,
+        body: '休憩です',
+        sound: isSoundEnabled,
       },
       trigger: null,
     });
