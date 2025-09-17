@@ -4,8 +4,9 @@ import { SplashScreen, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import { Pressable, Text, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -23,11 +24,11 @@ const BreakTimerOverlay = () => {
   return (
     <View style={styles.breakOverlayContainer}>
       <View style={styles.breakInfoCircle}>
-        <Text style={styles.breakLabelText}>休憩中</Text>
-        <Text style={styles.breakTimeText}>{formatTime(secondsLeft)}</Text>
+        <MixedFontText style={styles.breakLabelText}>休憩中</MixedFontText>
+        <MixedFontText style={styles.breakTimeText}>{formatTime(secondsLeft)}</MixedFontText>
       </View>
       <Pressable style={styles.breakCloseCircle} onPress={closeTimer}>
-        <Text style={styles.breakCloseButtonText}>×</Text>
+        <MixedFontText style={styles.breakCloseButtonText}>×</MixedFontText>
       </Pressable>
     </View>
   );
@@ -39,6 +40,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     'Klee One': require('../assets/fonts/KleeOne-SemiBold.ttf'),
+    'SourceSerif4-Light': require('../assets/fonts/SourceSerif4-Light.ttf'),
+    'SourceSerif4-Regular': require('../assets/fonts/SourceSerif4-Regular.ttf'),
+    'SourceSerif4-Medium': require('../assets/fonts/SourceSerif4-Medium.ttf'),
   });
 
   useEffect(() => {
@@ -59,8 +63,6 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
             <Stack.Screen
               name="password-reset-request"
               options={{
