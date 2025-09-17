@@ -1,14 +1,60 @@
 import { useAuth } from '@/hooks/useAuth';
+import { checkMentorSelectionRequired } from '@/services/api/mentorship';
 import { getMyTopics } from '@/services/api/topic';
 import { theme } from '@/styles/theme';
 import React, { useEffect, useRef, useState } from 'react';
-// ★ 修正点 1: ActivityIndicator をインポート
-import { checkMentorSelectionRequired } from '@/services/api/mentorship';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ImageSourcePropType, StyleSheet, View, ViewStyle } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
 import { TreeViewer } from './TreeViewer/TreeViewer';
+import { WafuCloud } from './WahuCloud';
+
+// ★ 2. 背景の雲をまとめて配置するためのコンポーネントを定義
+const BackgroundClouds = () => {
+  // 画像アセットのパスはご自身のプロジェクトに合わせて修正してください
+  const goldTexture = require('../assets/images/cloud-texture.png');
+
+  return (
+    // zIndex:-1で確実に背景に配置
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+      {/* 上部の雲 */}
+      <WafuCloud
+        seed={13}
+        textureSource={goldTexture}
+        duration={24000}
+        travelDistance={25}
+        style={{ width: 250, height: 120, top: 80, left: -50, opacity: 0.7 }}
+      />
+      <WafuCloud
+        seed={456}
+        textureSource={goldTexture}
+        duration={42000}
+        travelDistance={-20}
+        style={{ width: 200, height: 120, top: 110, right: -80, opacity: 0.5 }}
+      />
+      {/* 下部の雲 */}
+      <WafuCloud
+        seed={789}
+        textureSource={goldTexture}
+        duration={38000}
+        travelDistance={-22}
+        style={{ width: 220, height: 100, bottom: 130, left: -40, opacity: 0.9 }}
+      />
+      <WafuCloud
+        seed={101}
+        textureSource={goldTexture}
+        duration={30000}
+        travelDistance={18}
+        style={{ width: 320, height: 150, bottom: 50, right: -100, opacity: 0.9 }}
+      />
+    </View>
+  );
+};
+
+// =================================================================
+// ここから下がSimpleTopicView本体
+// =================================================================
 
 interface Topic {
   id: string;
@@ -19,14 +65,12 @@ interface Topic {
 }
 
 interface SimpleTopicViewProps {
-  topics?: Topic[];
   onUserPress: (topicId: string, userId: number) => void;
   onMentorSelectionRequired?: (topicId: string) => void;
   onTopicChange?: (topicId: string | null) => void;
 }
 
 export function SimpleTopicView({
-  topics: propTopics,
   onUserPress,
   onMentorSelectionRequired,
   onTopicChange,
@@ -103,12 +147,10 @@ export function SimpleTopicView({
       checkMentorSelection(topicId);
       onTopicChange?.(topicId);
     } else if (topics.length > 0) {
-      // トピックはあるが、管理ページにいる場合
       onTopicChange?.(null);
     }
   }, [topics, currentIndex]);
 
-  // ★ 修正点 2: ローディング中の表示を先に行う
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -117,13 +159,19 @@ export function SimpleTopicView({
     );
   }
 
-  // ★ 修正点 3: ローディング完了後にtopicsが空の場合のみ、管理ビューを表示
   if (topics.length === 0) {
-    return <TopicManageView onBack={() => refreshMyTopics(true)} />;
+    return (
+      <View style={styles.container}>
+        <BackgroundClouds />
+        <TopicManageView onBack={() => refreshMyTopics(true)} />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
+      <BackgroundClouds />
+
       <View style={{ flex: 1 }}>
         <PagerView
           ref={pagerRef}
@@ -185,7 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: 'transparent',
   },
   treeContainer: {
     position: 'absolute',
@@ -194,15 +242,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 100, // Space for TopicCarousel
   },
-  // ★ 修正点 4: ローディングコンテナ用のスタイルを追加
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff', // 必要に応じて背景色を設定
+    backgroundColor: 'transparent',
   },
-  loadingText: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
-    color: theme.colors.text.tertiary,
+  cloudContainer: {
+    position: 'absolute',
   },
 });

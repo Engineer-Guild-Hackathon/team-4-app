@@ -301,7 +301,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   text: { color: '#1f2937' },
   controlsContainer: {
