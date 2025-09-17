@@ -118,9 +118,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Klee One',
   },
   linkText: {
-    color: '#007AFF',
-    fontSize: 16,
+    color: theme.colors.text.link,
+    fontSize: remToPx(theme.typography.fontSize.base),
     textAlign: 'center',
     textDecorationLine: 'underline',
+    fontFamily: 'Klee One',
   },
 });
