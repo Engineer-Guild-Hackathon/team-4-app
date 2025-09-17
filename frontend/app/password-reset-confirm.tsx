@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { apiClient } from '@/utils/apiClient';
+import { theme } from '@/styles/theme';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function PasswordResetConfirm() {
   const [code, setCode] = useState('');
@@ -165,65 +168,72 @@ export default function PasswordResetConfirm() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.primary,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: remToPx(theme.spacing[5]),
     justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
+    marginBottom: remToPx(theme.spacing[5]),
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   description: {
-    fontSize: 16,
+    fontSize: remToPx(theme.typography.fontSize.base),
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    marginBottom: remToPx(theme.spacing[8]),
+    color: theme.colors.text.secondary,
     lineHeight: 22,
+    fontFamily: 'Klee One',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: remToPx(theme.spacing[5]),
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: remToPx(theme.spacing[2]),
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    borderColor: theme.colors.border,
+    borderRadius: remToPx(theme.borderRadius.md),
+    padding: remToPx(theme.spacing[3]),
+    fontSize: remToPx(theme.typography.fontSize.base),
+    backgroundColor: theme.colors.background.secondary,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: theme.colors.primary[300],
+    padding: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.md),
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: remToPx(theme.spacing[5]),
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: theme.colors.neutral[400],
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
   backButton: {
     alignItems: 'center',
-    padding: 12,
+    padding: remToPx(theme.spacing[3]),
   },
   backButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
+    color: theme.colors.text.link,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontFamily: 'Klee One',
   },
 });
