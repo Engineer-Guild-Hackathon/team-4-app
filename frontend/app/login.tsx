@@ -18,7 +18,7 @@ export default function LoginScreen() {
     try {
       await login(username, password);
     } catch (e: unknown) {
-      setError((e as Error).message || 'ログインに失敗しました');
+      setError('ユーザーネームまたはパスワードが正しくありません');
     }
   };
 
@@ -121,7 +121,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
     textAlign: 'center',
-    textDecorationLine: 'underline',
     fontFamily: 'Klee One',
   },
 });

@@ -89,12 +89,12 @@ class UserAPITest(TestCase):
 		response = self.client.post(f"/{user_to_block.id}/block/", headers=self.headers)
 		self.assertEqual(response.status_code, 200)
 		self.assertTrue(Block.objects.filter(blocker=self.user, blocked=user_to_block).exists())
-		self.assertIn("blocked", response.json()["message"])
+		self.assertIn("ブロックしました", response.json()["message"])
 
 	def test_block_user_self(self):
 		response = self.client.post(f"/{self.user.id}/block/", headers=self.headers)
 		self.assertEqual(response.status_code, 400)
-		self.assertIn("cannot block yourself", response.json()["message"])
+		self.assertIn("自分自身をブロックすることはできません", response.json()["message"])
 
 	def test_unblock_user_success(self):
 		user_to_block = User.objects.create_user(username="blockme2", email="blockme2@example.com", password="pass")
@@ -102,7 +102,7 @@ class UserAPITest(TestCase):
 		response = self.client.post(f"/{user_to_block.id}/unblock/", headers=self.headers)
 		self.assertEqual(response.status_code, 200)
 		self.assertFalse(Block.objects.filter(blocker=self.user, blocked=user_to_block).exists())
-		self.assertIn("unblocked", response.json()["message"])
+		self.assertIn("ブロックを解除しました", response.json()["message"])
 
 	def test_user_detail_blocked_and_blocking(self):
 		# 他ユーザー作成
@@ -115,7 +115,7 @@ class UserAPITest(TestCase):
 		# blocking=True, blocked=True
 		response = self.client.get(f"/{other.id}/", headers=self.headers)
 		self.assertEqual(response.status_code, 403)
-		self.assertIn("blocked", response.json()["message"])
+		self.assertIn("ブロックされています", response.json()["message"])
 
 		# blockingのみTrue
 		Block.objects.filter(blocker=other, blocked=self.user).delete()
@@ -130,7 +130,7 @@ class UserAPITest(TestCase):
 		Block.objects.create(blocker=other, blocked=self.user)
 		response = self.client.get(f"/{other.id}/", headers=self.headers)
 		self.assertEqual(response.status_code, 403)
-		self.assertIn("blocked", response.json()["message"])
+		self.assertIn("ブロックされています", response.json()["message"])
 
 		# 両方False
 		Block.objects.filter(blocker=other, blocked=self.user).delete()

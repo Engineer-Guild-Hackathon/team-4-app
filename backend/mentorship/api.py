@@ -123,24 +123,24 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
 
     # 自分自身へのリクエストを禁止
     if from_user.id == to_user.id:
-        return 400, {"message": "You cannot send a mentor request to yourself."}
+        return 400, {"message": "自分自身にリクエストを送ることはできません"}
 
     # 既存の関係やリクエストをチェック
     if MentorRelation.objects.filter(mentee=from_user, mentor=to_user, topic=topic).exists():
-        return 400, {"message": "You are already in a mentorship with this user."}
+        return 400, {"message": "既に師弟関係にあります"}
     if MentorRelationRequest.objects.filter(
         from_user=from_user, to_user=to_user, topic=topic, status="pending"
     ).exists():
-        return 400, {"message": "A pending request to this user already exists."}
+        return 400, {"message": "既にリクエストが送信されています"}
 
     # 師匠のレベルが弟子より高いかチェック
     try:
         from_user_topic = UserTopic.objects.get(user=from_user, topic=topic)
         to_user_topic = UserTopic.objects.get(user=to_user, topic=topic)
         if to_user_topic.level <= from_user_topic.level:
-            return 400, {"message": "Mentor must have a higher level than the mentee."}
+            return 400, {"message": "師匠のレベルが弟子より高くなければなりません"}
     except UserTopic.DoesNotExist:
-        return 400, {"message": "UserTopic not found for the specified topic."}
+        return 400, {"message": "指定されたトピックのユーザー情報が見つかりません"}
 
     # 師匠の定員をチェック
     is_within_capacity, current_count, capacity = _check_mentor_capacity(to_user, payload.topic_id)
@@ -202,7 +202,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
 
     # リクエストの宛先本人かチェック
     if request.user.id != mentor_request.to_user.id:
-        return 403, {"message": "You do not have permission to perform this action."}
+        return 403, {"message": "この操作を実行する権限がありません"}
 
     # 定員をチェック
     is_within_capacity, current_count, capacity = _check_mentor_capacity(
@@ -210,7 +210,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     )
     
     if not is_within_capacity:
-        return 400, {"message": "Capacity exceeded. Please expel or graduate existing mentees first."}
+        return 400, {"message": "定員を超過しています。既存の弟子を破門または卒業させてください"}
 
     # 新しい師弟関係を作成
     MentorRelation.objects.create(
@@ -239,7 +239,7 @@ def approve_mentor_request(request: HttpRequest, request_id: int):
     mentor_request.status = MentorRelationRequest.Status.APPROVED
     mentor_request.save()
 
-    return {"message": "Request approved successfully."}
+    return {"message": "リクエストを承認しました"}
 
 
 @router.post(
@@ -260,13 +260,13 @@ def reject_mentor_request(request: HttpRequest, request_id: int):
 
     # リクエストの宛先本人かチェック
     if request.user.id != mentor_request.to_user.id:
-        return 403, {"message": "You do not have permission to perform this action."}
+        return 403, {"message": "この操作を実行する権限がありません"}
 
     # リクエストのステータスを更新
     mentor_request.status = MentorRelationRequest.Status.REJECTED
     mentor_request.save()
 
-    return {"message": "Request rejected successfully."}
+    return {"message": "リクエストを拒否しました"}
 
 
 @router.post(
@@ -424,7 +424,7 @@ def check_mentor_selection_required(request: HttpRequest, topic_id: str):
             "user_status": user_topic.status
         }
     except UserTopic.DoesNotExist:
-        return 404, {"message": "UserTopic not found."}
+        return 404, {"message": "ユーザートピックが見つかりません"}
 @router.get(
     "/mentor-request-status/{topic_id}",
     summary="師匠選択リクエストの状態を取得",
@@ -442,17 +442,17 @@ def get_mentor_request_status(request: HttpRequest, topic_id: str):
         ).order_by('-created_at').first()
         
         if not latest_request:
-            return {"status": "none", "message": "No mentor request found"}
+            return {"status": "none", "message": "メンターリクエストが見つかりません"}
         
         return {
             "status": latest_request.status,
             "to_user_id": latest_request.to_user.id,
             "to_username": latest_request.to_user.username,
             "created_at": latest_request.created_at,
-            "message": f"Request to {latest_request.to_user.username} is {latest_request.status}"
+            "message": f"{latest_request.to_user.username}へのリクエストは{latest_request.status}です"
         }
     except Exception as e:
-        return 400, {"message": f"Error retrieving request status: {str(e)}"}
+        return 400, {"message": "リクエストステータスの取得に失敗しました"}
 
 @router.get(
     "/user-level/{topic_id}",
@@ -471,7 +471,7 @@ def get_user_level(request: HttpRequest, topic_id: str):
             "status": user_topic.status
         }
     except UserTopic.DoesNotExist:
-        return 404, {"message": "UserTopic not found for the specified topic."}
+        return 404, {"message": "指定されたトピックのユーザー情報が見つかりません"}
 
 @router.get(
     "/received-requests",
@@ -509,7 +509,7 @@ def get_received_mentor_requests(request: HttpRequest):
         
         return request_list
     except Exception as e:
-        return 400, {"message": f"Error retrieving requests: {str(e)}"}
+        return 400, {"message": "リクエストの取得に失敗しました"}
 
 @router.get(
     "/available-mentors/{topic_id}",
@@ -554,7 +554,7 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
         ]
         
     except UserTopic.DoesNotExist:
-        return 404, {"message": "UserTopic not found for the specified topic."}
+        return 404, {"message": "指定されたトピックのユーザー情報が見つかりません"}
 
 
 @router.get(
@@ -593,7 +593,7 @@ def get_mentees(request: HttpRequest, topic_id: str):
         return mentee_list
         
     except Exception as e:
-        return 400, {"message": f"Error retrieving mentees: {str(e)}"}
+        return 400, {"message": "弟子一覧の取得に失敗しました"}
 
 
 @router.get(
@@ -619,7 +619,7 @@ def get_mentor_capacity(request: HttpRequest, topic_id: str):
         }
         
     except Exception as e:
-        return 400, {"message": f"Error retrieving capacity: {str(e)}"}
+        return 400, {"message": "定員情報の取得に失敗しました"}
 
 
 @router.post(
@@ -652,7 +652,7 @@ def no_mentor_selection(request: HttpRequest, topic_id: str):
         }
         
     except UserTopic.DoesNotExist:
-        return 404, {"message": "UserTopic not found for the specified topic."}
+        return 404, {"message": "指定されたトピックのユーザー情報が見つかりません"}
     except Exception as e:
-        return 400, {"message": f"Error setting level: {str(e)}"}
+        return 400, {"message": "レベルの設定に失敗しました"}
 

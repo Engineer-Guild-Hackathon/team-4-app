@@ -30,7 +30,7 @@ def create_thread(request, payload: ThreadCreateIn):
 	mentor = get_object_or_404(User, id=payload.mentor_id)
 	mentorship = MentorRelation.objects.filter(mentor=mentor, mentee=request.user, topic=topic).first()
 	if not mentorship:
-		return 403, {"message": "You do not have permission to create a thread with this mentor on the selected topic."}
+		return 403, {"message": "選択されたトピックでこの師匠とスレッドを作成する権限がありません"}
 	thread = Thread.objects.create(
 		topic=topic,
 		starter=request.user,
@@ -43,9 +43,9 @@ def create_thread(request, payload: ThreadCreateIn):
 def delete_thread(request, thread_id: int):
 	thread = get_object_or_404(Thread, id=thread_id)
 	if thread.starter != request.user:
-		return 404, {"message": "You do not have permission to delete this thread."}
+		return 404, {"message": "このスレッドを削除する権限がありません"}
 	thread.delete()
-	return {"message": "Thread deleted"}
+	return {"message": "スレッドを削除しました"}
 
 @router.post("/{thread_id}/messages", response={200: ThreadMessageOut, 400: dict, 403: dict}, auth=JWTAuth())
 @transaction.atomic
@@ -57,7 +57,7 @@ def send_message(request, thread_id: int, payload: ThreadMessageCreateIn):
 		(Q(mentor=thread.mentor, mentee=request.user) | Q(mentor=request.user, mentee=thread.starter))
     ).first()
 	if not mentorship:
-		return 403, {"message": "You do not have permission to send a message in this thread."}
+		return 403, {"message": "このスレッドにメッセージを送信する権限がありません"}
 	parent = None
 	if payload.parent_id:
 		parent = get_object_or_404(ThreadMessage, id=payload.parent_id)
@@ -75,6 +75,6 @@ def delete_message(request, thread_id: int, message_id: int):
 	thread = get_object_or_404(Thread, id=thread_id)
 	message = get_object_or_404(ThreadMessage, id=message_id, thread=thread)
 	if message.author != request.user:
-		return 403, {"message": "You do not have permission to delete this message."}
+		return 403, {"message": "このメッセージを削除する権限がありません"}
 	message.delete()
-	return {"message": "Message deleted"}
+	return {"message": "メッセージを削除しました"}

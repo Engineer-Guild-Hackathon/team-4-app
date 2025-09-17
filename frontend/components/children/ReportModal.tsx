@@ -30,7 +30,7 @@ export default function ReportModal({ visible, onClose, onSubmit }: ReportModalP
       if (e instanceof Error) {
         Alert.alert('エラー', e?.message || '報告に失敗しました');
       } else {
-        Alert.alert('エラー', '不明なエラーが発生しました');
+        Alert.alert('エラー', '報告に失敗しました');
       }
     } finally {
       setLoading(false);

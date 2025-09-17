@@ -107,7 +107,7 @@ class TopicAPITest(TestCase):
         response = self.client.delete(f"/{self.topic.id}/", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
-        self.assertEqual(response_data["message"], "トピックが削除されました")
+        self.assertEqual(response_data["message"], "トピックを削除しました")
         self.assertFalse(Topic.objects.filter(id=self.topic.id).exists())
 
     def test_create_topic_with_empty_description(self):

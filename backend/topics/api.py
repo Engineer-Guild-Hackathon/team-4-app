@@ -110,7 +110,7 @@ def delete_topic(request, topic_id: uuid.UUID):
             "detail": "このトピックには関連するユーザーが存在するため削除できません"
         }, 400
     topic.delete()
-    return {"message": "トピックが削除されました"}
+    return {"message": "トピックを削除しました"}
 
 
 # UserTopic関連のエンドポイント
@@ -192,7 +192,7 @@ def remove_user_from_topic(request, topic_id: uuid.UUID, user_id: int):
     
     # UserTopicを削除
     user_topic.delete()
-    return {"message": "ユーザーをトピックから退出させました"}
+    return {"message": "トピックから退出しました"}
 
 
 # completed: この際に何らかの指定関係を結ぶ場合は、MentorRelationも同時に作成する。引数にmentor_idを追加するのがいいと思う。transaction.atomicデコレータは必須です。
@@ -316,7 +316,7 @@ def update_mentee_capacity(request, topic_id: uuid.UUID, data: MenteeCapacityUpd
     # 定員の範囲チェック
     if data.mentee_capacity < 1 or data.mentee_capacity > 100:
         return 400, {
-            "message": "弟子定員は1人から100人の範囲で設定してください"
+            "message": "弟子定員は1〜100人の範囲で設定してください"
         }
     
     # 現在の弟子数を取得
@@ -328,7 +328,7 @@ def update_mentee_capacity(request, topic_id: uuid.UUID, data: MenteeCapacityUpd
     # 新しい定員が現在の弟子数より少ない場合はエラー
     if data.mentee_capacity < current_mentee_count:
         return 400, {
-            "message": f"現在{current_mentee_count}人の弟子がいるため、定員を{data.mentee_capacity}人にすることはできません。\n\n先に弟子を破門または卒業させてから定員を変更してください。"
+            "message": f"現在{current_mentee_count}人の弟子がいるため、定員を{data.mentee_capacity}人にすることはできません。先に弟子を破門または卒業させてから定員を変更してください"
         }
     
     # 弟子定員を更新

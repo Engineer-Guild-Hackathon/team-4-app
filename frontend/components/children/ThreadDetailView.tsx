@@ -27,7 +27,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
       // ★ 3. 送信後、すぐに一番下にスクロールする
       setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 100);
     } catch (error) {
-      console.error('Message send failed:', error);
+      console.error('メッセージ送信に失敗しました:', error);
     } finally {
       setSending(false);
     }

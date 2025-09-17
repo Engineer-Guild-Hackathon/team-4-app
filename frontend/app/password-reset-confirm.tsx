@@ -71,10 +71,10 @@ export default function PasswordResetConfirm() {
         ]
       );
     } catch (error) {
-      console.error('Password reset confirmation error:', error);
+      console.error('パスワードリセット確認エラー:', error);
       Alert.alert(
         'エラー',
-        'パスワードリセットに失敗しました。コードが無効または期限切れの可能性があります。'
+        'パスワードリセットに失敗しました'
       );
     } finally {
       setLoading(false);

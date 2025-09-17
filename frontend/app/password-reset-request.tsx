@@ -55,10 +55,10 @@ export default function PasswordResetRequest() {
         ]
       );
     } catch (error) {
-      console.error('Password reset request error:', error);
+      console.error('パスワードリセットリクエストエラー:', error);
       Alert.alert(
         'エラー',
-        'メール送信に失敗しました。しばらく時間をおいて再度お試しください。'
+        'メール送信に失敗しました'
       );
       setLoading(false);
     }

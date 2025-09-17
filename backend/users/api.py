@@ -69,7 +69,7 @@ def request_password_reset(request, data: PasswordResetRequestIn):
             fail_silently=False,
         )
     except Exception:
-        return 400, {"message": "メール送信に失敗しました。しばらく時間をおいて再度お試しください。"}
+        return 400, {"message": "メール送信に失敗しました"}
     
     return PasswordResetResponseOut(message="パスワードリセットコードを送信しました。")
 
@@ -79,18 +79,18 @@ def confirm_password_reset(request, data: PasswordResetConfirmIn):
         # ユーザーを取得
         user = User.objects.filter(email=data.email).first()
         if not user:
-            return 400, {"message": "無効なメールアドレスです。"}
+            return 400, {"message": "無効なメールアドレスです"}
         
         # キャッシュからコードを取得
         cache_key = f"password_reset_{data.email}"
         stored_code = cache.get(cache_key)
         
         if not stored_code:
-            return 400, {"message": "コードが期限切れまたは無効です。"}
+            return 400, {"message": "コードが期限切れまたは無効です"}
         
         # コードの検証
         if stored_code != data.code:
-            return 400, {"message": "無効なコードです。"}
+            return 400, {"message": "無効なコードです"}
         
         # パスワード更新
         user.set_password(data.new_password)
@@ -102,7 +102,7 @@ def confirm_password_reset(request, data: PasswordResetConfirmIn):
         return PasswordResetResponseOut(message="パスワードが正常にリセットされました。")
         
     except Exception:
-        return 400, {"message": "パスワードリセットに失敗しました。コードが無効または期限切れの可能性があります。"}
+        return 400, {"message": "パスワードリセットに失敗しました"}
 
 @router.get("/{user_id}/", response={200: UserDetail, 403: dict}, auth=JWTAuth())
 def get_user(request, user_id: int):
@@ -111,7 +111,7 @@ def get_user(request, user_id: int):
     blocked = Block.objects.filter(blocker=user, blocked=request.user).exists()
     blocking = Block.objects.filter(blocker=request.user, blocked=user).exists()
     if blocked:
-        return 403, {"message": "You are blocked by this user. Cannot display details."}
+        return 403, {"message": "このユーザーにブロックされています"}
     return UserDetail(
         id=user.id,
         username=user.username,
@@ -197,13 +197,13 @@ def update_my_profile(request,
 @router.post("/{user_id}/block/", response={200: dict, 400: dict, 404: dict}, auth=JWTAuth())
 def block_user(request, user_id: int):
     if request.user.id == user_id:
-        return 400, {"message": "You cannot block yourself."}
+        return 400, {"message": "自分自身をブロックすることはできません"}
     user_to_block = get_object_or_404(User, id=user_id)
     Block.objects.get_or_create(blocker=request.user, blocked=user_to_block)
-    return {"message": f"User {user_to_block.username} has been blocked."}
+    return {"message": f"{user_to_block.username}をブロックしました"}
 
 @router.post("/{user_id}/unblock/", response={200: dict, 400: dict, 404: dict}, auth=JWTAuth())
 def unblock_user(request, user_id: int):
     user_to_unblock = get_object_or_404(User, id=user_id)
     Block.objects.filter(blocker=request.user, blocked=user_to_unblock).delete()
-    return {"message": f"User {user_to_unblock.username} has been unblocked."}
+    return {"message": f"{user_to_unblock.username}のブロックを解除しました"}
