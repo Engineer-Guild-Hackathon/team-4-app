@@ -1,6 +1,6 @@
+import { theme } from '@/styles/theme';
 import { HierarchyPointNode } from 'd3-hierarchy';
 import React, { useEffect } from 'react';
-import { theme } from '@/styles/theme';
 import Animated, {
   interpolateColor,
   useAnimatedProps,
@@ -18,7 +18,7 @@ interface Props {
   isFocused: boolean;
 }
 
-const NODE_RADIUS = 20;
+const NODE_RADIUS = 40;
 
 const splitLabelByParentheses = (label: string): [string, string] => {
   const match = label.match(/^(.*?)\s*(\([^)]*\)|（[^））]*）)?$/);

@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Image,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-} from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/styles/theme';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { theme } from '@/styles/theme';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-// Helper to convert rem to px.
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function EditProfileScreen() {
-  const { user, accessToken, refreshUser } = useAuth();
+  // useAuthから必要な情報を取得
+  const { user, accessToken } = useAuth();
   const router = useRouter();
 
   const [bio, setBio] = useState(user?.bio || '');
@@ -88,9 +88,10 @@ export default function EditProfileScreen() {
       }
 
       Alert.alert('成功', 'プロフィールを更新しました。');
-      if (refreshUser) await refreshUser();
-      router.back();
-    } catch (error: unknown) {
+
+      // 前の画面に戻る
+      router.push('/?profileUpdated=true');
+    } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
       Alert.alert(
         'エラー',
@@ -112,13 +113,12 @@ export default function EditProfileScreen() {
 
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
           <Image
-            source={
-              avatarUri
-                ? { uri: avatarUri }
-                : {
-                    uri: `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
-                  }
-            }
+            source={{
+              uri: avatarUri
+                ? avatarUri
+                : `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
+              cacheKey: avatarUri ? avatarUri.split('?')[0] : undefined,
+            }}
             style={styles.avatar}
           />
           <Text style={styles.avatarEditText}>画像を変更</Text>

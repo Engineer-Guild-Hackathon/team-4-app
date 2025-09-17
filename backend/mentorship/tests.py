@@ -255,9 +255,9 @@ class MentorAPITestCase(TestCase):
 
         # Assert levels were updated correctly
         self.assertEqual(
-            UserTopic.objects.get(user=self.user1, topic=self.topic).level, mentor_level
+            UserTopic.objects.get(user=self.user1, topic=self.topic).level, mentor_level + 1
         )
-        level_delta = mentor_level - mentee_level
+        level_delta = (mentor_level + 1) - mentee_level
         self.assertEqual(
             UserTopic.objects.get(user=self.user3, topic=self.topic).level,
             grandchild_level + level_delta,
@@ -644,7 +644,7 @@ class MentorCapacityTestCase(TestCase):
         self.assertEqual(self.mentee1_topic.status, UserTopic.Status.GRADUATED)
         
         # 卒業された弟子のレベルが上がっている
-        self.assertEqual(self.mentee1_topic.level, 5)  # 師匠と同じレベル
+        self.assertEqual(self.mentee1_topic.level, 6)  # 師匠のレベル+1
 
     def test_get_mentor_capacity(self):
         """師匠の定員情報取得テスト"""

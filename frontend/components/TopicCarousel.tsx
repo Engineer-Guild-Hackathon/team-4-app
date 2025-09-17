@@ -1,14 +1,14 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Animated,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
 import { theme } from '@/styles/theme';
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface Topic {
   id: string;

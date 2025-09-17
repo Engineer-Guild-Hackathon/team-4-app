@@ -5,10 +5,14 @@ export const checkMentorSelectionRequired = async (topicId: string) => {
   try {
     const res = await authedApiClient(`/api/mentorship/mentor-selection/required/${topicId}`);
     return res;
-  } catch (error: any) {
-    console.error('師匠選択判定エラー:', error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('師匠選択判定エラー:', error);
+    } else {
+      console.error('師匠選択判定エラー:', error);
+    }
     // 404エラーの場合は、師匠選択が不要とみなす
-    if (error.status === 404) {
+    if ((error as any).status === 404) {
       return { required: false, reason: 'UserTopic not found' };
     }
     throw error;

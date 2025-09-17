@@ -1,33 +1,45 @@
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/Shared/Button';
+import { useAuth } from '@/hooks/AuthProvider';
+import { theme } from '@/styles/theme';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
-import { theme } from '@/styles/theme';
-import { Link, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
 import MentorDashboard from '../components/MentorDashboard';
+import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
-import { Button } from '@/components/Shared/Button';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
-  const { accessToken, user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
-  const [currentTopicId] = useState<string | null>(null);
+  const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
+  const router = useRouter();
+  const [pomodoroVisible, setPomodoroVisible] = useState(false);
+  const params = useLocalSearchParams();
+
   const [renderKey, setRenderKey] = useState(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log('画面がフォーカスされたため、SimpleTopicViewを再描画します。');
-      // キーの値を更新することで、keyプロップを持つコンポーネントが再マウントされる
+  useEffect(() => {
+    if (params.profileUpdated === 'true') {
       setRenderKey(prevKey => prevKey + 1);
-    }, [])
-  );
+
+      router.setParams({ profileUpdated: undefined });
+    }
+  }, [params.profileUpdatedm, router, params.profileUpdated]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);
@@ -37,13 +49,6 @@ export default function HomeScreen() {
 
   if (authLoading || !user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
-  }
-  if (!accessToken) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.infoText}>ログインが必要です</Text>
-      </View>
-    );
   }
 
   return (
@@ -55,6 +60,12 @@ export default function HomeScreen() {
               <Feather name="user" size={24} color="white" />
             </Button>
           </Link>
+          <TouchableOpacity
+            style={styles.headerCenterButton}
+            onPress={() => setPomodoroVisible(true)}
+          >
+            <Text style={styles.pomodoroButtonText}>集中</Text>
+          </TouchableOpacity>
           <Button
             variant="icon"
             size="icon"
@@ -82,6 +93,11 @@ export default function HomeScreen() {
       <MentorDashboard
         visible={mentorDashboardVisible}
         onClose={() => setMentorDashboardVisible(false)}
+        topicId={currentTopicId!}
+      />
+      <PomodoroTimer
+        visible={pomodoroVisible}
+        onClose={() => setPomodoroVisible(false)}
         topicId={currentTopicId!}
       />
     </View>
@@ -117,6 +133,27 @@ const styles = StyleSheet.create({
   mentorshipButton: {
     // This will be defined using the fabBaseStyle constant
   },
+  headerCenterButton: {
+    position: 'absolute',
+    top: 60,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pomodoroButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
 });
 
 const fabBaseStyle: ViewStyle = {
@@ -143,5 +180,26 @@ Object.assign(styles, {
   mentorshipButton: {
     ...fabBaseStyle,
     top: remToPx(theme.spacing[24]) + remToPx(theme.spacing[24]), // "7xl" + "6xl"
+  },
+  headerCenterButton: {
+    position: 'absolute',
+    top: 60,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pomodoroButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
 });

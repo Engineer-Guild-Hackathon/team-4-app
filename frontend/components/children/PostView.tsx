@@ -1,5 +1,7 @@
+import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
 import { useEvent } from 'expo';
+import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
 import {
@@ -7,14 +9,12 @@ import {
   Alert,
   FlatList,
   ImageStyle,
-  Image,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { theme } from '@/styles/theme';
-import ReportModal from './ReportModal';
 import { Button } from '../Shared/Button';
+import ReportModal from './ReportModal';
 
 interface PostViewProps {
   posts: PostOut[];
@@ -91,8 +91,16 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
       <View>
         {item.media.map((media: PostMediaOut, index: number) => {
           const mediaUrl = media.file;
+          const cacheKey = mediaUrl.split('?')[0];
           if (media.media_type === 'image') {
-            return <Image key={index} source={{ uri: mediaUrl }} style={styles.media} />;
+            return (
+              <Image
+                key={index}
+                source={{ uri: mediaUrl, cacheKey }}
+                style={styles.media}
+                contentFit="cover"
+              />
+            );
           } else if (media.media_type === 'video') {
             return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
           }

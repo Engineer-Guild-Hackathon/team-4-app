@@ -1,26 +1,27 @@
+import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/styles/theme';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Image,
-  ScrollView,
-  Alert,
   ActivityIndicator,
+  Alert,
   Platform,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
+  View,
   ViewStyle,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@/hooks/useAuth';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { theme } from '@/styles/theme';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
-const VideoPreviewItem = ({ uri, style }: { uri: string; style: ViewStyle }) => {
+const VideoPreviewItem = ({ uri, style }: { uri: string; style: StyleProp<ViewStyle> }) => {
   const player = useVideoPlayer(uri, player => {
     player.muted = true;
   });
@@ -59,7 +60,7 @@ export default function CreatePostScreen() {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsMultipleSelection: true,
-        quality: 1,
+        quality: 0.1,
       });
 
       if (!result.canceled) {
@@ -152,9 +153,15 @@ export default function CreatePostScreen() {
 
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset => {
+          const cacheKey = asset.uri.split('?')[0];
           if (asset.type === 'image') {
             return (
-              <Image key={asset.assetId} source={{ uri: asset.uri }} style={styles.previewImage} />
+              <Image
+                key={asset.assetId}
+                transition={300}
+                source={{ uri: asset.uri, cacheKey }}
+                style={styles.previewImage}
+              />
             );
           } else if (asset.type === 'video') {
             return (

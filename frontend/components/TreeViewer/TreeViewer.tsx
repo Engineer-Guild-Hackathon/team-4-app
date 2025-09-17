@@ -1,163 +1,247 @@
-import React, { useMemo, useEffect, useCallback } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@/styles/theme';
-import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { hierarchy, HierarchyPointNode, tree } from 'd3-hierarchy';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { G, Line } from 'react-native-svg';
-import { hierarchy, tree, HierarchyPointNode } from 'd3-hierarchy';
 import { useTreeData } from '../../hooks/useTreeData';
 import { TreeNodeView } from './TreeNode';
-import { Button } from '../Shared/Button';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+const CANVAS_MULTIPLIER = 5;
+const CANVAS_WIDTH = screenWidth * CANVAS_MULTIPLIER;
+const CANVAS_HEIGHT = screenHeight * CANVAS_MULTIPLIER;
+// Y方向のノード間隔
+const VERTICAL_SPACING = 240;
+const HORIZONTAL_SPACING = 180;
+
+type NodeCoords = {
+  id: number; // findAndAnimateToNextNodeでIDを使うために残しておきます
+  x: number;
+  y: number;
+};
+
 interface TreeViewerProps {
   topicId: string | null;
+  userId?: number;
   onNodePress: (userId: number) => void;
 }
 
-export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) => {
-  const { data, loading } = useTreeData(topicId);
+export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodePress }) => {
+  const { data, loading, max_level } = useTreeData(topicId);
 
-  // --- D3 レイアウト ---
   const layout = useMemo(() => {
     if (!data || data.length === 0) return null;
-
     const hierarchyData = buildTree(data);
-    if (!hierarchyData) return null;
+    const root = hierarchy(hierarchyData);
+    let nodes = root.descendants().slice(1);
+    if (nodes.length === 0) return null;
 
-    const treeLayout = tree<D3TreeNode>().nodeSize([120, 150]);
-    const root = treeLayout(hierarchy(hierarchyData));
-    const nodes = root.descendants();
-
-    const xCoords = nodes.map(n => n.x);
-    const yCoords = nodes.map(n => n.y);
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const minY = Math.min(...yCoords);
-    const maxY = Math.max(...yCoords);
-
-    const PADDING = 80;
-    const treeWidth = maxX - minX;
-    const treeHeight = maxY - minY;
-
-    const scaleX = (screenWidth - PADDING * 2) / treeWidth;
-    const scaleY = (screenHeight - PADDING * 2) / treeHeight;
-    const initialScale = Math.min(scaleX, scaleY, 1.0);
-
-    // ノード座標を画面中央にスケーリング
+    const treeLayout = tree<D3TreeNode>().nodeSize([HORIZONTAL_SPACING, 0]);
+    const layoutRoot = treeLayout(root);
+    const layoutNodes = layoutRoot.descendants().slice(1);
+    nodes.forEach((node, i) => {
+      node.x = layoutNodes[i].x;
+    });
+    const maxLevel = max_level ?? Math.max(...nodes.map(n => n.data.level), 0);
     nodes.forEach(node => {
-      const centeredX = node.x - (minX + treeWidth / 2);
-      const centeredY = node.y - (minY + treeHeight / 2);
-      node.x = centeredX * initialScale + screenWidth / 2;
-      node.y = centeredY * initialScale + screenHeight / 2;
+      node.y = (maxLevel - node.data.level) * VERTICAL_SPACING;
     });
 
-    const currentUserNode = root.find(node => node.data.id === 1);
+    const xCoords = nodes.map(n => n.x ?? 0);
+    const minX = Math.min(...xCoords);
+    const maxX = Math.max(...xCoords);
+    const treeWidth = maxX - minX;
+    nodes.forEach(node => {
+      const centeredX = (node.x ?? 0) - (minX + treeWidth / 2);
+      node.x = centeredX + CANVAS_WIDTH / 2;
+    });
 
-    return {
-      root,
-      bounds: { minX, maxX, minY, maxY },
-      initialScale,
-      currentUserId: currentUserNode?.data.id ?? null,
-    };
-  }, [data]);
+    const yCoords = nodes.map(n => n.y ?? 0);
+    const minY = Math.min(...yCoords);
+    const maxY = Math.max(...yCoords);
+    const treeHeight = maxY - minY;
 
-  const rootNode = layout?.root ?? null;
+    nodes.forEach(node => {
+      const centeredY = (node.y ?? 0) - (minY + treeHeight / 2);
+      node.y = centeredY + CANVAS_HEIGHT / 2;
+    });
 
-  // --- ズーム・パン用の共有値 ---
+    const links = root.links().filter(link => link.source.data.id !== -1);
+    return { root, nodes, links };
+  }, [data, max_level]);
+
+  const {
+    root: rootNode,
+    nodes: nodesToRender,
+    links: linksToRender,
+  } = layout || {
+    root: null,
+    nodes: [],
+    links: [],
+  };
+
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const savedScale = useSharedValue(1);
-  const savedTranslateX = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
+  const nodeCoords = useSharedValue<NodeCoords[]>([]);
+
+  useEffect(() => {
+    if (nodesToRender && nodesToRender.length > 0) {
+      nodeCoords.value = nodesToRender.map(node => ({
+        id: node.data.id,
+        x: node.x ?? 0,
+        y: node.y ?? 0,
+      }));
+    } else {
+      nodeCoords.value = [];
+    }
+  }, [nodesToRender, nodeCoords]);
+
+  const findAndAnimateToNextNode = useCallback(
+    (velocityX: number, velocityY: number) => {
+      'worklet';
+      const coordsList = nodeCoords.value;
+      const vLengthSq = velocityX ** 2 + velocityY ** 2;
+
+      if (vLengthSq < 150 * 150) return;
+      if (coordsList.length === 0) return;
+
+      const currentScale = scale.value;
+      const currentCenterX = CANVAS_WIDTH / 2 - translateX.value / currentScale;
+      const currentCenterY = CANVAS_HEIGHT / 2 - translateY.value / currentScale;
+
+      const backwardNodes = [];
+      for (let i = 0; i < coordsList.length; i++) {
+        const node = coordsList[i];
+        const vecX = node.x - currentCenterX;
+        const vecY = node.y - currentCenterY;
+        const dotProduct = velocityX * vecX + velocityY * vecY;
+
+        if (dotProduct < 0) {
+          const dLengthSq = vecX ** 2 + vecY ** 2;
+          if (dLengthSq === 0) continue;
+          const cosSq = dotProduct ** 2 / (vLengthSq * dLengthSq);
+          backwardNodes.push({ node, dLengthSq, cosSq });
+        }
+      }
+
+      if (backwardNodes.length === 0) return;
+
+      let bestCandidate: NodeCoords | null = null;
+      const strictCandidates = backwardNodes.filter(item => item.cosSq > 0.9);
+
+      if (strictCandidates.length > 0) {
+        strictCandidates.sort((a, b) => a.dLengthSq - b.dLengthSq);
+        bestCandidate = strictCandidates[0].node;
+      } else {
+        backwardNodes.sort((a, b) => a.dLengthSq - b.dLengthSq);
+        bestCandidate = backwardNodes[0].node;
+      }
+
+      if (bestCandidate) {
+        const targetTx = (CANVAS_WIDTH / 2 - bestCandidate.x) * currentScale;
+        const targetTy = (CANVAS_HEIGHT / 2 - bestCandidate.y) * currentScale;
+        translateX.value = withTiming(targetTx, { duration: 300 });
+        translateY.value = withTiming(targetTy, { duration: 300 });
+      }
+    },
+    [nodeCoords, scale, translateX, translateY]
+  );
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate(e => {
+      scale.value = Math.max(0.3, Math.min(e.scale * savedScale.value, 4.0));
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+    });
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      cancelAnimation(translateX);
+      cancelAnimation(translateY);
+    })
+    .onUpdate(() => {})
+    .onEnd(e => {
+      const scaleValue = scale.value;
+      const svgVelocityX = e.velocityX / scaleValue;
+      const svgVelocityY = e.velocityY / scaleValue;
+      findAndAnimateToNextNode(svgVelocityX, svgVelocityY);
+    })
+    .shouldCancelWhenOutside(false);
+
+  const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const zoomIn = () => {
     scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
   };
-
   const zoomOut = () => {
     scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
   };
 
-  // --- ジェスチャー処理 ---
-  const exploreGesture = Gesture.Simultaneous(
-    Gesture.Pinch()
-      .onUpdate(e => {
-        scale.value = Math.max(0.3, Math.min(e.scale * savedScale.value, 4.0));
-      })
-      .onEnd(() => {
-        savedScale.value = scale.value;
-      }),
-    Gesture.Pan()
-      .onUpdate(e => {
-        translateX.value = savedTranslateX.value + e.translationX;
-        translateY.value = savedTranslateY.value + e.translationY;
-      })
-      .onBegin(() => {
-        savedTranslateX.value = translateX.value;
-        savedTranslateY.value = translateY.value;
-      })
-  );
-  const composedGesture = exploreGesture;
-
-  // --- ボタン操作 ---
-  const DURATION = 300;
-
   const fitToNetwork = useCallback(() => {
-    if (!rootNode) return;
+    scale.value = withTiming(1, { duration: 300 });
+    translateX.value = withTiming(0, { duration: 300 });
+    translateY.value = withTiming(0, { duration: 300 });
+  }, [scale, translateX, translateY]);
 
-    const nodes = rootNode.descendants();
-    if (nodes.length === 0) return;
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+      ],
+    };
+  });
 
-    const xCoords = nodes.map(n => n.x);
-    const yCoords = nodes.map(n => n.y);
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const maxY = Math.max(...yCoords);
-
-    const PADDING = 80;
-    const treeWidth = maxX - minX;
-    const treeHeight = maxY;
-
-    const scaleX = (screenWidth - PADDING * 2) / treeWidth;
-    const scaleY = (screenHeight - PADDING * 2) / treeHeight;
-    const newScale = Math.min(scaleX, scaleY, 1.0);
-
-    // 初期スケールと中央揃えにリセット
-    scale.value = withTiming(newScale, { duration: DURATION });
-    translateX.value = withTiming(0, { duration: DURATION });
-    translateY.value = withTiming(0, { duration: DURATION });
-  }, [rootNode, scale, translateX, translateY]);
-
-  // --- アニメーションスタイル ---
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  // --- 初期表示時に全体をフィット ---
   useEffect(() => {
-    if (rootNode) {
-      fitToNetwork();
+    if (layout) {
+      // userIdプロップが渡されている場合、そのノードを探して中央に移動
+      if (userId && nodesToRender.length > 0) {
+        const targetNode = nodesToRender.find(node => node.data.id === userId);
+
+        if (targetNode) {
+          // 見つかったノードを中央に配置するための移動量を計算
+          const targetTx = CANVAS_WIDTH / 2 - (targetNode.x ?? 0);
+          const targetTy = CANVAS_HEIGHT / 2 - (targetNode.y ?? 0);
+
+          // アニメーションで指定ノードへ移動
+          translateX.value = withTiming(targetTx, { duration: 500 });
+          translateY.value = withTiming(targetTy, { duration: 500 });
+          scale.value = withTiming(1, { duration: 500 });
+        } else {
+          // 指定されたuserIdのノードが見つからなかった場合は、全体を表示
+          fitToNetwork();
+        }
+      } else {
+        // userIdプロップがない場合は、全体を表示
+        fitToNetwork();
+      }
     }
-  }, [rootNode, fitToNetwork]);
+  }, [layout, userId, fitToNetwork, nodesToRender, scale, translateX, translateY]); // layoutとuserIdが準備できたら実行
+  // ★★★★★ 修正ここまで ★★★★★
 
-  // --- ノードタップ処理 ---
-  const handleNodeTap = (node: HierarchyPointNode<D3TreeNode>) => {
-    onNodePress(node.data.id);
-  };
-
-  // --- レンダリング ---
   if (loading) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>読み込み中...</Text>
+        <ActivityIndicator />
       </View>
     );
   }
@@ -169,103 +253,90 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, onNodePress }) 
     );
   }
 
-  const nodes = rootNode.descendants();
-  const links = rootNode.links();
-
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
-        <Button
-          style={styles.controlButton}
-          textStyle={styles.controlButtonText}
-          onPress={() => fitToNetwork()}
-        >
-          ⛶
-        </Button>
-        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={zoomIn}>
-          ＋
-        </Button>
-        <Button style={styles.controlButton} textStyle={styles.controlButtonText} onPress={zoomOut}>
-          －
-        </Button>
+        <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>⛶</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>＋</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomOut} activeOpacity={0.7}>
+          <Text style={styles.controlButtonText}>－</Text>
+        </TouchableOpacity>
       </View>
-
       <GestureDetector gesture={composedGesture}>
-        <Animated.View style={[styles.flex, animatedStyle]}>
-          <Svg width={screenWidth} height={screenHeight}>
-            <G>
-              {links.map((link, i) => (
-                <Line
-                  key={i}
-                  x1={link.source.x}
-                  y1={link.source.y}
-                  x2={link.target.x}
-                  y2={link.target.y}
-                  stroke={theme.colors.textGray}
-                  strokeWidth={1.5}
-                />
-              ))}
-              {nodes.map(node => (
-                <TreeNodeView
-                  key={node.data.id}
-                  node={node}
-                  onPress={() => handleNodeTap(node)}
-                  isFocused={false}
-                />
-              ))}
-            </G>
-          </Svg>
-        </Animated.View>
+        <View style={styles.gestureContainer}>
+          <Animated.View style={[styles.canvas, animatedStyle]}>
+            <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
+              <G>
+                {linksToRender.map(link => (
+                  <Line
+                    key={`${link.source.data.id}-${link.target.data.id}`}
+                    x1={link.source.x ?? 0}
+                    y1={link.source.y ?? 0}
+                    x2={link.target.x ?? 0}
+                    y2={link.target.y ?? 0}
+                    stroke="#6b7280"
+                    strokeWidth={1.5}
+                  />
+                ))}
+                {nodesToRender.map(node => (
+                  <TreeNodeView
+                    key={node.data.id}
+                    node={node as HierarchyPointNode<D3TreeNode>}
+                    onPress={() => onNodePress(node.data.id)}
+                    // isFocusedのロジックは今回削除し、シンプルに保ちます
+                    isFocused={false}
+                  />
+                ))}
+              </G>
+            </Svg>
+          </Animated.View>
+        </View>
       </GestureDetector>
     </GestureHandlerRootView>
   );
 };
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.primary,
-  },
-  flex: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.primary,
-  },
-  text: {
-    color: theme.colors.text.primary,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontFamily: theme.typography.fontFamily.primary,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  text: { color: '#1f2937' },
   controlsContainer: {
     position: 'absolute',
     bottom: 120,
-    right: remToPx(theme.spacing[8]), // xl
+    right: 20,
     zIndex: 10,
     flexDirection: 'column',
-    gap: remToPx(theme.spacing[4]), // md
+    gap: 12,
   },
   controlButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    width: 54,
-    height: 54,
-    borderRadius: remToPx(theme.borderRadius.full),
-    borderColor: theme.colors.background.tertiary,
+    backgroundColor: '#fff',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  controlButtonText: {
-    color: theme.colors.text.secondary,
-    fontSize: remToPx(theme.typography.fontSize.xl),
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: theme.typography.fontFamily.primary,
+  controlButtonText: { color: '#374151', fontSize: 20, fontWeight: 'bold' },
+  gestureContainer: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  canvas: {
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
+    position: 'absolute',
+    left: (screenWidth - CANVAS_WIDTH) / 2,
+    top: (screenHeight - CANVAS_HEIGHT) / 2,
   },
 });
