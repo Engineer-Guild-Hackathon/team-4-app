@@ -106,7 +106,6 @@ export const approveMentorRequest = async (requestId: number) => {
   }
 };
 
-
 // 師匠選択リクエストを拒否
 export const rejectMentorRequest = async (requestId: number) => {
   try {
