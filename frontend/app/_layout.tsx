@@ -30,6 +30,20 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="password-reset-request" 
+            options={{ 
+              title: "パスワードリセット",
+              headerShown: true 
+            }} 
+          />
+          <Stack.Screen 
+            name="password-reset-confirm" 
+            options={{ 
+              title: "新しいパスワード",
+              headerShown: true 
+            }} 
+          />
         </Stack>
       </GestureHandlerRootView>
     </AuthProvider>
