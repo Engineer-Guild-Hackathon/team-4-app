@@ -53,6 +53,7 @@ export default function HomeScreen() {
     router.push(`/select-level-mentor?topicId=${topicId}`);
   };
 
+
   const handleStartPomodoro = () => {
     // 現在選択中のトピックIDを引数にして、グローバルタイマーの設定画面を開く
     startTimerSession(currentTopicId!);
@@ -67,6 +68,7 @@ export default function HomeScreen() {
       <SimpleTopicView
         key={renderKey}
         onUserPress={handleUserPress}
+        onMentorSelectionRequired={handleMentorSelectionRequired}
         onTopicChange={topicId => setCurrentTopicId(topicId)}
       />
 
