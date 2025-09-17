@@ -71,7 +71,7 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"message": "You cannot send a mentor request to yourself."},
+            {"message": "自分自身にリクエストを送ることはできません"},
         )
 
     def test_create_mentor_request_pending_exists_fails(self):
@@ -91,7 +91,7 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"message": "A pending request to this user already exists."},
+            {"message": "既にリクエストが送信されています"},
         )
 
     def test_approve_mentor_request_success(self):
@@ -214,7 +214,7 @@ class MentorAPITestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"message": "You are already in a mentorship with this user."},
+            {"message": "既に師弟関係にあります"},
         )
 
     def test_graduate_mentee_success(self):
