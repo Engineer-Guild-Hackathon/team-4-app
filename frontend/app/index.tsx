@@ -17,6 +17,7 @@ import MentorDashboard from '../components/MentorDashboard';
 import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+import { useTimer } from '../contexts/TimerContext';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -28,10 +29,9 @@ export default function HomeScreen() {
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
   const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
   const router = useRouter();
-  const [pomodoroVisible, setPomodoroVisible] = useState(false);
   const params = useLocalSearchParams();
-
   const [renderKey, setRenderKey] = useState(0);
+  const { startTimerSession, phase } = useTimer();
 
   useEffect(() => {
     if (params.profileUpdated === 'true') {
@@ -45,8 +45,18 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
+  const handleTopicChange = (topicId: string | null) => {
+    setCurrentTopicId(topicId);
+  };
+
   const handleMentorSelectionRequired = (topicId: string) => {
     router.push(`/select-level-mentor?topicId=${topicId}`);
+  };
+
+
+  const handleStartPomodoro = () => {
+    // 現在選択中のトピックIDを引数にして、グローバルタイマーの設定画面を開く
+    startTimerSession(currentTopicId!);
   };
 
   if (authLoading || !user) {
@@ -69,12 +79,11 @@ export default function HomeScreen() {
               <Feather name="user" size={24} color="white" />
             </Button>
           </Link>
-          <TouchableOpacity
-            style={styles.headerCenterButton}
-            onPress={() => setPomodoroVisible(true)}
-          >
+          {phase !== 'break' && (
+          <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
             <Text style={styles.pomodoroButtonText}>集中</Text>
           </TouchableOpacity>
+          )}         
           <Button
             variant="icon"
             size="icon"
@@ -102,11 +111,7 @@ export default function HomeScreen() {
         onClose={() => setMentorDashboardVisible(false)}
         topicId={currentTopicId!}
       />
-      <PomodoroTimer
-        visible={pomodoroVisible}
-        onClose={() => setPomodoroVisible(false)}
-        topicId={currentTopicId!}
-      />
+      <PomodoroTimer />
     </View>
   );
 }
@@ -114,19 +119,19 @@ export default function HomeScreen() {
 // ★ 修正点: スタイルの定義方法を改善
 const fabBaseStyle: ViewStyle = {
   position: 'absolute',
-  right: 24,
+  right: remToPx(theme.spacing[6]), // 24px
   height: 60,
   width: 60,
   backgroundColor: theme.colors.primary[400],
   justifyContent: 'center',
   alignItems: 'center',
-  borderRadius: 30,
+  borderRadius: remToPx(theme.borderRadius.full),
   zIndex: 10,
   shadowColor: '#000',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.5,
-  shadowRadius: 5,
-  elevation: 2,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 5,
   borderWidth: 0,
 };
 
@@ -162,21 +167,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 60,
     left: '50%',
-    transform: [{ translateX: -30 }],
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    transform: [{ translateX: -40 }], // Adjust based on final width
+    backgroundColor: theme.colors.background.secondary,
+    paddingVertical: remToPx(theme.spacing[2]),
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    borderRadius: remToPx(theme.borderRadius.xl),
     zIndex: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
     elevation: 2,
   },
   pomodoroButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
+    fontSize: remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.link,
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
 });
