@@ -19,6 +19,8 @@ interface TimerContextType {
   setOutputDuration: React.Dispatch<React.SetStateAction<number>>;
   breakDuration: number;
   setBreakDuration: React.Dispatch<React.SetStateAction<number>>;
+  isSoundEnabled: boolean; // ★ 通知音設定
+  setIsSoundEnabled: React.Dispatch<React.SetStateAction<boolean>>; // ★
   startTimerSession: (topicId?: string) => void; // タイマーセッションを開始する新しい関数
   startStudy: () => void;     // 学習を開始
   closeTimer: () => void;    // タイマーを閉じる
@@ -39,6 +41,8 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
   const [studyDuration, setStudyDuration] = useState(DEFAULT_STUDY_MINUTES * 60);
   const [outputDuration, setOutputDuration] = useState(DEFAULT_OUTPUT_MINUTES * 60);
   const [breakDuration, setBreakDuration] = useState(DEFAULT_BREAK_MINUTES * 60);
+
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
 
   useEffect(() => {
     const requestNotificationPermission = async () => {
@@ -68,15 +72,21 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
         setSecondsLeft(s => s - 1);
       }, 1000);
     } else if (isActive && secondsLeft === 0) {
+
+      const notificationContent = (title: string, body: string) => ({
+        title,
+        body,
+        sound: isSoundEnabled ? 'default' : null,
+      });
       // フェーズの切り替え
       if (phase === 'studying') {
-        Notifications.scheduleNotificationAsync({ content: { title: "集中お疲れ様でした！", body: 'アウトプットを始めましょう。' }, trigger: null });
+        Notifications.scheduleNotificationAsync({ content: notificationContent("集中お疲れ様でした！", 'アウトプットを始めましょう。'), trigger: null });
         setPhase('output');
         setSecondsLeft(outputDuration);
       } else if (phase === 'output') {
         endOutputAndBreak();
       } else if (phase === 'break') {
-        Notifications.scheduleNotificationAsync({ content: { title: "休憩終了", body: 'よく頑張りました！' }, trigger: null });
+        Notifications.scheduleNotificationAsync({ content: notificationContent("休憩終了", 'よく頑張りました！'), trigger: null });
         setPhase('studying');
         setSecondsLeft(studyDuration);
       }
@@ -84,7 +94,7 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, secondsLeft, phase]);
+  }, [isActive, secondsLeft, phase, isSoundEnabled]);
   
   // --- 他のコンポーネントから呼び出すための関数 ---
   const startTimerSession = (topicId?: string) => {
@@ -109,7 +119,11 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
 
   const endOutputAndBreak = () => {
     Notifications.scheduleNotificationAsync({
-      content: { title: 'アウトプット終了！', body: '休憩です。' },
+      content: { 
+        title: 'アウトプット終了！', 
+        body: '5分間の休憩です。',
+        sound: isSoundEnabled ? 'default' : null,
+      },
       trigger: null,
     });
     setPhase('break');
@@ -121,6 +135,7 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
     studyDuration, setStudyDuration,
     outputDuration, setOutputDuration,
     breakDuration, setBreakDuration,
+    isSoundEnabled, setIsSoundEnabled,
     startTimerSession, startStudy, closeTimer, endOutputAndBreak 
   };
 
