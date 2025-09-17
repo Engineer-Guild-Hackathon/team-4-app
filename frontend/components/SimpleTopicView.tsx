@@ -149,10 +149,6 @@ export function SimpleTopicView({
                   }}
                 />
               </View>
-              <View style={styles.descriptionContainer} pointerEvents="box-none">
-                <Text style={styles.topicTitle}>{topic.title}</Text>
-                <Text style={styles.topicDescription}>{topic.description}</Text>
-              </View>
             </View>
           ))}
         </PagerView>
@@ -187,41 +183,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  descriptionContainer: {
-    position: 'absolute',
-    top: 30,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
   treeContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  topicTitle: {
-    marginBottom: 20,
-    textAlign: 'center',
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    textShadowColor: 'rgba(255, 255, 255, 1)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-  },
-  topicDescription: {
-    textAlign: 'center',
-    fontSize: 18,
-    lineHeight: 26,
-    color: '#1f2937',
-    maxWidth: 300,
-    textShadowColor: 'rgba(255, 255, 255, 0.7)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
   },
   // ★ 修正点 4: ローディングコンテナ用のスタイルを追加
   loadingContainer: {
