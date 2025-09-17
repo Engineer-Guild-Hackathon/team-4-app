@@ -5,45 +5,13 @@ import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
 
-<<<<<<< HEAD
 // 時間フォーマット関数
-=======
-// --- 初期設定と定数 ---
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-const STUDY_DURATION = 5; // 22分
-const OUTPUT_DURATION = 20; // 3分
-const BREAK_DURATION = 20; // 5分
-
-const CIRCLE_RADIUS = 120;
-const CIRCLE_STROKE_WIDTH = 15;
-const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
-
-// --- 型定義 ---
-type TimerPhase = 'idle' | 'studying' | 'output' | 'break';
-
-interface PomodoroTimerProps {
-  visible: boolean;
-  onClose: () => void;
-  topicId?: string;
-}
-
-// --- ヘルパー関数とコンポーネント ---
->>>>>>> main
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
-<<<<<<< HEAD
 const CIRCLE_RADIUS = 120;
 const CIRCLE_STROKE_WIDTH = 15;
 const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
@@ -66,18 +34,6 @@ const DurationSetter = ({ label, durationMinutes, onUpdate }: { label: string, d
       </Pressable>
     </View>
   </View>
-=======
-const BreakTimerOverlay = ({
-  secondsLeft,
-  onClose,
-}: {
-  secondsLeft: number;
-  onClose: () => void;
-}) => (
-  <Pressable style={styles.breakOverlay} onPress={onClose}>
-    <Text style={styles.breakText}>休憩中: {formatTime(secondsLeft)}</Text>
-  </Pressable>
->>>>>>> main
 );
 
 export default function PomodoroTimer() {
@@ -90,75 +46,10 @@ export default function PomodoroTimer() {
     startStudy, closeTimer, endOutputAndBreak 
   } = useTimer();
 
-<<<<<<< HEAD
   // モーダルを表示するのは idle, studying, output のいずれかのフェーズ
   const isVisible = phase === 'idle' || phase === 'studying' || phase === 'output';
   if (!isVisible) {
     return null;
-=======
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isActive && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft(s => s - 1);
-      }, 1000);
-    } else if (isActive && secondsLeft === 0) {
-      if (phase === 'studying') {
-        Notifications.scheduleNotificationAsync({
-          content: { title: '集中お疲れ様でした！', body: '3分間のアウトプットを始めましょう。' },
-          trigger: null,
-        });
-        setPhase('output');
-        setSecondsLeft(OUTPUT_DURATION);
-      } else if (phase === 'output') {
-        Notifications.scheduleNotificationAsync({
-          content: { title: 'アウトプット完了！', body: '5分間の休憩です。' },
-          trigger: null,
-        });
-        setPhase('break');
-        setSecondsLeft(BREAK_DURATION);
-      } else if (phase === 'break') {
-        Notifications.scheduleNotificationAsync({
-          content: { title: '休憩終了', body: 'よく頑張りました！' },
-          trigger: null,
-        });
-        setIsActive(false);
-        setPhase('idle');
-        setSecondsLeft(STUDY_DURATION);
-      }
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, secondsLeft, phase]);
-
-  const handleStart = () => {
-    setIsActive(true);
-    setPhase('studying');
-    setSecondsLeft(STUDY_DURATION);
-  };
-
-  const handleClose = () => {
-    setIsActive(false);
-    setPhase('idle');
-    setSecondsLeft(STUDY_DURATION);
-    onClose();
-  };
-
-  const handlePostSuccess = () => {
-    Notifications.scheduleNotificationAsync({
-      content: { title: 'アウトプット完了！', body: '5分間の休憩です。' },
-      trigger: null,
-    });
-    setPhase('break');
-    setSecondsLeft(BREAK_DURATION);
-  };
-
-  if (!visible) return null;
-
-  if (phase === 'break') {
-    return <BreakTimerOverlay secondsLeft={secondsLeft} onClose={handleClose} />;
->>>>>>> main
   }
 
   const getPhaseText = () => {
@@ -171,19 +62,12 @@ export default function PomodoroTimer() {
         return '準備中';
     }
   };
-<<<<<<< HEAD
   
   const totalDuration = 
     phase === 'studying' ? studyDuration :
     phase === 'output' ? outputDuration :
     studyDuration;
   
-=======
-
-  const totalDuration =
-    phase === 'studying' ? STUDY_DURATION : phase === 'output' ? OUTPUT_DURATION : STUDY_DURATION;
-
->>>>>>> main
   const progress = secondsLeft / totalDuration;
   const strokeDashoffset = CIRCLE_CIRCUMFERENCE * (1 - progress);
 
@@ -265,31 +149,14 @@ export default function PomodoroTimer() {
             { activeTopicId? (
               <CreatePostForm topicId={activeTopicId} />
             ) : (
-<<<<<<< HEAD
               <Text style={styles.errorText}>投稿先のトピックが選択されていません。</Text>
-=======
-              <Text style={{ textAlign: 'center', marginTop: 20 }}>
-                投稿先のトピックが選択されていません。
-              </Text>
->>>>>>> main
             )}
             <Pressable style={styles.PostFinishButton} onPress={endOutputAndBreak}>
               <Text style={styles.PostFinishText}>投稿を終了して休憩する</Text>
             </Pressable>
           </View>
         )}
-<<<<<<< HEAD
       </BlurView>
-=======
-
-        {/* 閉じるボタン (学習中は非表示) */}
-        {phase === 'idle' && (
-          <Pressable style={styles.closeButton} onPress={handleClose}>
-            <Text style={styles.closeText}>×</Text>
-          </Pressable>
-        )}
-      </View>
->>>>>>> main
     </Modal>
   );
 }
