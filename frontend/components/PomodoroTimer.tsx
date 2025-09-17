@@ -70,8 +70,7 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
         setSecondsLeft(BREAK_DURATION);
       } else if (phase === 'break') {
         Notifications.scheduleNotificationAsync({ content: { title: "休憩終了", body: 'よく頑張りました！' }, trigger: null });
-        setIsActive(false);
-        setPhase('idle');
+        setPhase('studying');
         setSecondsLeft(STUDY_DURATION);
       }
     }
