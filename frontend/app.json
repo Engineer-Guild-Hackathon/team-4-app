@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tempura29.frontend"
+      "bundleIdentifier": "com.tempura29.takumi"
     },
     "android": {
       "adaptiveIcon": {
