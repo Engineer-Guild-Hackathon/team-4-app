@@ -1,110 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
-import * as Notifications from 'expo-notifications';
-import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
+import { useTimer } from '../contexts/TimerContext';
 
-// --- 初期設定と定数 ---
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-const STUDY_DURATION = 5; // 22分
-const OUTPUT_DURATION = 5; // 3分
-const BREAK_DURATION = 5;  // 5分
-
-const CIRCLE_RADIUS = 120;
-const CIRCLE_STROKE_WIDTH = 15;
-const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
-
-// --- 型定義 ---
-type TimerPhase = 'idle' | 'studying' | 'output' | 'break';
-
-interface PomodoroTimerProps {
-  visible: boolean;
-  onClose: () => void;
-  topicId?: string;
-}
-
-// --- ヘルパー関数とコンポーネント ---
+// 時間フォーマット関数
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
-const BreakTimerOverlay = ({ secondsLeft, onClose }: { secondsLeft: number; onClose: () => void; }) => (
-  <Pressable style={styles.breakOverlay} onPress={onClose}>
-    <Text style={styles.breakText}>休憩中: {formatTime(secondsLeft)}</Text>
-  </Pressable>
+const CIRCLE_RADIUS = 120;
+const CIRCLE_STROKE_WIDTH = 15;
+const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
+
+// interface PomodoroTimerProps {
+//   topicId?: string;
+// }
+
+// 時間設定用のUIコンポーネント
+const DurationSetter = ({ label, durationMinutes, onUpdate }: { label: string, durationMinutes: number, onUpdate: (newDuration: number) => void }) => (
+  <View style={styles.setterContainer}>
+    <Text style={styles.setterLabel}>{label}</Text>
+    <View style={styles.setterControls}>
+      <Pressable onPress={() => onUpdate(Math.max(1, durationMinutes - 1))} style={styles.setterButton}>
+        <Text style={styles.setterButtonText}>-</Text>
+      </Pressable>
+      <Text style={styles.setterValue}>{durationMinutes} 分</Text>
+      <Pressable onPress={() => onUpdate(durationMinutes + 1)} style={styles.setterButton}>
+        <Text style={styles.setterButtonText}>+</Text>
+      </Pressable>
+    </View>
+  </View>
 );
 
-// --- メインコンポーネント ---
-export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTimerProps) {
-  const [phase, setPhase] = useState<TimerPhase>('idle');
-  const [isActive, setIsActive] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(STUDY_DURATION);
-  const router = useRouter();
+export default function PomodoroTimer() {
+  // グローバルなstateと関数を取得
+  const { 
+    phase, secondsLeft, activeTopicId,
+    studyDuration, setStudyDuration,
+    outputDuration, setOutputDuration,
+    breakDuration, setBreakDuration,
+    startStudy, closeTimer, endOutputAndBreak 
+  } = useTimer();
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isActive && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft(s => s - 1);
-      }, 1000);
-    } else if (isActive && secondsLeft === 0) {
-      if (phase === 'studying') {
-        Notifications.scheduleNotificationAsync({ content: { title: "集中お疲れ様でした！", body: '3分間のアウトプットを始めましょう。' }, trigger: null });
-        setPhase('output');
-        setSecondsLeft(OUTPUT_DURATION);
-      } else if (phase === 'output') {
-        Notifications.scheduleNotificationAsync({ content: { title: "アウトプット完了！", body: '5分間の休憩です。' }, trigger: null });
-        setPhase('break');
-        setSecondsLeft(BREAK_DURATION);
-      } else if (phase === 'break') {
-        Notifications.scheduleNotificationAsync({ content: { title: "休憩終了", body: 'よく頑張りました！' }, trigger: null });
-        setPhase('studying');
-        setSecondsLeft(STUDY_DURATION);
-      }
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, secondsLeft, phase]);
-
-  const handleStart = () => {
-    setIsActive(true);
-    setPhase('studying');
-    setSecondsLeft(STUDY_DURATION);
-  };
-
-  const handleClose = () => {
-    setIsActive(false);
-    setPhase('idle');
-    setSecondsLeft(STUDY_DURATION);
-    onClose();
-  };
-
-  const handlePostFinish = () => {
-    Notifications.scheduleNotificationAsync({
-      content: { title: 'アウトプット終了！', body: '5分間の休憩です。' },
-      trigger: null,
-    });
-    setPhase('break');
-    setSecondsLeft(BREAK_DURATION);
-  };
-
-  if (!visible) return null;
-
-  if (phase === 'break') {
-    return <BreakTimerOverlay secondsLeft={secondsLeft} onClose={handleClose} />;
+  // モーダルを表示するのは idle, studying, output のいずれかのフェーズ
+  const isVisible = phase === 'idle' || phase === 'studying' || phase === 'output';
+  if (!isVisible) {
+    return null;
   }
 
   const getPhaseText = () => {
@@ -116,22 +61,46 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
   };
   
   const totalDuration = 
-    phase === 'studying' ? STUDY_DURATION :
-    phase === 'output' ? OUTPUT_DURATION :
-    STUDY_DURATION;
+    phase === 'studying' ? studyDuration :
+    phase === 'output' ? outputDuration :
+    studyDuration;
   
   const progress = secondsLeft / totalDuration;
   const strokeDashoffset = CIRCLE_CIRCUMFERENCE * (1 - progress);
 
   return (
     <Modal visible={true} transparent animationType="fade">
-      {/* 背景用のすりガラス */}
-      <BlurView intensity={90} tint="light" style={StyleSheet.absoluteFill} />
+      <BlurView intensity={90} tint="light" style={styles.contentContainer}>
+        {phase === 'idle' && (
+          <>
+            <View style={styles.configContainer}>
+              <Text style={styles.configTitle}>集中時間の設定</Text>
+              <DurationSetter 
+                label="学習" 
+                durationMinutes={studyDuration / 60} 
+                onUpdate={(mins) => setStudyDuration(mins * 60)} 
+              />
+              <DurationSetter 
+                label="アウトプット" 
+                durationMinutes={outputDuration / 60} 
+                onUpdate={(mins) => setOutputDuration(mins * 60)} 
+              />
+              <DurationSetter 
+                label="休憩" 
+                durationMinutes={breakDuration / 60} 
+                onUpdate={(mins) => setBreakDuration(mins * 60)} 
+              />
+            </View>
+            <Pressable style={styles.button} onPress={startStudy}>
+              <Text style={styles.buttonText}>開始</Text>
+            </Pressable>
+            <Pressable style={styles.closeButton} onPress={closeTimer}>
+              <Text style={styles.closeText}>×</Text>
+            </Pressable>
+          </>
+        )}
 
-      {/* 操作可能なUIを、すりガラスの上に重ねる */}
-      <View style={styles.contentContainer}>
-        {/* 開始前と学習中 */}
-        {(phase === 'idle' || phase === 'studying') && (
+        {phase === 'studying' && (
           <>
             <View style={styles.timerUiContainer}>
               <Svg height={CIRCLE_RADIUS * 2} width={CIRCLE_RADIUS * 2}>
@@ -157,53 +126,38 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
                 <Text style={styles.timerText}>{formatTime(secondsLeft)}</Text>
               </View>
             </View>
-            {phase === 'idle' ? (
-              <Pressable style={styles.button} onPress={handleStart}>
-                <Text style={styles.buttonText}>開始</Text>
-              </Pressable>
-            ) : (
-              <View style={styles.buttonDisabled}>
-                <Text style={styles.buttonText}>集中</Text>
-              </View>
-            )}
+            <View style={styles.buttonDisabled}>
+              <Text style={styles.buttonText}>集中</Text>
+            </View>
+            <Pressable style={styles.closeButton} onPress={closeTimer}>
+              <Text style={styles.closeText}>×</Text>
+            </Pressable>
           </>
         )}
-
-        {/* アウトプット中 */}
+        
         {phase === 'output' && (
           <View style={styles.outputContainer}>
             <View style={styles.outputHeader}>
               <Text style={styles.outputPhaseText}>アウトプット</Text>
               <Text style={styles.outputTimerText}>{formatTime(secondsLeft)}</Text>
             </View>
-            {topicId ? (
-              <CreatePostForm topicId={topicId} />
+            { activeTopicId? (
+              <CreatePostForm topicId={activeTopicId} />
             ) : (
-              <Text style={{textAlign: 'center', marginTop: 20}}>投稿先のトピックが選択されていません。</Text>
+              <Text style={styles.errorText}>投稿先のトピックが選択されていません。</Text>
             )}
-            <Pressable style={styles.PostFinishButton} onPress={handlePostFinish}>
+            <Pressable style={styles.PostFinishButton} onPress={endOutputAndBreak}>
               <Text style={styles.PostFinishText}>投稿を終了して休憩する</Text>
             </Pressable>
           </View>
         )}
-        
-        {/* 閉じるボタン (学習中は非表示) */}
-        {(phase === 'idle' || phase === 'studying') && (
-          <Pressable style={styles.closeButton} onPress={handleClose}>
-            <Text style={styles.closeText}>×</Text>
-          </Pressable>
-        )}
-      </View>
+      </BlurView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  contentContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   timerUiContainer: {
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
@@ -215,6 +169,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  configContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  configTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  setterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 10,
+  },
+  setterLabel: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  setterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  setterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  setterButtonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#555',
+  },
+  setterValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginHorizontal: 15,
+    width: 60,
+    textAlign: 'center',
+  },
   phaseText: {
     fontSize: 24,
     fontWeight: '600',
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 56,
     fontWeight: 'bold',
-    color: '#ffffffff',
+    color: '#111',
     fontFamily: 'Courier New',
     letterSpacing: 2,
   },
@@ -280,20 +281,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Courier New',
   },
-  breakOverlay: {
-    position: 'absolute',
-    top: 50,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  breakText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   PostFinishButton: {
     marginTop: 10,
     backgroundColor: '#FF3B30',
@@ -306,5 +293,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: 'red',
+  }
 });
 
