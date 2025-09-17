@@ -21,7 +21,6 @@ django-ninja-jwt==5.3.7
 djangorestframework==3.16.1
 djangorestframework-simplejwt==5.2.2
 dnspython==2.7.0
-email-validator==2.0.0
 google-auth==2.40.3
 google-genai==1.32.0
 gunicorn==23.0.0

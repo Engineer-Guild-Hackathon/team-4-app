@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 
@@ -38,10 +38,22 @@ export default function LoginScreen() {
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button title={loading ? '認証中...' : 'ログイン'} onPress={handleLogin} disabled={loading} />
-      {/* ユーザー作成画面へのリンク追加 */}
-      <View style={{ marginTop: 24 }}>
-        <Button title="新規ユーザー登録はこちら" onPress={() => router.push('/signup')} />
-      </View>
+      
+      {/* パスワードリセットリンク */}
+      <TouchableOpacity 
+        style={styles.linkButton}
+        onPress={() => router.push('/password-reset-request')}
+      >
+        <Text style={styles.linkText}>パスワードを忘れた方</Text>
+      </TouchableOpacity>
+      
+      {/* ユーザー作成画面へのリンク */}
+      <TouchableOpacity 
+        style={styles.linkButton}
+        onPress={() => router.push('/signup')}
+      >
+        <Text style={styles.linkText}>新規ユーザー登録はこちら</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -74,5 +86,15 @@ const styles = StyleSheet.create({
   error: {
     color: 'red',
     marginBottom: 12,
+  },
+  linkButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 16,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });

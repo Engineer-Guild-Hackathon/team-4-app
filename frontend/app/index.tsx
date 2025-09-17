@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams, Link, useFocusEffect, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
@@ -15,19 +15,11 @@ export default function HomeScreen() {
   const [currentTopicId, setCurrentTopicId] = useState<string | undefined>(undefined);
   const router = useRouter();
 
-  const params = useLocalSearchParams();
-
   useFocusEffect(
     useCallback(() => {
       console.log("画面がフォーカスされたよ！");
     }, []) 
   );
-
-  useEffect(() => {
-    if (params.openModal === 'true') {
-      setModalVisible(true);
-    }
-  }, [params.openModal]);
 
   const handleUserPress = (topicId: string, userId: number) => {
     setSelectedTopicId(topicId);

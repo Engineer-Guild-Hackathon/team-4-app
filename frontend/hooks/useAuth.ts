@@ -79,13 +79,13 @@ export function useAuth() {
           console.error('ユーザー情報の取得に失敗しました:', e);
           setUser(null);
           // 認証が必要なページにいたらログインページに飛ばす
-          if (pathname !== '/login' && pathname !== '/signup') {
+          if (pathname !== '/login' && pathname !== '/signup' && pathname !== '/password-reset-request' && pathname !== '/password-reset-confirm') {
             router.replace('/login');
           }
         }
       } else {
         // 認証不要画面は遷移しない
-        if (pathname !== '/login' && pathname !== '/signup') {
+        if (pathname !== '/login' && pathname !== '/signup' && pathname !== '/password-reset-request' && pathname !== '/password-reset-confirm') {
           router.replace('/login');
         }
       }
