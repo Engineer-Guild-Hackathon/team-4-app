@@ -92,9 +92,9 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
     onClose();
   };
 
-  const handlePostSuccess = () => {
+  const handlePostFinish = () => {
     Notifications.scheduleNotificationAsync({
-      content: { title: 'アウトプット完了！', body: '5分間の休憩です。' },
+      content: { title: 'アウトプット終了！', body: '5分間の休憩です。' },
       trigger: null,
     });
     setPhase('break');
@@ -181,6 +181,9 @@ export default function PomodoroTimer({ visible, onClose, topicId }: PomodoroTim
             ) : (
               <Text style={{textAlign: 'center', marginTop: 20}}>投稿先のトピックが選択されていません。</Text>
             )}
+            <Pressable style={styles.PostFinishButton} onPress={handlePostFinish}>
+              <Text style={styles.PostFinishText}>投稿を終了して休憩する</Text>
+            </Pressable>
           </View>
         )}
         
@@ -290,6 +293,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  PostFinishButton: {
+    marginTop: 10,
+    backgroundColor: '#FF3B30',
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  PostFinishText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
