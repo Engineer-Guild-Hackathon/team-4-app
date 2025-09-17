@@ -17,6 +17,7 @@ import MentorDashboard from '../components/MentorDashboard';
 import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
+import { useTimer } from '../contexts/TimerContext';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -28,10 +29,9 @@ export default function HomeScreen() {
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
   const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
   const router = useRouter();
-  const [pomodoroVisible, setPomodoroVisible] = useState(false);
   const params = useLocalSearchParams();
-
   const [renderKey, setRenderKey] = useState(0);
+  const { startTimerSession, phase } = useTimer();
 
   useEffect(() => {
     if (params.profileUpdated === 'true') {
@@ -43,6 +43,19 @@ export default function HomeScreen() {
     setSelectedTopicId(topicId);
     setSelectedUserId(userId);
     setModalVisible(true);
+  };
+
+  const handleTopicChange = (topicId: string | null) => {
+    setCurrentTopicId(topicId);
+  };
+
+  const handleMentorSelectionRequired = (topicId: string) => {
+    router.push(`/select-level-mentor?topicId=${topicId}`);
+  };
+
+  const handleStartPomodoro = () => {
+    // 現在選択中のトピックIDを引数にして、グローバルタイマーの設定画面を開く
+    startTimerSession(currentTopicId!);
   };
 
   if (authLoading || !user) {
@@ -64,12 +77,11 @@ export default function HomeScreen() {
               <Feather name="user" size={24} color="white" />
             </Button>
           </Link>
-          <TouchableOpacity
-            style={styles.headerCenterButton}
-            onPress={() => setPomodoroVisible(true)}
-          >
+          {phase !== 'break' && (
+          <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
             <Text style={styles.pomodoroButtonText}>集中</Text>
           </TouchableOpacity>
+          )}         
           <Button
             variant="icon"
             size="icon"
@@ -97,11 +109,7 @@ export default function HomeScreen() {
         onClose={() => setMentorDashboardVisible(false)}
         topicId={currentTopicId!}
       />
-      <PomodoroTimer
-        visible={pomodoroVisible}
-        onClose={() => setPomodoroVisible(false)}
-        topicId={currentTopicId!}
-      />
+      <PomodoroTimer />
     </View>
   );
 }
