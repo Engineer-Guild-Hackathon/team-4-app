@@ -35,7 +35,6 @@ interface UserDetailModalProps {
   onClose: () => void;
   topicId?: string;
   userId?: number;
-  isSelf?: boolean;
   selfUserId?: number;
 }
 
@@ -68,7 +67,7 @@ export default function UserDetailModal({
           if (e instanceof Error) {
             setError(e.message);
           } else {
-            setError('不明なエラーが発生しました');
+            setError('エラーが発生しました');
           }
         } finally {
           setLoading(false);
@@ -91,9 +90,9 @@ export default function UserDetailModal({
             await getPosts(topicId!, userId!);
           } catch (e: unknown) {
             if (e instanceof Error) {
-              Alert.alert('エラー', e.message || '削除中にエラーが発生しました。');
+              Alert.alert('エラー', e.message || '削除に失敗しました');
             } else {
-              Alert.alert('エラー', '削除中に不明なエラーが発生しました。');
+              Alert.alert('エラー', '削除に失敗しました');
             }
           }
         },
@@ -141,60 +140,62 @@ export default function UserDetailModal({
                     {profile.bio}
                   </Text>
                 </View>
-                {profile.blocking ? (
-                  <Button // Unblock
-                    onPress={async () => {
-                      Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
-                        { text: 'キャンセル', style: 'cancel' },
-                        {
-                          text: 'はい',
-                          style: 'destructive',
-                          onPress: async () => {
-                            try {
-                              await unblockUser(userId!); // 解除APIが同じ場合
-                              Alert.alert('完了', 'ユーザーのブロックを解除しました');
-                              const updatedProfile = await getUser(userId!);
-                              setProfile(updatedProfile);
-                            } catch {
-                              Alert.alert('エラー', 'ブロック解除に失敗しました');
-                            }
+                {selfUserId !== userId && (
+                  profile.blocking ? (
+                    <Button // Unblock
+                      onPress={async () => {
+                        Alert.alert('ブロック解除', 'このユーザーのブロックを解除しますか？', [
+                          { text: 'キャンセル', style: 'cancel' },
+                          {
+                            text: 'はい',
+                            style: 'destructive',
+                            onPress: async () => {
+                              try {
+                                await unblockUser(userId!); // 解除APIが同じ場合
+                                Alert.alert('完了', 'ユーザーのブロックを解除しました');
+                                const updatedProfile = await getUser(userId!);
+                                setProfile(updatedProfile);
+                              } catch {
+                                Alert.alert('エラー', 'ブロック解除に失敗しました');
+                              }
+                            },
                           },
-                        },
-                      ]);
-                    }}
-                    variant="secondary"
-                    size="sm"
-                    style={{ marginLeft: 12 }}
-                  >
-                    ブロック解除
-                  </Button> // Unblock
-                ) : (
-                  <Button
-                    onPress={async () => {
-                      Alert.alert('ブロック', 'このユーザーをブロックしますか？', [
-                        { text: 'キャンセル', style: 'cancel' },
-                        {
-                          text: 'はい',
-                          style: 'destructive',
-                          onPress: async () => {
-                            try {
-                              await blockUser(userId!);
-                              Alert.alert('完了', 'ユーザーをブロックしました');
-                              const updatedProfile = await getUser(userId!);
-                              setProfile(updatedProfile);
-                            } catch {
-                              Alert.alert('エラー', 'ブロックに失敗しました');
-                            }
+                        ]);
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      style={{ marginLeft: 12 }}
+                    >
+                      ブロック解除
+                    </Button> // Unblock
+                  ) : (
+                    <Button
+                      onPress={async () => {
+                        Alert.alert('ブロック', 'このユーザーをブロックしますか？', [
+                          { text: 'キャンセル', style: 'cancel' },
+                          {
+                            text: 'はい',
+                            style: 'destructive',
+                            onPress: async () => {
+                              try {
+                                await blockUser(userId!);
+                                Alert.alert('完了', 'ユーザーをブロックしました');
+                                const updatedProfile = await getUser(userId!);
+                                setProfile(updatedProfile);
+                              } catch {
+                                Alert.alert('エラー', 'ブロックに失敗しました');
+                              }
+                            },
                           },
-                        },
-                      ]);
-                    }}
-                    variant="secondary"
-                    size="sm"
-                    style={{ marginLeft: 12 }}
-                  >
-                    ブロック
-                  </Button>
+                        ]);
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      style={{ marginLeft: 12 }}
+                    >
+                      ブロック
+                    </Button>
+                  )
                 )}
               </View>
             ) : (

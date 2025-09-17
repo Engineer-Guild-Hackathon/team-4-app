@@ -60,7 +60,7 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
 
   const handlePost = async () => {
     if (!content.trim() && mediaAssets.length === 0) {
-      Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください。');
+      Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください');
       return;
     }
     setIsSubmitting(true);
@@ -92,7 +92,7 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
       setContent('');
       setMediaAssets([]);
     } catch (error: any) {
-      Alert.alert('投稿エラー', error?.detail || '投稿に失敗しました。');
+      Alert.alert('エラー', error?.detail || '投稿に失敗しました');
     } finally {
       setIsSubmitting(false);
     }

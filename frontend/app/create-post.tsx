@@ -78,11 +78,11 @@ export default function CreatePostScreen() {
 
   const handlePost = async () => {
     if (!content.trim() && mediaAssets.length === 0) {
-      Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください。');
+      Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください');
       return;
     }
     if (!topicId) {
-      Alert.alert('エラー', '投稿先のトピックが見つかりません。');
+      Alert.alert('エラー', '投稿先のトピックが見つかりません');
       return;
     }
 
@@ -126,8 +126,8 @@ export default function CreatePostScreen() {
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage =
         (error as { detail?: string })?.detail ||
-        '投稿に失敗しました。ネットワーク接続を確認するか、時間をおいて再試行してください。';
-      Alert.alert('投稿エラー', errorMessage);
+        '投稿に失敗しました';
+      Alert.alert('エラー', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
