@@ -1,4 +1,5 @@
 import { theme } from '@/styles/theme';
+import { useRouter } from 'expo-router';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
@@ -36,6 +37,8 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
 }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList<DisplayTopic>>(null);
+
+  const router = useRouter();
 
   const displayData: DisplayTopic[] = [
     { id: 'left-spacer' },
@@ -81,7 +84,15 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     });
 
     return (
-      <TouchableOpacity onPress={() => onSelectIndex(pageIndex)}>
+      <TouchableOpacity
+        onPress={() => {
+          if (currentIndex === pageIndex) {
+            router.push(`/list-post?topicId=${item.id}`);
+          } else {
+            onSelectIndex(pageIndex);
+          }
+        }}
+      >
         <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
           <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
             <MixedFontText
