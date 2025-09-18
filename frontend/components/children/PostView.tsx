@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
 } from 'react-native';
 import { Button } from '../Shared/Button';
 import ReportModal from './ReportModal';
@@ -100,25 +101,33 @@ export default function PostView({
           </Button>
         )}
       </View>
-      <View>
-        {item.media.map((media: PostMediaOut, index: number) => {
-          const mediaUrl = media.file;
-          const cacheKey = mediaUrl.split('?')[0];
-          if (media.media_type === 'image') {
-            return (
-              <Image
-                key={index}
-                source={{ uri: mediaUrl, cacheKey }}
-                style={styles.media}
-                contentFit="cover"
-              />
-            );
-          } else if (media.media_type === 'video') {
-            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
-          }
-          return null;
-        })}
-      </View>
+      {item.media && item.media.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.mediaScrollView}
+        >
+          {item.media.map((media: PostMediaOut, index: number) => {
+            const mediaUrl = media.file;
+            const cacheKey = mediaUrl.split('?')[0];
+            const mediaStyle = item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
+
+            if (media.media_type === 'image') {
+              return (
+                <Image
+                  key={index}
+                  source={{ uri: mediaUrl, cacheKey }}
+                  style={mediaStyle}
+                  contentFit="cover"
+                />
+              );
+            } else if (media.media_type === 'video') {
+              return <VideoItem key={index} uri={mediaUrl} style={mediaStyle} />;
+            }
+            return null;
+          })}
+        </ScrollView>
+      )}
       <Text style={styles.postContent}>{item.content}</Text>
     </View>
   );
@@ -218,5 +227,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: remToPx(theme.typography.fontSize['3xl']),
     lineHeight: remToPx(theme.typography.fontSize['3xl']),
+  },
+    mediaScrollView: {
+  },
+  mediaItemSingle: {
+    width: remToPx('24rem'), 
+    height: 250,
+    backgroundColor: theme.colors.background.secondary,
+  },
+  mediaItemMulti: {
+    width: 250, 
+    height: 250, 
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginRight: remToPx(theme.spacing[2]), 
+    backgroundColor: theme.colors.background.secondary,
   },
 });
