@@ -4,6 +4,7 @@ import {
   checkMentorSelectionRequired,
   createMentorRequest,
   getAvailableMentors,
+  getMentorRequestStatus,
   getUserLevel,
   noMentorSelection,
 } from '@/services/api/mentorship';
@@ -54,6 +55,12 @@ export default function SelectLevelMentorScreen() {
   // ユーザーの現在レベルとステータス
   const [userLevel, setUserLevel] = useState<number | null>(null);
   const [userStatus, setUserStatus] = useState<string | null>(null);
+
+  // 師匠選択リクエストの状態
+  const [requestStatus, setRequestStatus] = useState<{
+    status: string;
+    to_username?: string;
+  } | null>(null);
 
   // レベルセレクターの制限を計算
   const getLevelConstraints = () => {
@@ -167,6 +174,26 @@ export default function SelectLevelMentorScreen() {
     };
     fetchPosts();
   }, [topicId]);
+
+  // 師匠選択リクエストの状態を取得
+  useEffect(() => {
+    const fetchRequestStatus = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const status = await getMentorRequestStatus(user.id, topicId) as {
+          status: string;
+          to_username?: string;
+        };
+        setRequestStatus(status);
+      } catch (error) {
+        console.error('リクエスト状態取得エラー:', error);
+        setRequestStatus(null);
+      }
+    };
+
+    fetchRequestStatus();
+  }, [user?.id, topicId]);
 
 
   // 師匠選択処理
@@ -407,8 +434,9 @@ export default function SelectLevelMentorScreen() {
         )}
       </View>
       {/* 下中央にOKボタン - 適切な条件でのみ表示 */}
-      {(mentorData?.required === false ||
-        (mentorData?.required === true && selectedMentor)) && (
+      {((mentorData?.required === false) ||
+        (mentorData?.required === true && selectedMentor) ||
+        (requestStatus?.status === 'approved')) && (
         <View style={styles.bottomButtonContainer}>
           <View
             style={{
@@ -581,5 +609,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     fontWeight: '500',
+  },
+  requestStatusContainer: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    width: 300,
+  },
+  requestStatusTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  requestStatusMessage: {
+    fontSize: 14,
+    color: '#92400e',
+    textAlign: 'center',
   },
 });
