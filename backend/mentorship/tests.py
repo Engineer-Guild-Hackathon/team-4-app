@@ -657,3 +657,172 @@ class MentorCapacityTestCase(TestCase):
         self.mentee2_topic.refresh_from_db()
         # 師匠とのレベル差(10-5=5)分だけレベルダウン
         self.assertEqual(self.mentee2_topic.level, -4)  # 2 - 5 - 1 (破門によるレベルダウン)
+
+
+class MentorSelectionTestCase(TestCase):
+    """師匠選択に関するテストケース"""
+    
+    def setUp(self):
+        """Set up test users and a topic for mentor selection tests."""
+        self.user1 = User.objects.create_user(username="user1", password="pass123")
+        self.user2 = User.objects.create_user(username="user2", password="pass123")
+        self.user3 = User.objects.create_user(username="user3", password="pass123")
+        self.user4 = User.objects.create_user(username="user4", password="pass123")
+        self.topic = Topic.objects.create(
+            title="Test Topic", description="Description for test topic"
+        )
+        
+        # 通常のユーザー（レベル5）
+        self.user1_topic = UserTopic.objects.create(
+            user=self.user1, topic=self.topic, level=5, mentee_capacity=3
+        )
+        # 師匠候補（レベル4）
+        self.user2_topic = UserTopic.objects.create(
+            user=self.user2, topic=self.topic, level=4, mentee_capacity=3
+        )
+        # 師匠候補（レベル3）
+        self.user3_topic = UserTopic.objects.create(
+            user=self.user3, topic=self.topic, level=3, mentee_capacity=3
+        )
+        # 師匠候補（レベル6）
+        self.user4_topic = UserTopic.objects.create(
+            user=self.user4, topic=self.topic, level=6, mentee_capacity=3
+        )
+
+    def test_get_available_mentors_normal_user(self):
+        """通常ユーザーが師匠選択可能なユーザーを取得するテスト"""
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/available-mentors/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        mentors = response.json()
+        # レベル5より高い師匠（レベル6）のみが表示される
+        self.assertEqual(len(mentors), 1)
+        self.assertEqual(mentors[0]['username'], 'user4')
+
+    def test_get_available_mentors_expelled_user(self):
+        """破門済みユーザーが師匠選択可能なユーザーを取得するテスト"""
+        # user1を破門状態にする
+        self.user1_topic.status = UserTopic.Status.EXPELLED
+        self.user1_topic.level = 3  # レベルを3に下げる
+        self.user1_topic.save()
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/available-mentors/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        mentors = response.json()
+        # レベル3以下の師匠（レベル3）が表示される
+        self.assertEqual(len(mentors), 1)
+        mentor_usernames = [mentor['username'] for mentor in mentors]
+        self.assertIn('user3', mentor_usernames)
+
+    def test_get_available_mentors_graduated_user(self):
+        """卒業済みユーザーが師匠選択可能なユーザーを取得するテスト"""
+        # user1を卒業状態にする
+        self.user1_topic.status = UserTopic.Status.GRADUATED
+        self.user1_topic.level = 4  # レベルを4に設定
+        self.user1_topic.save()
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.get(
+            f"/api/mentorship/available-mentors/{self.topic.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        mentors = response.json()
+        # レベル5以上の師匠（レベル6）のみが表示される
+        self.assertEqual(len(mentors), 1)
+        self.assertEqual(mentors[0]['username'], 'user4')
+
+    def test_create_mentor_request_expelled_user(self):
+        """破門済みユーザーが自分のレベル以下の師匠を選択できるテスト"""
+        # user1を破門状態にする
+        self.user1_topic.status = UserTopic.Status.EXPELLED
+        self.user1_topic.level = 3  # レベルを3に下げる
+        self.user1_topic.save()
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user2.id, "topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers
+        )
+        
+        # 破門済みユーザーは自分のレベル以下の師匠を選択可能
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_mentor_request_graduated_user(self):
+        """卒業済みユーザーが自分のレベル+1以上の師匠を選択できるテスト"""
+        # user1を卒業状態にする
+        self.user1_topic.status = UserTopic.Status.GRADUATED
+        self.user1_topic.level = 4  # レベルを4に設定
+        self.user1_topic.save()
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.post(
+            "/api/mentorship/request",
+            {"to_user_id": self.user4.id, "topic_id": str(self.topic.id)},
+            content_type="application/json",
+            headers=headers
+        )
+        
+        # 卒業済みユーザーは自分のレベル+1以上の師匠を選択可能
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete_mentor_request(self):
+        """師匠選択リクエストを削除するテスト"""
+        # リクエストを作成
+        request = MentorRelationRequest.objects.create(
+            from_user=self.user1,
+            to_user=self.user2,
+            topic=self.topic,
+            status="pending"
+        )
+        
+        headers = get_jwt_auth_headers(self.user1)
+        response = self.client.delete(
+            f"/api/mentorship/requests/{request.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['message'], 'リクエストを削除しました')
+        
+        # リクエストが削除されていることを確認
+        self.assertFalse(
+            MentorRelationRequest.objects.filter(id=request.id).exists()
+        )
+
+    def test_delete_mentor_request_unauthorized(self):
+        """他人のリクエストを削除しようとした場合のテスト"""
+        # リクエストを作成
+        request = MentorRelationRequest.objects.create(
+            from_user=self.user1,
+            to_user=self.user2,
+            topic=self.topic,
+            status="pending"
+        )
+        
+        # user2がuser1のリクエストを削除しようとする
+        headers = get_jwt_auth_headers(self.user2)
+        response = self.client.delete(
+            f"/api/mentorship/requests/{request.id}",
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()['message'], 'この操作を実行する権限がありません')
+        
+        # リクエストが削除されていないことを確認
+        self.assertTrue(
+            MentorRelationRequest.objects.filter(id=request.id).exists()
+        )

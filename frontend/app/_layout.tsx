@@ -63,32 +63,42 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="password-reset-request"
-              options={{
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="signup" options={{ headerShown: false }} />
+            
+            <Stack.Screen 
+            name="password-reset-request" 
+            options={{ 
                 title: 'パスワードリセット',
-                headerShown: true,
-              }}
-            />
-            <Stack.Screen
-              name="password-reset-confirm"
-              options={{
-                title: '新しいパスワード',
-                headerShown: true,
-              }}
-            />
-            <Stack.Screen
-              name="create-post"
-              options={{
+                  headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="password-reset-confirm" 
+            options={{ 
+                 title: '新しいパスワード',
+                   headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="select-level-mentor" 
+            options={{ headerShown: false }} 
+          />
+            <Stack.Screen 
+              name="create-post" 
+              options={{ 
                 presentation: 'modal',
-                title: '新規投稿',
-              }}
+                  title: '新規投稿',
+                headerShown: false
+              }} 
+
             />
             <Stack.Screen
               name="edit-profile"
               options={{
-                presentation: 'modal',
+
+                presentation: 'modal', 
                 title: 'プロフィール編集',
+                headerShown: false
+
               }}
             />
           </Stack>
