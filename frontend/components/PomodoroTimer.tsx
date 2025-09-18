@@ -8,6 +8,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { useTimer } from '../contexts/TimerContext';
 import CreatePostForm from './CreatePostForm';
 import { Button } from './Shared/Button';
+import { Feather } from '@expo/vector-icons';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -37,20 +38,22 @@ const DurationSetter = ({
           onUpdate(Math.max(1, durationMinutes - 1));
         }}
         style={styles.setterButton}
-        textStyle={styles.setterButtonText}
       >
-        <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
+        <Feather name="minus" size={16} color={theme.colors.white} />
       </Button>
-      <MixedFontText style={styles.setterValue}>{durationMinutes} 分</MixedFontText>
-      <Pressable
+      <View style={styles.setterValueContainer}>
+        <MixedFontText style={styles.setterValue}>{durationMinutes}</MixedFontText>
+        <MixedFontText style={styles.setterUnit}>分</MixedFontText>
+      </View>
+      <Button
         onPress={() => {
           buttonHaptic();
           onUpdate(durationMinutes + 1);
         }}
         style={styles.setterButton}
       >
-        <MixedFontText style={styles.setterButtonText}>+</MixedFontText>
-      </Pressable>
+        <Feather name="plus" size={16} color={theme.colors.white} />
+      </Button>
     </View>
   </View>
 );
@@ -101,7 +104,7 @@ export default function PomodoroTimer() {
         {phase === 'idle' && (
           <>
             <View style={styles.configContainer}>
-              <MixedFontText style={styles.configTitle}>集中時間の設定</MixedFontText>
+              <MixedFontText style={styles.configTitle}>タイマーの設定</MixedFontText>
               <DurationSetter
                 label="学習"
                 durationMinutes={studyDuration / 60}
@@ -117,8 +120,8 @@ export default function PomodoroTimer() {
                 durationMinutes={breakDuration / 60}
                 onUpdate={mins => setBreakDuration(mins * 60)}
               />
-              <View style={styles.setterContainer}>
-                <MixedFontText style={styles.setterLabel}>通知音</MixedFontText>
+              <View style={styles.notificationSetterContainer}>
+                <MixedFontText style={styles.setterLabel}>通知</MixedFontText>
                 <Switch
                   trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[300] }}
                   thumbColor={theme.colors.neutral[50]}
@@ -128,24 +131,28 @@ export default function PomodoroTimer() {
                 />
               </View>
             </View>
-            <Pressable
-              style={styles.button}
+            <Button
+              style={styles.startButton}
+              textStyle={styles.startButtonText}
               onPress={() => {
                 importantActionHaptic();
                 startStudy();
               }}
             >
-              <MixedFontText style={styles.buttonText}>開始</MixedFontText>
-            </Pressable>
-            <Pressable
+              開始
+            </Button>
+
+            <Button
+              variant="icon"
               style={styles.closeButton}
+              textStyle={styles.closeButtonText}
               onPress={() => {
                 buttonHaptic();
                 closeTimer();
               }}
             >
-              <MixedFontText style={styles.closeText}>×</MixedFontText>
-            </Pressable>
+              ×
+            </Button>
           </>
         )}
 
@@ -194,7 +201,7 @@ export default function PomodoroTimer() {
                 closeTimer();
               }}
             >
-              <MixedFontText style={styles.closeText}>×</MixedFontText>
+              <MixedFontText style={styles.closeButtonText}>×</MixedFontText>
             </Pressable>
           </>
         )}
@@ -260,7 +267,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   setterContainer: {
-    flexDirection: 'row',
+    // flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
@@ -276,21 +283,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   setterButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    padding: 0,
+    // width: 40,
+    // height: 40,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   setterButtonText: {
-    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.secondary,
+    // flex: 1,
+    // fontSize: 40, 
+    // color: theme.colors.text.secondary,
   },
   setterValueContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    marginHorizontal: 15,
+    marginHorizontal: 5,
     width: 60,
   },
   setterValue: {
@@ -321,12 +329,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 60,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 60,
-    right: 30,
-    backgroundColor: theme.colors.neutral[200],
   },
   closeText: {
     fontSize: parseFloat(theme.typography.fontSize['3xl']) * 16,
@@ -391,5 +393,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 25,
     alignItems: 'center',
+  },
+  startButton: {
+    marginTop: 60,
+    backgroundColor: theme.colors.background.primary, 
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  startButtonText: {
+    color: theme.colors.text.primary, 
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20, 
+    right: 40, 
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.background.primary, 
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  closeButtonText: {
+    fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
+    color: theme.colors.text.secondary, 
+    fontWeight: theme.typography.fontWeight.regular,
+    lineHeight: parseFloat(theme.typography.fontSize['2xl']) * 16 * 1.2,
+    textAlign: 'center',
+  },
+    notificationSetterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', // 中央揃えに変更
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    gap: 16, // ラベルとスイッチの間のスペース
   },
 });
