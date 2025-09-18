@@ -34,7 +34,14 @@
           "backgroundColor": "#fff8e1"
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "投稿やプロフィールに設定するために、写真へのアクセスを許可してください。",
+          "cameraPermission": "写真を撮影して投稿するために、カメラへのアクセスを許可してください。"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
