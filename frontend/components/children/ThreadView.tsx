@@ -7,6 +7,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
 import { Button } from '../Shared/Button';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 type ThreadViewProps = {
   topicId: string;
@@ -51,11 +52,11 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
     <View style={{ flex: 1 }}>
       {error ? (
         <View style={styles.centered}>
-          <Text style={styles.errorText}>{error}</Text>
+          <MixedFontText style={styles.errorText}>{error}</MixedFontText>
         </View>
       ) : threads.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>まだスレッドがありません</Text>
+          <MixedFontText style={styles.emptyText}>まだスレッドがありません</MixedFontText>
         </View>
       ) : (
         <ScrollView style={styles.pageContainer}>
@@ -69,11 +70,9 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.threadTitle}>
-                starter: {thread.starter?.username} / mentor: {thread.mentor?.username}
-              </Text>
-              <Text style={styles.threadDate}>{new Date(thread.created_at).toLocaleString()}</Text>
-              <Text style={styles.threadMsgCount}>メッセージ数: {thread.messages.length}</Text>
+              <MixedFontText style={styles.threadTitle}>{`starter: ${thread.starter?.username} / mentor: ${thread.mentor?.username}`}</MixedFontText>
+              <MixedFontText style={styles.threadDate}>{new Date(thread.created_at).toLocaleString()}</MixedFontText>
+              <MixedFontText style={styles.threadMsgCount}>{`メッセージ数: ${thread.messages.length}`}</MixedFontText>
             </TouchableOpacity>
           ))}
         </ScrollView>

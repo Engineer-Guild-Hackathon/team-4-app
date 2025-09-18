@@ -10,7 +10,6 @@ import { TopicManageView } from './TopicManageView';
 import { TreeViewer } from './TreeViewer/TreeViewer';
 import { WafuCloud } from './WahuCloud';
 
-// ★ 2. 背景の雲をまとめて配置するためのコンポーネントを定義
 const BackgroundClouds = () => {
   // 画像アセットのパスはご自身のプロジェクトに合わせて修正してください
   const goldTexture = require('../assets/images/cloud-texture.png');

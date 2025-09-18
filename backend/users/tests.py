@@ -76,13 +76,14 @@ class UserAPITest(TestCase):
 		response_data = response.json()
 		self.assertEqual(response_data["username"], "updateduser")
 
-	def test_delete_user(self):
-		user = User.objects.create_user(username="deluser", email="del@example.com", password="pass")
-		response = self.client.delete(f"/{user.id}/", headers=self.headers)
+	def test_delete_my_account(self):
+		# 削除前のユーザーIDを保存
+		user_id = self.user.id
+		response = self.client.delete("/me/", headers=self.headers)
 		self.assertEqual(response.status_code, 200)
 		response_data = response.json()
-		self.assertTrue(response_data["success"])
-		self.assertFalse(User.objects.filter(id=user.id).exists())
+		self.assertIn("アカウントが正常に削除されました", response_data["message"])
+		self.assertFalse(User.objects.filter(id=user_id).exists())
 
 	def test_block_user_success(self):
 		user_to_block = User.objects.create_user(username="blockme", email="blockme@example.com", password="pass")

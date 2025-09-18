@@ -17,6 +17,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Button } from '../Shared/Button';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
@@ -144,7 +145,14 @@ export default function PostView({
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
   if (error) {
-    return <Text style={styles.centered}>エラー: {error}</Text>;
+    return <MixedFontText style={styles.centered}>{`エラー: ${error}`}</MixedFontText>;
+  }
+  if (posts.length === 0) {
+    return (
+      <View style={styles.centered}>
+        <MixedFontText style={styles.emptyText}>まだ投稿がありません。</MixedFontText>
+      </View>
+    );
   }
   return (
     <>
@@ -191,7 +199,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     textAlign: 'center',
     marginTop: remToPx(theme.spacing[16]),
-    fontFamily: 'Klee One',
+    
     fontSize: remToPx(theme.typography.fontSize.base),
   },
   post: {
@@ -204,7 +212,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     marginBottom: remToPx(theme.spacing[4]) - 2, // md - 2px
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   media: {
     width: '100%',
