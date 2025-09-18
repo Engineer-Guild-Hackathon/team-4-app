@@ -20,6 +20,8 @@ interface Props {
 
 const NODE_RADIUS = 40;
 
+const remToPx = (rem: string) => parseFloat(rem) * 16;
+
 const splitLabelByParentheses = (label: string): [string, string] => {
   const match = label.match(/^(.*?)\s*(\([^)]*\)|（[^））]*）)?$/);
   return match ? [match[1].trim(), (match[2] || '').trim()] : [label, ''];
@@ -73,12 +75,10 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
 };
 
 export const NODE_WIDTH = 90; // 親コンポーネントが中央揃えに使うための幅
-export const NODE_HEIGHT = 80; // 親コンポーネントが中央揃えに使うための高さ
+export const NODE_HEIGHT = 125; // 親コンポーネントが中央揃えに使うための高さ
 
 const styles = StyleSheet.create({
   container: {
-    width: NODE_WIDTH,
-    height: NODE_HEIGHT,
     alignItems: 'center',
   },
   avatarContainer: {
@@ -97,13 +97,13 @@ const styles = StyleSheet.create({
   mainLabel: {
     marginTop: 4,
     color: theme.colors.text.primary,
-    fontSize: parseFloat(theme.typography.fontSize.sm) * 16,
+    fontSize: remToPx(theme.typography.fontSize.base),
     fontFamily: theme.typography.fontFamily.primary,
     textAlign: 'center',
   },
   subLabel: {
     color: theme.colors.text.tertiary,
-    fontSize: parseFloat(theme.typography.fontSize.xs) * 16,
+    fontSize: remToPx(theme.typography.fontSize.sm),
     fontFamily: theme.typography.fontFamily.primary,
     textAlign: 'center',
   },
