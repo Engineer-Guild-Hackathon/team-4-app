@@ -30,7 +30,6 @@ export default function EditProfileScreen() {
 
   useEffect(() => {
     getUser(user!.id).then(userData => {
-      console.log('Fetched user data:', userData);
       setBio(userData.bio || '');
       setAvatarUri(userData.avatar || null);
     });

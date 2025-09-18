@@ -3,7 +3,17 @@ import { apiClient } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { formSubmitHaptic, successHaptic, errorHaptic } from '@/utils/haptics';
@@ -47,41 +57,41 @@ export default function UserCreateScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoidingContainer}
     >
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <View style={styles.container}>
-      <MixedFontText style={styles.title}>ユーザー作成</MixedFontText>
-      <TextInput
-        style={styles.input}
-        placeholder="ユーザー名"
-        autoCapitalize="none"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="メールアドレス"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="パスワード"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
-      {success ? <MixedFontText style={styles.success}>{success}</MixedFontText> : null}
-      <TouchableOpacity style={styles.button} onPress={handleCreate}>
-        <MixedFontText style={styles.buttonText}>ユーザー作成</MixedFontText>
-      </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <MixedFontText style={styles.title}>ユーザー作成</MixedFontText>
+          <TextInput
+            style={styles.input}
+            placeholder="ユーザー名"
+            autoCapitalize="none"
+            value={username}
+            onChangeText={setUsername}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="メールアドレス"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="パスワード"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
+          {success ? <MixedFontText style={styles.success}>{success}</MixedFontText> : null}
+          <TouchableOpacity style={styles.button} onPress={handleCreate}>
+            <MixedFontText style={styles.buttonText}>ユーザー作成</MixedFontText>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/login')}>
-        <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
-      </TouchableOpacity>
-    </View>
-    </TouchableWithoutFeedback>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.push('/login')}>
+            <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

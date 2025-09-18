@@ -241,7 +241,6 @@ export default function ListPostScreen() {
 
     return (
       <View style={styles.deckContainer}>
-        <Text>{new Date().toISOString()}</Text>
         {posts
           .map((post, index) => (
             <PostCard

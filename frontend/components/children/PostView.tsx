@@ -1,4 +1,5 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { getPosts } from '@/services/api/post';
 import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
 import Fontisto from '@expo/vector-icons/Fontisto';
@@ -21,7 +22,7 @@ import { Button } from '../Shared/Button';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
-  posts: PostOut[];
+  userId: number;
   loading: boolean;
   error: string | null;
   selfUserId?: number;
@@ -50,7 +51,7 @@ const VideoItem = ({ uri, style }: { uri: string; style: ImageStyle }) => {
 };
 
 export default function PostView({
-  posts,
+  userId,
   loading,
   error,
   selfUserId,
@@ -59,8 +60,13 @@ export default function PostView({
 }: PostViewProps) {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
+  const [posts, setPosts] = React.useState<PostOut[]>([]);
 
   const router = useRouter();
+
+  React.useEffect(() => {
+    getPosts(topicId, userId).then(setPosts);
+  }, [loading, error, topicId, userId]);
 
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('気づきメニュー', '', [
@@ -172,14 +178,16 @@ export default function PostView({
           setReportTargetPost(null);
         }}
       />
-      <Button
-        variant="icon"
-        style={styles.fab}
-        textStyle={styles.fabText}
-        onPress={() => router.push(`/create-post?topicId=${topicId}`)}
-      >
-        <Fontisto name="plus-a" size={24} color="#fff" />
-      </Button>
+      {selfUserId === userId && (
+        <Button
+          variant="icon"
+          style={styles.fab}
+          textStyle={styles.fabText}
+          onPress={() => router.push(`/create-post?topicId=${topicId}`)}
+        >
+          <Fontisto name="plus-a" size={24} color="#fff" />
+        </Button>
+      )}
     </View>
   );
 }

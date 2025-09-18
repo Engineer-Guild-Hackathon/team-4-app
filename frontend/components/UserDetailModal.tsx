@@ -237,7 +237,7 @@ export default function UserDetailModal({
           >
             {/* 気づき一覧ページ */}
             <PostView
-              posts={posts}
+              userId={userId!}
               loading={loading}
               error={error}
               selfUserId={selfUserId}

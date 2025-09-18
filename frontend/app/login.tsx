@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import { useAuth } from '@/hooks/AuthProvider';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
@@ -33,49 +43,49 @@ export default function LoginScreen() {
       style={styles.keyboardAvoidingContainer}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <View style={styles.container}>
-      <MixedFontText style={styles.title}>ログイン</MixedFontText>
-      <TextInput
-        style={styles.input}
-        placeholder="ユーザー名"
-        autoCapitalize="none"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="パスワード"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        <MixedFontText style={styles.buttonText}>
-          {loading ? '認証中...' : 'ログイン'}
-        </MixedFontText>
-      </TouchableOpacity>
+        <View style={styles.container}>
+          <MixedFontText style={styles.title}>ログイン</MixedFontText>
+          <TextInput
+            style={styles.input}
+            placeholder="ユーザー名"
+            autoCapitalize="none"
+            value={username}
+            onChangeText={setUsername}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="パスワード"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+            <MixedFontText style={styles.buttonText}>
+              {loading ? '認証中...' : 'ログイン'}
+            </MixedFontText>
+          </TouchableOpacity>
 
-      {/* パスワードリセットリンク */}
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={() => router.push('/password-reset-request')}
-      >
-        <MixedFontText style={styles.linkText}>パスワードを忘れた方</MixedFontText>
-      </TouchableOpacity>
+          {/* パスワードリセットリンク */}
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => router.push('/password-reset-request')}
+          >
+            <MixedFontText style={styles.linkText}>パスワードを忘れた方</MixedFontText>
+          </TouchableOpacity>
 
-      {/* ユーザー作成画面へのリンク */}
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={() => {
-          buttonHaptic();
-          router.push('/signup');
-        }}
-      >
-        <MixedFontText style={styles.linkButtonText}>新規ユーザー登録はこちら</MixedFontText>
-      </TouchableOpacity>
-    </View>
-    </TouchableWithoutFeedback>
+          {/* ユーザー作成画面へのリンク */}
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => {
+              buttonHaptic();
+              router.push('/signup');
+            }}
+          >
+            <MixedFontText style={styles.linkButtonText}>新規ユーザー登録はこちら</MixedFontText>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
@@ -139,5 +149,5 @@ const styles = StyleSheet.create({
   },
   keyboardAvoidingContainer: {
     flex: 1,
-  }, 
+  },
 });
