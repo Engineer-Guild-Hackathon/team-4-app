@@ -1,19 +1,19 @@
+import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/styles/theme';
+import * as ImagePicker from 'expo-image-picker';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
   StyleSheet,
   TextInput,
-  Image,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  Platform,
+  View,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@/hooks/useAuth';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { Button } from './Shared/Button';
-import { theme } from '@/styles/theme';
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
@@ -51,7 +51,7 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
       if (!result.canceled) {
         setMediaAssets(result.assets);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('メディアの読み込みに失敗しました', '別のファイルを選択してください。');
     } finally {
       setIsPickingMedia(false);
@@ -60,7 +60,7 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
 
   const handlePost = async () => {
     if (!content.trim() && mediaAssets.length === 0) {
-      Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください');
+      Alert.alert('エラー', '内容を入力するか、メディアを選択してください');
       return;
     }
     setIsSubmitting(true);
@@ -131,7 +131,7 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
         loading={isSubmitting}
         style={styles.postButton}
       >
-        アウトプットを投稿する
+        気づきを投稿する
       </Button>
       {isSubmitting && <ActivityIndicator />}
     </View>

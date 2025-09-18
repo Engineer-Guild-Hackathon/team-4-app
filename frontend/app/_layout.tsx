@@ -92,7 +92,7 @@ export default function RootLayout() {
               name="create-post"
               options={{
                 presentation: 'modal',
-                title: '新規投稿',
+                title: '新しい気づき',
                 headerShown: false,
               }}
             />
@@ -108,7 +108,7 @@ export default function RootLayout() {
               name="list-post"
               options={{
                 presentation: 'containedTransparentModal',
-                title: '投稿一覧',
+                title: '気づき一覧',
                 headerShown: false,
                 animation: 'fade',
               }}

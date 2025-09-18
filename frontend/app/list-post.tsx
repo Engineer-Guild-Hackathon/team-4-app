@@ -94,7 +94,7 @@ const PostCard = ({
   }));
 
   const handleOpenMenu = (targetPost: PostOut) => {
-    Alert.alert('投稿メニュー', '', [
+    Alert.alert('気づきメニュー', '', [
       { text: 'ユーザーブロック（未実装）', onPress: () => {} },
       {
         text: 'ポスト報告',
@@ -108,7 +108,7 @@ const PostCard = ({
   };
 
   const handleDelete = (postId: number) => {
-    Alert.alert('投稿を削除', '本当にこの投稿を削除しますか？', [
+    Alert.alert('気づきを削除', '本当にこの気づきを削除しますか？', [
       { text: 'キャンセル', style: 'cancel' },
       { text: '削除', style: 'destructive', onPress: onSwipe },
     ]);
@@ -212,7 +212,7 @@ export default function ListPostScreen() {
         if (e instanceof Error) {
           setError(e.message);
         } else {
-          setError('投稿の読み込みに失敗しました。');
+          setError('気づきの読み込みに失敗しました。');
         }
       } finally {
         setLoading(false);
@@ -262,7 +262,7 @@ export default function ListPostScreen() {
     <BlurView intensity={95} tint="dark" style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>投稿</Text>
+          <Text style={styles.headerTitle}>気づき</Text>
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Fontisto name="close-a" size={20} color="#fff" />
           </Pressable>

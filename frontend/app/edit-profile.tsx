@@ -1,5 +1,6 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { useAuth } from '@/hooks/useAuth';
+import { getUser } from '@/services/api/user';
 import { theme } from '@/styles/theme';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,10 +29,11 @@ export default function EditProfileScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setBio(user.bio || '');
-      setAvatarUri(user.avatar || null);
-    }
+    getUser(user!.id).then(userData => {
+      console.log('Fetched user data:', userData);
+      setBio(userData.bio || '');
+      setAvatarUri(userData.avatar || null);
+    });
   }, [user]);
 
   const pickImage = async () => {

@@ -1,4 +1,6 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { theme } from '@/styles/theme';
+import { selectionHaptic } from '@/utils/haptics';
 import { HierarchyPointNode } from 'd3-hierarchy';
 import { Image } from 'expo-image'; // ★ expo-image を使用
 import React, { useEffect } from 'react';
@@ -10,8 +12,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { TreeNode as D3TreeNode } from './treeUtils';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { selectionHaptic } from '@/utils/haptics';
 
 interface Props {
   node: HierarchyPointNode<D3TreeNode>;
@@ -19,7 +19,7 @@ interface Props {
   isFocused: boolean;
 }
 
-const NODE_RADIUS = 40;
+export const NODE_RADIUS = 40;
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -86,7 +86,14 @@ export const NODE_HEIGHT = 125; // 親コンポーネントが中央揃えに使
 
 const styles = StyleSheet.create({
   container: {
+    width: NODE_WIDTH,
+    height: NODE_HEIGHT,
+    justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   avatarContainer: {
     width: NODE_RADIUS * 2,

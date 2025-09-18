@@ -1,6 +1,7 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/styles/theme';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { errorHaptic, formSubmitHaptic, selectionHaptic, successHaptic } from '@/utils/haptics';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,13 +14,11 @@ import {
   ScrollView,
   StyleProp,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
-import { formSubmitHaptic, successHaptic, errorHaptic, selectionHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -134,7 +133,7 @@ export default function CreatePostScreen() {
       }
 
       successHaptic();
-      Alert.alert('成功', '投稿が完了しました！');
+      Alert.alert('成功', '気づきの投稿が完了しました！');
       router.replace({ pathname: '/', params: { openModal: 'true' } });
     } catch (error: unknown) {
       errorHaptic();
@@ -148,7 +147,7 @@ export default function CreatePostScreen() {
 
   return (
     <View style={styles.container}>
-      <MixedFontText style={styles.title}>新規投稿</MixedFontText>
+      <MixedFontText style={styles.title}>新しい気づき</MixedFontText>
 
       <TextInput
         style={styles.input}

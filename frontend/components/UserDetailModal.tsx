@@ -12,7 +12,6 @@ import {
   Modal,
   Platform,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
@@ -50,7 +49,7 @@ export default function UserDetailModal({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0); // 0: 投稿, 1: 掲示板
+  const [selectedTab, setSelectedTab] = useState(0);
   const pagerRef = React.useRef<PagerView>(null);
 
   useEffect(() => {
@@ -80,7 +79,7 @@ export default function UserDetailModal({
   }, [visible, topicId, userId]);
 
   const handleDeletePost = async (postId: number) => {
-    Alert.alert('投稿の削除', 'この投稿を本当に削除しますか？', [
+    Alert.alert('気づきの削除', 'この気づきを本当に削除しますか？', [
       { text: 'キャンセル', style: 'cancel' },
       {
         text: '削除',
@@ -214,7 +213,7 @@ export default function UserDetailModal({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
             >
-              投稿
+              気づき
             </Button>
             <Button
               variant={selectedTab === 1 ? 'primary' : 'ghost'}
@@ -236,7 +235,7 @@ export default function UserDetailModal({
             ref={pagerRef}
             onPageSelected={handlePageSelected}
           >
-            {/* 投稿一覧ページ */}
+            {/* 気づき一覧ページ */}
             <PostView
               posts={posts}
               loading={loading}

@@ -1,3 +1,4 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
 import Fontisto from '@expo/vector-icons/Fontisto';
@@ -11,13 +12,12 @@ import {
   Alert,
   FlatList,
   ImageStyle,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  ScrollView,
 } from 'react-native';
 import { Button } from '../Shared/Button';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
 import ReportModal from './ReportModal';
 
 interface PostViewProps {
@@ -63,7 +63,7 @@ export default function PostView({
   const router = useRouter();
 
   const handleOpenMenu = (post: PostOut) => {
-    Alert.alert('投稿メニュー', '', [
+    Alert.alert('気づきメニュー', '', [
       {
         text: 'ユーザーブロック（ダミー）',
         onPress: () => Alert.alert('ダミー', 'ユーザーブロック機能は未実装です'),
@@ -88,6 +88,7 @@ export default function PostView({
               uri:
                 item.author?.avatar ||
                 `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}`,
+              cacheKey: item.author?.avatar ? item.author.avatar.split('?')[0] : undefined,
             }}
             style={styles.authorAvatar}
           />
@@ -142,21 +143,20 @@ export default function PostView({
   if (error) {
     return <MixedFontText style={styles.centered}>{`エラー: ${error}`}</MixedFontText>;
   }
-  if (posts.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <MixedFontText style={styles.emptyText}>まだ投稿がありません。</MixedFontText>
-      </View>
-    );
-  }
+
   return (
-    <>
-      <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
-      {posts.length === 0 && (
-        <View style={styles.centered}>
-          <Text style={styles.emptyText}>まだ投稿がありません。</Text>
-        </View>
-      )}
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={{ flexGrow: 1 }}
+        ListEmptyComponent={
+          <View style={styles.centered}>
+            <Text style={styles.emptyText}>まだ気づきがありません。</Text>
+          </View>
+        }
+      />
       {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
         visible={showReportModal}
@@ -180,7 +180,7 @@ export default function PostView({
       >
         <Fontisto name="plus-a" size={24} color="#fff" />
       </Button>
-    </>
+    </View>
   );
 }
 
@@ -193,8 +193,6 @@ const styles = StyleSheet.create({
   emptyText: {
     color: theme.colors.text.tertiary,
     textAlign: 'center',
-    marginTop: remToPx(theme.spacing[16]),
-
     fontSize: remToPx(theme.typography.fontSize.base),
   },
   post: {

@@ -1,8 +1,13 @@
 import { hierarchy, HierarchyPointNode, tree } from 'd3-hierarchy';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { theme } from '@/styles/theme';
-import { remToPx } from '@/styles/theme';
-import { ActivityIndicator, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -14,8 +19,6 @@ import Svg, { G, Line } from 'react-native-svg';
 import { useTreeData } from '../../hooks/useTreeData';
 import { NODE_HEIGHT, NODE_WIDTH, TreeNodeView } from './TreeNode';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { buttonHaptic, selectionHaptic } from '@/utils/haptics';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -93,11 +96,9 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   };
 
   const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
   const savedScale = useSharedValue(1);
-  const translateX = useSharedValue((screenWidth - CANVAS_WIDTH) / 2);
-  const translateY = useSharedValue((screenHeight - CANVAS_HEIGHT) / 2);
-  const savedTranslateX = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
   const nodeCoords = useSharedValue<NodeCoords[]>([]);
 
   useEffect(() => {
@@ -169,22 +170,15 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
     })
     .onEnd(() => {
       savedScale.value = scale.value;
-      selectionHaptic();
     });
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
       cancelAnimation(translateX);
       cancelAnimation(translateY);
     })
-    .onUpdate(e => {
-      translateX.value = savedTranslateX.value + e.translationX;
-      translateY.value = savedTranslateY.value + e.translationY;
-    })
+    .onUpdate(() => {})
     .onEnd(e => {
-      savedTranslateX.value = translateX.value;
       const scaleValue = scale.value;
       const svgVelocityX = e.velocityX / scaleValue;
       const svgVelocityY = e.velocityY / scaleValue;
@@ -195,20 +189,17 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const zoomIn = () => {
-    buttonHaptic();
     scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
   };
   const zoomOut = () => {
-    buttonHaptic();
     scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
   };
 
   const fitToNetwork = useCallback(() => {
-    buttonHaptic();
     scale.value = withTiming(1, { duration: 300 });
-    translateX.value = withTiming((screenWidth - CANVAS_WIDTH) / 2, { duration: 300 });
-    translateY.value = withTiming((screenHeight - CANVAS_HEIGHT) / 2, { duration: 300 });
-  }, [scale, translateX, translateY]); // Dependencies are correct
+    translateX.value = withTiming(0, { duration: 300 });
+    translateY.value = withTiming(0, { duration: 300 });
+  }, [scale, translateX, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -228,8 +219,8 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
 
         if (targetNode) {
           // 見つかったノードを中央に配置するための移動量を計算
-          const targetTx = screenWidth / 2 - (targetNode.x ?? 0);
-          const targetTy = screenHeight / 2 - (targetNode.y ?? 0);
+          const targetTx = CANVAS_WIDTH / 2 - (targetNode.x ?? 0);
+          const targetTy = CANVAS_HEIGHT / 2 - (targetNode.y ?? 0);
 
           // アニメーションで指定ノードへ移動
           translateX.value = withTiming(targetTx, { duration: 500 });
@@ -257,7 +248,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   if (!rootNode) {
     return (
       <View style={styles.center}>
-        <MixedFontText style={styles.text}>表示できるデータがありません。</MixedFontText>
+        <Text style={styles.text}>表示できるデータがありません。</Text>
       </View>
     );
   }
@@ -266,13 +257,13 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork} activeOpacity={0.7}>
-          <MixedFontText style={styles.controlButtonText}>⛶</MixedFontText>
+          <Text style={styles.controlButtonText}>⛶</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
-          <MixedFontText style={styles.controlButtonText}>＋</MixedFontText>
+          <Text style={styles.controlButtonText}>＋</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={zoomOut} activeOpacity={0.7}>
-          <MixedFontText style={styles.controlButtonText}>－</MixedFontText>
+          <Text style={styles.controlButtonText}>－</Text>
         </TouchableOpacity>
       </View>
       <GestureDetector gesture={composedGesture}>
@@ -287,7 +278,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
                     y1={link.source.y ?? 0}
                     x2={link.target.x ?? 0}
                     y2={link.target.y ?? 0}
-                    stroke={theme.colors.text.tertiary}
+                    stroke="#6b7280"
                     strokeWidth={1.5}
                   />
                 ))}
@@ -320,44 +311,32 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.primary,
-  },
-  text: {
-    color: theme.colors.text.primary,
-    fontSize: remToPx(theme.typography.fontSize.base),
-  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  text: { color: '#1f2937' },
   controlsContainer: {
     position: 'absolute',
-    bottom: 120, // This value is specific to keep controls above the carousel
-    right: remToPx(theme.spacing[5]),
+    bottom: 120,
+    right: 20,
     zIndex: 10,
     flexDirection: 'column',
-    gap: remToPx(theme.spacing[3]),
+    gap: 12,
   },
   controlButton: {
-    backgroundColor: theme.colors.background.primary,
-    width: remToPx(theme.spacing[12]),
-    height: remToPx(theme.spacing[12]),
-    borderRadius: remToPx(theme.spacing[6]),
+    backgroundColor: '#fff',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    shadowColor: theme.colors.shadow.strong,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  controlButtonText: {
-    color: theme.colors.text.secondary,
-    fontSize: remToPx(theme.typography.fontSize.xl),
-    fontWeight: theme.typography.fontWeight.bold,
-  },
+  controlButtonText: { color: '#374151', fontSize: 20, fontWeight: 'bold' },
   gestureContainer: {
     flex: 1,
     overflow: 'hidden',
@@ -366,5 +345,7 @@ const styles = StyleSheet.create({
     width: CANVAS_WIDTH,
     height: CANVAS_HEIGHT,
     position: 'absolute',
+    left: (screenWidth - CANVAS_WIDTH) / 2,
+    top: (screenHeight - CANVAS_HEIGHT) / 2,
   },
 });

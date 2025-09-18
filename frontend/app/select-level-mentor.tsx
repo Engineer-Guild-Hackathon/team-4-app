@@ -190,8 +190,7 @@ export default function SelectLevelMentorScreen() {
           to_username?: string;
         };
         setRequestStatus(status);
-      } catch (error) {
-        console.error('リクエスト状態取得エラー:', error);
+      } catch {
         setRequestStatus(null);
       }
     };
@@ -436,7 +435,7 @@ export default function SelectLevelMentorScreen() {
                 </MixedFontText>
               </View>
             ) : (
-              <MixedFontText style={{ marginTop: 20 }}>投稿がありません</MixedFontText>
+              <MixedFontText style={{ marginTop: 20 }}>気づきがありません。</MixedFontText>
             )}
           </>
         )}
