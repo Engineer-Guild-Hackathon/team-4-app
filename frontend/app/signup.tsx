@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -39,7 +40,7 @@ export default function UserCreateScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>ユーザー作成</Text>
+      <MixedFontText style={styles.title}>ユーザー作成</MixedFontText>
       <TextInput
         style={styles.input}
         placeholder="ユーザー名"
@@ -61,10 +62,10 @@ export default function UserCreateScreen() {
         value={password}
         onChangeText={setPassword}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {success ? <Text style={styles.success}>{success}</Text> : null}
+      {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
+      {success ? <MixedFontText style={styles.success}>{success}</MixedFontText> : null}
       <TouchableOpacity style={styles.button} onPress={handleCreate}>
-        <Text style={styles.buttonText}>ユーザー作成</Text>
+        <MixedFontText style={styles.buttonText}>ユーザー作成</MixedFontText>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[8]),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   input: {
     width: '100%',
@@ -104,17 +105,17 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   error: {
     color: theme.colors.semantic.error.main,
     marginBottom: remToPx(theme.spacing[4]),
-    fontFamily: 'Klee One',
+    
   },
   success: {
     color: theme.colors.semantic.success.main,
     marginBottom: remToPx(theme.spacing[4]),
-    fontFamily: 'Klee One',
+    
   },
   button: {
     width: '100%',
@@ -129,7 +130,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   backButton: {
     alignItems: 'center',

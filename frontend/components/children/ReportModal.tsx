@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '@/styles/theme';
 import { Button } from '../Shared/Button';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface ReportModalProps {
   visible: boolean;
@@ -41,7 +42,7 @@ export default function ReportModal({ visible, onClose, onSubmit }: ReportModalP
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.title}>ポスト報告</Text>
+          <MixedFontText style={styles.title}>ポスト報告</MixedFontText>
           <TextInput
             style={styles.input}
             placeholder="報告理由を入力"

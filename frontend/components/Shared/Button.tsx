@@ -9,6 +9,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from './MixedFontText';
 
 export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'icon' | 'frosted' | 'outline' | 'ghost';
@@ -53,11 +54,9 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <View style={styles.content}>
           {icon && <View style={styles.icon}>{icon}</View>}
-          <Text
-            style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}
-          >
+          <MixedFontText style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}>
             {children}
-          </Text>
+          </MixedFontText>
         </View>
       )}
     </TouchableOpacity>
@@ -87,7 +86,7 @@ const styles = StyleSheet.create({
   textBase: {
     fontWeight: '600',
     textAlign: 'center',
-    fontFamily: 'Klee One',
+    
   },
   disabled: {
     opacity: 0.5,
