@@ -3,6 +3,15 @@
  * Using Klee One for headings and body text with Japanese language support
  */
 
+/**
+ * Converts a rem string to a pixel number.
+ * Assumes a base font size of 16px.
+ * @param rem - The rem value as a string (e.g., '1.5rem').
+ * @returns The equivalent pixel value as a number.
+ */
+export const remToPx = (rem: string): number => {
+  return parseFloat(rem) * 16;
+};
 export const typography = {
   fontFamily: {
     primary: 'Klee One',

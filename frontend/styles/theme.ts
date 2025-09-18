@@ -1,7 +1,7 @@
 // theme.ts
 
 import { colors, colorUtils } from './colors';
-import { typography, textStyles, japaneseTypography, typographyClasses } from './typography';
+import { typography, textStyles, japaneseTypography, typographyClasses, remToPx } from './typography';
 import { spacing, layout, borderRadius, shadows, transitions } from './spacing';
 import { accessibility, a11yUtils } from './accessibility';
 import { layoutClasses, layoutStyles } from './layoutUtils';
@@ -13,6 +13,7 @@ export const theme = {
   typography,
   textStyles,
   japaneseTypography,
+  remToPx,
   typographyClasses,
 
   spacing,

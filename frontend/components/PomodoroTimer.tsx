@@ -1,10 +1,13 @@
-import { View, Text, StyleSheet, Modal, Pressable, Switch } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
 import * as Haptics from 'expo-haptics';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { Button } from './Shared/Button';
+import { theme } from '@/styles/theme';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -28,16 +31,21 @@ const DurationSetter = ({
   <View style={styles.setterContainer}>
     <MixedFontText style={styles.setterLabel}>{label}</MixedFontText>
     <View style={styles.setterControls}>
-      <Pressable
+      <Button
+        variant="secondary"
         onPress={() => onUpdate(Math.max(1, durationMinutes - 1))}
         style={styles.setterButton}
+        textStyle={styles.setterButtonText}
       >
-        <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
-      </Pressable>
-      <MixedFontText style={styles.setterValue}>{durationMinutes} 分</MixedFontText>
-      <Pressable onPress={() => onUpdate(durationMinutes + 1)} style={styles.setterButton}>
-        <MixedFontText style={styles.setterButtonText}>+</MixedFontText>
-      </Pressable>
+        -
+      </Button>
+      <View style={styles.setterValueContainer}>
+        <MixedFontText style={styles.setterValue}>{durationMinutes}</MixedFontText>
+        <MixedFontText style={styles.setterUnit}>分</MixedFontText>
+      </View>
+      <Button variant="secondary" onPress={() => onUpdate(durationMinutes + 1)} style={styles.setterButton} textStyle={styles.setterButtonText}>
+        +
+      </Button>
     </View>
   </View>
 );
@@ -101,12 +109,12 @@ export default function PomodoroTimer() {
                 <Switch value={isSoundEnabled} onValueChange={setIsSoundEnabled} />
               </View>
             </View>
-            <Pressable style={styles.button} onPress={startStudy}>
-              <MixedFontText style={styles.buttonText}>開始</MixedFontText>
-            </Pressable>
-            <Pressable style={styles.closeButton} onPress={closeTimer}>
+            <Button variant="primary" size="lg" style={styles.button} onPress={startStudy}>
+              開始
+            </Button>
+            <Button variant="icon" size="icon" style={styles.closeButton} onPress={closeTimer}>
               <MixedFontText style={styles.closeText}>×</MixedFontText>
-            </Pressable>
+            </Button>
           </>
         )}
 
@@ -125,7 +133,7 @@ export default function PomodoroTimer() {
                   cx={CIRCLE_RADIUS}
                   cy={CIRCLE_RADIUS}
                   r={CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2}
-                  stroke="#007AFF"
+                  stroke={theme.colors.primary[500]}
                   strokeWidth={CIRCLE_STROKE_WIDTH}
                   strokeDasharray={CIRCLE_CIRCUMFERENCE}
                   strokeDashoffset={strokeDashoffset}
@@ -138,12 +146,10 @@ export default function PomodoroTimer() {
                 <MixedFontText style={styles.timerText}>{formatTime(secondsLeft)}</MixedFontText>
               </View>
             </View>
-            <View style={styles.buttonDisabled}>
-              <MixedFontText style={styles.buttonText}>集中</MixedFontText>
-            </View>
-            <Pressable style={styles.closeButton} onPress={closeTimer}>
-              <MixedFontText style={styles.closeText}>×</MixedFontText>
-            </Pressable>
+            <Button variant="primary" size="lg" style={styles.button} disabled>
+              集中
+            </Button>
+            <Button variant="icon" size="icon" style={styles.closeButton} onPress={closeTimer}><MixedFontText style={styles.closeText}>×</MixedFontText></Button>
           </>
         )}
 
@@ -158,9 +164,14 @@ export default function PomodoroTimer() {
             ) : (
               <MixedFontText style={styles.errorText}>投稿先のトピックが選択されていません。</MixedFontText>
             )}
-            <Pressable style={styles.PostFinishButton} onPress={endOutputAndBreak}>
-              <MixedFontText style={styles.PostFinishText}>投稿を終了して休憩する</MixedFontText>
-            </Pressable>
+            <Button
+              variant="secondary"
+              style={styles.postFinishButton}
+              textStyle={styles.postFinishText}
+              onPress={endOutputAndBreak}
+            >
+              投稿を終了して休憩する
+            </Button>
           </View>
         )}
       </BlurView>
@@ -184,13 +195,13 @@ const styles = StyleSheet.create({
   configContainer: {
     width: '80%',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 20,
     alignItems: 'center',
   },
   configTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: theme.remToPx(theme.typography.fontSize['2xl']),
+    fontWeight: theme.typography.fontWeight.bold,
     marginBottom: 20,
   },
   setterContainer: {
@@ -201,80 +212,76 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   setterLabel: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   setterControls: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   setterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    padding: 0,
   },
   setterButtonText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#555',
+    fontSize: theme.remToPx(theme.typography.fontSize['3xl']),
+    fontWeight: theme.typography.fontWeight.bold,
   },
-  setterValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  setterValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
     marginHorizontal: 15,
     width: 60,
+  },
+  setterValue: {
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
+    fontFamily: theme.typography.fontFamily.latinMedium, 
+    color: theme.colors.text.primary,
+  },
+  setterUnit: {
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.primary, 
+    marginLeft: 4,
   },
   phaseText: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    fontFamily: 'Hiragino Mincho ProN',
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
     marginBottom: 10,
   },
   timerText: {
-    fontSize: 56,
-    fontWeight: 'bold',
-    color: '#111',
-    fontFamily: 'Courier New',
+    fontSize: theme.remToPx(theme.typography.fontSize['6xl']),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    fontVariant: ['tabular-nums'],
     letterSpacing: 2,
   },
   button: {
     marginTop: 60,
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
-    borderRadius: 30,
-  },
-  buttonDisabled: {
-    marginTop: 60,
-    backgroundColor: '#aaa',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
-    borderRadius: 30,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   closeButton: {
     position: 'absolute',
     top: 60,
     right: 30,
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   closeText: {
-    fontSize: 30,
-    color: '#555',
-    fontWeight: '300',
+    fontSize: theme.remToPx(theme.typography.fontSize['3xl']),
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.regular,
   },
   outputContainer: {
     width: '90%',
     height: '70%',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 15,
   },
@@ -285,29 +292,28 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   outputPhaseText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: theme.remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   outputTimerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'Courier New',
+    fontSize: theme.remToPx(theme.typography.fontSize.xl),
+    fontWeight: theme.typography.fontWeight.bold,
+    fontVariant: ['tabular-nums'],
+    color: theme.colors.text.primary,
   },
-  PostFinishButton: {
+  postFinishButton: {
     marginTop: 10,
-    backgroundColor: '#FF3B30',
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
+    backgroundColor: theme.colors.primary[600],
   },
-  PostFinishText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+  postFinishText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   errorText: {
     textAlign: 'center',
     marginTop: 20,
-    color: 'red',
+    color: theme.colors.danger,
   },
 });
