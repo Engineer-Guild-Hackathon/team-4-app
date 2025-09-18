@@ -203,14 +203,13 @@ STORAGES = {
 }
 
 # 開発中はCORSを許可
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # 許可するオリジン（フロントエンド）のリストを明示的に指定する
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8081",  # Expo Web開発用
-    "exp://192.168.12.4:8081" # Expo Goで使う自分のPCのIPアドレス
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8081",  # Expo Web開発用
+#     "exp://192.168.12.4:8081" # Expo Goで使う自分のPCのIPアドレス
+# ]
 
 # Expo Goからのアクセスをより柔軟に許可したい場合は、正規表現を使う
 CORS_ALLOWED_ORIGIN_REGEXES = [
