@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
 } from 'react-native';
 import { Button } from '../Shared/Button';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
@@ -80,13 +81,21 @@ export default function PostView({
 
   const renderPost = ({ item }: { item: PostOut }) => (
     <View style={styles.post}>
-      <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
+      <View style={styles.postHeader}>
+        <View style={styles.authorInfo}>
+          <Image
+            source={{ 
+              uri: item.author?.avatar || `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}` 
+            }}
+            style={styles.authorAvatar}
+          />
+          <Text style={styles.authorUsername}>{item.author?.username}</Text>
+        </View>
         {Number(selfUserId) === Number(item.author?.id) ? (
           <Button
             variant="secondary"
             size="sm"
             onPress={() => onDelete(item.id)}
-            style={styles.actionButton}
           >
             削除
           </Button>
@@ -95,32 +104,40 @@ export default function PostView({
             variant="secondary"
             size="sm"
             onPress={() => handleOpenMenu(item)}
-            style={styles.actionButton}
           >
             ⋮
           </Button>
         )}
       </View>
-      <View>
-        {item.media.map((media: PostMediaOut, index: number) => {
-          const mediaUrl = media.file;
-          const cacheKey = mediaUrl.split('?')[0];
-          if (media.media_type === 'image') {
-            return (
-              <Image
-                key={index}
-                source={{ uri: mediaUrl, cacheKey }}
-                style={styles.media}
-                contentFit="cover"
-              />
-            );
-          } else if (media.media_type === 'video') {
-            return <VideoItem key={index} uri={mediaUrl} style={styles.media} />;
-          }
-          return null;
-        })}
-      </View>
-      <MixedFontText style={styles.postContent}>{item.content}</MixedFontText>
+
+      {item.media && item.media.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.mediaScrollView}
+        >
+          {item.media.map((media: PostMediaOut, index: number) => {
+            const mediaUrl = media.file;
+            const cacheKey = mediaUrl.split('?')[0];
+            const mediaStyle = item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
+
+            if (media.media_type === 'image') {
+              return (
+                <Image
+                  key={index}
+                  source={{ uri: mediaUrl, cacheKey }}
+                  style={mediaStyle}
+                  contentFit="cover"
+                />
+              );
+            } else if (media.media_type === 'video') {
+              return <VideoItem key={index} uri={mediaUrl} style={mediaStyle} />;
+            }
+            return null;
+          })}
+        </ScrollView>
+      )}
+      <Text style={styles.postContent}>{item.content}</Text>
     </View>
   );
 
@@ -225,5 +242,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: remToPx(theme.typography.fontSize['3xl']),
     lineHeight: remToPx(theme.typography.fontSize['3xl']),
+  },
+    mediaScrollView: {
+  },
+  mediaItemSingle: {
+    width: remToPx('24rem'), 
+    height: 250,
+    backgroundColor: theme.colors.background.secondary,
+  },
+  mediaItemMulti: {
+    width: 250, 
+    height: 250, 
+    borderRadius: remToPx(theme.borderRadius.md),
+    marginRight: remToPx(theme.spacing[2]), 
+    backgroundColor: theme.colors.background.secondary,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    paddingVertical: remToPx(theme.spacing[3]),
+  },
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: remToPx(theme.spacing[3]),
+    backgroundColor: theme.colors.background.secondary,
+  },
+  authorUsername: {
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
 });
