@@ -169,11 +169,16 @@ def update_user(request, user_id: int, data: UserIn):
     user.save()
     return user
 
-@router.delete("/{user_id}/", auth=JWTAuth())
-def delete_user(request, user_id: int):
-    user = User.objects.get(id=user_id)
-    user.delete()
-    return {"success": True}
+@router.delete("/me/", response={200: dict, 400: dict}, auth=JWTAuth())
+def delete_my_account(request):
+    """現在ログインしているユーザーのアカウントを削除する"""
+    try:
+        user = request.auth
+        # ユーザーを削除（CASCADEで関連データも自動削除される）
+        user.delete()
+        return {"message": "アカウントが正常に削除されました"}
+    except Exception as e:
+        return 400, {"message": "アカウントの削除に失敗しました"}
 
 @router.post("/me/profile/", response=UserOut, auth=JWTAuth())
 def update_my_profile(request,
