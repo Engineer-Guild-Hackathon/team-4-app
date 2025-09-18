@@ -71,10 +71,6 @@ export default function PostView({
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('気づきメニュー', '', [
       {
-        text: 'ユーザーブロック（ダミー）',
-        onPress: () => Alert.alert('ダミー', 'ユーザーブロック機能は未実装です'),
-      },
-      {
         text: 'ポスト報告',
         onPress: () => {
           setReportTargetPost(post);

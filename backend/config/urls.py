@@ -41,6 +41,7 @@ api.add_router("/reports", reports_router, tags=["Reports"])
 
 
 urlpatterns = [
+    path("/", health),
     path('admin/', admin.site.urls),
     path('api/', api.urls),
     path('health/', health),
