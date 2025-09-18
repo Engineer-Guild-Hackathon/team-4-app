@@ -129,16 +129,14 @@ export default function PostView({
   if (error) {
     return <Text style={styles.centered}>エラー: {error}</Text>;
   }
-  if (posts.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>まだ投稿がありません。</Text>
-      </View>
-    );
-  }
   return (
     <>
       <FlatList data={posts} renderItem={renderPost} keyExtractor={item => item.id.toString()} />
+      {posts.length === 0 && (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>まだ投稿がありません。</Text>
+        </View>
+      )}
       {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
         visible={showReportModal}
