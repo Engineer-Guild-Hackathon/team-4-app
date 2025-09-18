@@ -205,7 +205,6 @@ export default function ListPostScreen() {
           params.topicId as string,
           undefined,
           1,
-          new Date().toISOString()
         );
         setPosts(fetchedPosts);
       } catch (e: unknown) {
@@ -228,7 +227,7 @@ export default function ListPostScreen() {
   };
 
   const handleAuthorPress = (userId: number) => {
-    Alert.alert('ユーザー情報', `ユーザーID: ${userId} のプロフィールを開きます`);
+    // Alert.alert('ユーザー情報', `ユーザーID: ${userId} のプロフィールを開きます`);
   };
 
   const renderContent = () => {
