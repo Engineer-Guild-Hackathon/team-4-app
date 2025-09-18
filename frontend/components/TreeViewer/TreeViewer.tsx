@@ -19,6 +19,7 @@ import { useTreeData } from '../../hooks/useTreeData';
 import { NODE_HEIGHT, NODE_WIDTH, TreeNodeView } from './TreeNode';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { buttonHaptic, selectionHaptic } from '@/utils/haptics';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -170,6 +171,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
     })
     .onEnd(() => {
       savedScale.value = scale.value;
+      selectionHaptic();
     });
 
   const panGesture = Gesture.Pan()
@@ -189,13 +191,16 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const zoomIn = () => {
+    buttonHaptic();
     scale.value = withTiming(Math.min(scale.value * 1.5, 4.0), { duration: 300 });
   };
   const zoomOut = () => {
+    buttonHaptic();
     scale.value = withTiming(Math.max(scale.value / 1.5, 0.3), { duration: 300 });
   };
 
   const fitToNetwork = useCallback(() => {
+    buttonHaptic();
     scale.value = withTiming(1, { duration: 300 });
     translateX.value = withTiming(0, { duration: 300 });
     translateY.value = withTiming(0, { duration: 300 });

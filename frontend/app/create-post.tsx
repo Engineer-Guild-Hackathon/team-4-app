@@ -19,6 +19,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { formSubmitHaptic, successHaptic, errorHaptic, selectionHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -50,8 +51,10 @@ export default function CreatePostScreen() {
   const topicId = params.topicId as string;
 
   const pickMedia = async () => {
+    selectionHaptic();
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
+      errorHaptic();
       Alert.alert('許可が必要です', '投稿するには、写真ライブラリへのアクセスを許可してください。');
       return;
     }
@@ -66,8 +69,10 @@ export default function CreatePostScreen() {
 
       if (!result.canceled) {
         setMediaAssets(result.assets);
+        successHaptic();
       }
     } catch {
+      errorHaptic();
       Alert.alert(
         'メディアの読み込みに失敗しました',
         '選択されたメディアの処理中にエラーが発生しました。別のファイルを選択するか、デバイスにダウンロードしてから再度お試しください。'
@@ -79,14 +84,17 @@ export default function CreatePostScreen() {
 
   const handlePost = async () => {
     if (!content.trim() && mediaAssets.length === 0) {
+      errorHaptic();
       Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください');
       return;
     }
     if (!topicId) {
+      errorHaptic();
       Alert.alert('エラー', '投稿先のトピックが見つかりません');
       return;
     }
 
+    formSubmitHaptic();
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -121,9 +129,11 @@ export default function CreatePostScreen() {
         throw errorData;
       }
 
+      successHaptic();
       Alert.alert('成功', '投稿が完了しました！');
       router.replace({ pathname: '/', params: { openModal: 'true' } });
     } catch (error: unknown) {
+      errorHaptic();
       console.error('投稿エラー詳細:', JSON.stringify(error, null, 2));
       const errorMessage = (error as { detail?: string })?.detail || '投稿に失敗しました';
       Alert.alert('エラー', errorMessage);

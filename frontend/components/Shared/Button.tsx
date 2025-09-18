@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from './MixedFontText';
+import { buttonHaptic, importantActionHaptic, HapticType } from '@/utils/haptics';
 
 export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'icon' | 'frosted' | 'outline' | 'ghost';
@@ -21,6 +22,7 @@ export interface ButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  hapticType?: HapticType | 'none';
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -33,12 +35,24 @@ export const Button: React.FC<ButtonProps> = ({
   loading,
   style,
   textStyle,
+  hapticType = 'light',
 }) => {
   const isDisabled = disabled || loading;
 
+  const handlePress = () => {
+    if (hapticType !== 'none') {
+      if (hapticType === 'medium' || hapticType === 'heavy') {
+        importantActionHaptic();
+      } else {
+        buttonHaptic();
+      }
+    }
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.8}
       style={[

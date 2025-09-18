@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { selectionHaptic } from '@/utils/haptics';
 
 interface VerticalLevelSelectorProps {
   min: number;
@@ -68,8 +69,13 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
         const newLevel = yToValue(clampedY);
         if (newLevel !== lastNotifiedLevel.current) {
           onChange(newLevel);
-          if (newLevel % 5 === 0) {
+          // より細かい触覚フィードバック
+          if (newLevel % 10 === 0) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (newLevel % 5 === 0) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          } else {
+            selectionHaptic();
           }
           lastNotifiedLevel.current = newLevel;
         }

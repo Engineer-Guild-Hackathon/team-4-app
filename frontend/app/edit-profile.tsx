@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { buttonHaptic, formSubmitHaptic, successHaptic, errorHaptic, selectionHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 

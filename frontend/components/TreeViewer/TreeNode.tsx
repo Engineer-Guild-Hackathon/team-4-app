@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { TreeNode as D3TreeNode } from './treeUtils';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { selectionHaptic } from '@/utils/haptics';
 
 interface Props {
   node: HierarchyPointNode<D3TreeNode>;
@@ -54,7 +55,13 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   const placeholderUrl = `https://placehold.co/${imageSize}x${imageSize}/e0e0e0/555555?text=${initialCharacter}`;
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.container}>
+    <TouchableOpacity 
+      onPress={() => {
+        selectionHaptic();
+        onPress();
+      }} 
+      style={styles.container}
+    >
       <Animated.View style={[styles.avatarContainer, animatedBorderStyle]}>
         <Image
           source={{ uri: node.data.avatar || placeholderUrl }}

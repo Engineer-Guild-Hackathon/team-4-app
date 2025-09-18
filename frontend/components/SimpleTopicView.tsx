@@ -9,6 +9,7 @@ import { TopicCarousel } from './TopicCarousel';
 import { TopicManageView } from './TopicManageView';
 import { TreeViewer } from './TreeViewer/TreeViewer';
 import { WafuCloud } from './WahuCloud';
+import { selectionHaptic } from '@/utils/haptics';
 
 const BackgroundClouds = () => {
   // 画像アセットのパスはご自身のプロジェクトに合わせて修正してください
@@ -182,6 +183,7 @@ export function SimpleTopicView({
             if (!isPagerScrollEnabled) {
               return;
             }
+            selectionHaptic();
           }}
           key={topics.length + 1}
         >

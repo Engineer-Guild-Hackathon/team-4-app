@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/AuthProvider';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { formSubmitHaptic, errorHaptic, successHaptic, buttonHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -16,9 +17,12 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setError('');
+    formSubmitHaptic();
     try {
       await login(username, password);
+      successHaptic();
     } catch (e: unknown) {
+      errorHaptic();
       setError('ユーザーネームまたはパスワードが正しくありません');
     }
   };
@@ -41,7 +45,11 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
       {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={handleLogin} 
+        disabled={loading}
+      >
         <MixedFontText style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</MixedFontText>
       </TouchableOpacity>
 
@@ -54,7 +62,13 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {/* ユーザー作成画面へのリンク */}
-      <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/signup')}>
+      <TouchableOpacity 
+        style={styles.linkButton} 
+        onPress={() => {
+          buttonHaptic();
+          router.push('/signup');
+        }}
+      >
         <MixedFontText style={styles.linkButtonText}>新規ユーザー登録はこちら</MixedFontText>
       </TouchableOpacity>
     </View>

@@ -25,6 +25,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { selectionHaptic, successHaptic, errorHaptic, formSubmitHaptic, buttonHaptic } from '@/utils/haptics';
 
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
@@ -199,10 +200,12 @@ export default function SelectLevelMentorScreen() {
   // 師匠選択処理
   const handleMentorSelection = async () => {
     if (!selectedMentor) {
+      errorHaptic();
       Alert.alert('エラー', '師匠を選択してください');
       return;
     }
 
+    formSubmitHaptic();
     try {
       // 師匠選択リクエストを作成
       const response = (await createMentorRequest(selectedMentor.id, topicId)) as {
@@ -217,6 +220,7 @@ export default function SelectLevelMentorScreen() {
       // レスポンスの内容に応じてメッセージを変更
       if (response.status === 'approved') {
         // 定員内の場合：無条件で師弟関係成立
+        successHaptic();
         Alert.alert('参加完了', '師匠選択が完了しました。トピックに参加しました。', [
           {
             text: 'OK',
@@ -225,6 +229,7 @@ export default function SelectLevelMentorScreen() {
         ]);
       } else {
         // 定員超過の場合：承認待ち
+        successHaptic();
         Alert.alert(
           'リクエスト送信完了',
           '師匠選択リクエストを送信しました。師匠の承認をお待ちください。',
@@ -237,6 +242,7 @@ export default function SelectLevelMentorScreen() {
         );
       }
     } catch (error) {
+      errorHaptic();
       console.error('師匠選択エラー:', error);
       Alert.alert('エラー', '師匠選択に失敗しました');
     }
@@ -244,17 +250,20 @@ export default function SelectLevelMentorScreen() {
 
   // 師匠選択をしない処理
   const handleNoMentorSelection = async () => {
+    selectionHaptic();
     Alert.alert('確認', '師匠を選択せずに参加しますか？\n最高レベル+1に設定されます。', [
       { text: 'キャンセル', style: 'cancel' },
       {
         text: '参加する',
         onPress: async () => {
+          formSubmitHaptic();
           try {
             const response = (await noMentorSelection(topicId)) as {
               message?: string;
               new_level?: number;
             };
 
+            successHaptic();
             Alert.alert(
               '参加完了',
               `師匠選択をスキップしました。レベル${response.new_level}で参加しました。`,
@@ -266,6 +275,7 @@ export default function SelectLevelMentorScreen() {
               ]
             );
           } catch (error) {
+            errorHaptic();
             console.error('師匠選択スキップエラー:', error);
             Alert.alert('エラー', '参加に失敗しました');
           }
@@ -332,7 +342,13 @@ export default function SelectLevelMentorScreen() {
       {/* 左上に戻るボタン - 承認済みでない場合のみ表示 */}
       {requestStatus?.status !== 'approved' && (
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => {
+              buttonHaptic();
+              handleBack();
+            }}
+          >
             <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
           </TouchableOpacity>
         </View>
@@ -393,7 +409,10 @@ export default function SelectLevelMentorScreen() {
                         styles.mentorItem,
                         selectedMentor?.id === item.id && styles.selectedMentorItem,
                       ]}
-                      onPress={() => setSelectedMentor(item)}
+                      onPress={() => {
+                        selectionHaptic();
+                        setSelectedMentor(item);
+                      }}
                     >
                       <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
                     </TouchableOpacity>

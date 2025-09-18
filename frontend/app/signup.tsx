@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { formSubmitHaptic, successHaptic, errorHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -20,6 +21,7 @@ export default function UserCreateScreen() {
   const handleCreate = async () => {
     setError('');
     setSuccess('');
+    formSubmitHaptic();
     try {
       const res = await apiClient<UserCreateOut>('/api/users/', {
         method: 'POST',
@@ -28,12 +30,14 @@ export default function UserCreateScreen() {
       // access, refresh保存
       await SecureStore.setItemAsync('accessToken', res.access);
       await SecureStore.setItemAsync('refreshToken', res.refresh);
+      successHaptic();
       setSuccess('ユーザー作成に成功しました');
       setUsername('');
       setEmail('');
       setPassword('');
       router.replace('/'); // index.tsxに遷移
     } catch (e: unknown) {
+      errorHaptic();
       setError((e as Error).message || 'ユーザー作成に失敗しました');
     }
   };

@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { modalHaptic } from '@/utils/haptics';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -27,7 +28,13 @@ const BreakTimerOverlay = () => {
         <MixedFontText style={styles.breakLabelText}>休憩中</MixedFontText>
         <MixedFontText style={styles.breakTimeText}>{formatTime(secondsLeft)}</MixedFontText>
       </View>
-      <Pressable style={styles.breakCloseCircle} onPress={closeTimer}>
+      <Pressable 
+        style={styles.breakCloseCircle} 
+        onPress={() => {
+          modalHaptic();
+          closeTimer();
+        }}
+      >
         <MixedFontText style={styles.breakCloseButtonText}>×</MixedFontText>
       </Pressable>
     </View>

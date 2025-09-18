@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { selectionHaptic } from '@/utils/haptics';
 
 interface Topic {
   id: string;
@@ -81,7 +82,12 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     });
 
     return (
-      <TouchableOpacity onPress={() => onSelectIndex(pageIndex)}>
+      <TouchableOpacity 
+        onPress={() => {
+          selectionHaptic();
+          onSelectIndex(pageIndex);
+        }}
+      >
         <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
           <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
             <MixedFontText
@@ -121,6 +127,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
         onMomentumScrollEnd={e => {
           const newPageIndex = Math.round(e.nativeEvent.contentOffset.x / ITEM_FULL_WIDTH);
           if (newPageIndex !== currentIndex) {
+            selectionHaptic();
             onSelectIndex(newPageIndex);
           }
         }}

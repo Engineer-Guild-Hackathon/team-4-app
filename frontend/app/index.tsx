@@ -21,6 +21,7 @@ import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
 import { getMentorRequestStatus, deleteMentorRequest } from '@/services/api/mentorship';
+import { importantActionHaptic } from '@/utils/haptics';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -155,7 +156,13 @@ export default function HomeScreen() {
             </Button>
           </Link>
           {phase !== 'break' && (
-            <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
+            <TouchableOpacity 
+              style={styles.headerCenterButton} 
+              onPress={() => {
+                importantActionHaptic();
+                handleStartPomodoro();
+              }}
+            >
               <MixedFontText style={styles.pomodoroButtonText}>集中</MixedFontText>
             </TouchableOpacity>
           )}
