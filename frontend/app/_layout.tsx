@@ -69,18 +69,22 @@ export default function RootLayout() {
             name="password-reset-confirm" 
             options={{ headerShown: false }} 
           />
+          <Stack.Screen 
+            name="select-level-mentor" 
+            options={{ headerShown: false }} 
+          />
             <Stack.Screen 
               name="create-post" 
               options={{ 
                 presentation: 'modal',
-                title: '新規投稿' 
+                headerShown: false
               }} 
             />
             <Stack.Screen
               name="edit-profile"
               options={{
                 presentation: 'modal', 
-                title: 'プロフィール編集',
+                headerShown: false
               }}
             />
           </Stack>
