@@ -138,7 +138,9 @@ export default function PasswordResetConfirm() {
           onPress={handleCodeSubmit}
           disabled={loading}
         >
-          <MixedFontText style={styles.buttonText}>{loading ? '処理中...' : 'パスワード更新'}</MixedFontText>
+          <MixedFontText style={styles.buttonText}>
+            {loading ? '処理中...' : 'パスワード更新'}
+          </MixedFontText>
         </TouchableOpacity>
 
         <TouchableOpacity

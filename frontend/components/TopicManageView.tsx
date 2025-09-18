@@ -18,7 +18,6 @@ import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'rea
 import { Button } from './Shared/Button';
 import { MixedFontText } from './Shared/MixedFontText';
 
-
 interface TopicManageViewProps {
   onBack: () => void;
 }
@@ -259,7 +258,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         <ScrollView style={styles.joinSection}>
           {availableTopics.length === 0 ? (
             <View style={styles.emptyTopicsContainer}>
-              <MixedFontText style={styles.emptyTopicsText}>参加可能なトピックがありません</MixedFontText>
+              <MixedFontText style={styles.emptyTopicsText}>
+                参加可能なトピックがありません
+              </MixedFontText>
               <MixedFontText style={styles.emptyTopicsSubText}>
                 新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
               </MixedFontText>
@@ -269,7 +270,9 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               <View key={topic.id} style={styles.availableTopicItem}>
                 <View style={styles.availableTopicInfo}>
                   <MixedFontText style={styles.availableTopicTitle}>{topic.title}</MixedFontText>
-                  <MixedFontText style={styles.availableTopicDescription}>{topic.description}</MixedFontText>
+                  <MixedFontText style={styles.availableTopicDescription}>
+                    {topic.description}
+                  </MixedFontText>
                 </View>
                 <Button variant="primary" size="sm" onPress={() => handleJoinTopic(topic.id)}>
                   参加
@@ -284,15 +287,21 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
           <MixedFontText style={styles.sectionTitle}>参加中のトピック</MixedFontText>
           {myTopics.length === 0 ? (
             <View style={styles.emptyTopicsContainer}>
-              <MixedFontText style={styles.emptyTopicsText}>参加しているトピックがありません</MixedFontText>
-              <MixedFontText style={styles.emptyTopicsSubText}>トピックを作成してください</MixedFontText>
+              <MixedFontText style={styles.emptyTopicsText}>
+                参加しているトピックがありません
+              </MixedFontText>
+              <MixedFontText style={styles.emptyTopicsSubText}>
+                トピックを作成してください
+              </MixedFontText>
             </View>
           ) : (
             myTopics.map(topic => (
               <View key={topic.id} style={styles.topicItem}>
                 <View style={styles.topicInfo}>
                   <MixedFontText style={styles.topicItemTitle}>{topic.title}</MixedFontText>
-                  <MixedFontText style={styles.topicItemDescription}>{topic.description}</MixedFontText>
+                  <MixedFontText style={styles.topicItemDescription}>
+                    {topic.description}
+                  </MixedFontText>
                   <View style={styles.capacitySection}>
                     <MixedFontText style={styles.capacityLabel}>弟子定員:</MixedFontText>
                     <View style={styles.capacityInputContainer}>
@@ -374,7 +383,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: theme.remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.tertiary,
-    
   },
   manageContainer: {
     flex: 1,
@@ -392,7 +400,6 @@ const styles = StyleSheet.create({
     fontSize: theme.remToPx(theme.typography.fontSize['2xl']),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    
   },
   createSection: {
     marginBottom: theme.remToPx(theme.spacing[12]),
@@ -405,7 +412,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
     marginBottom: theme.remToPx(theme.spacing[6]) - 1,
-    
   },
   input: {
     borderWidth: 1,
@@ -417,7 +423,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.remToPx(theme.spacing[4]) - 2,
     backgroundColor: theme.colors.background.primary,
     color: theme.colors.text.primary,
-    
   },
   textArea: {
     height: 80,
@@ -439,12 +444,10 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: theme.remToPx(theme.spacing[2]), // xs
-    
   },
   topicItemDescription: {
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    
   },
   emptyTopicsContainer: {
     backgroundColor: theme.colors.background.secondary,
@@ -458,14 +461,12 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     marginBottom: theme.remToPx(theme.spacing[3]),
     textAlign: 'center',
-    
   },
   emptyTopicsSubText: {
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.placeholder,
     textAlign: 'center',
     lineHeight: theme.remToPx(theme.typography.lineHeight.tight),
-    
   },
   joinSection: {
     marginBottom: theme.remToPx(theme.spacing[12]),
@@ -488,7 +489,6 @@ const styles = StyleSheet.create({
     fontSize: theme.remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    
   },
   modalContent: {
     flex: 1,
@@ -511,12 +511,10 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: theme.remToPx(theme.spacing[2]),
-    
   },
   availableTopicDescription: {
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    
   },
   capacitySection: {
     marginTop: theme.remToPx(theme.spacing[2]),

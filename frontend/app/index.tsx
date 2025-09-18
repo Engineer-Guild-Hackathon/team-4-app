@@ -1,7 +1,9 @@
 import { Button } from '@/components/Shared/Button';
-import { useAuth } from '@/hooks/AuthProvider';
-import { theme, remToPx } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { useAuth } from '@/hooks/AuthProvider';
+import { deleteMentorRequest, getMentorRequestStatus } from '@/services/api/mentorship';
+import { remToPx, theme } from '@/styles/theme';
+import { importantActionHaptic } from '@/utils/haptics';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
@@ -10,7 +12,6 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   ViewStyle,
@@ -20,10 +21,6 @@ import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
-import { getMentorRequestStatus, deleteMentorRequest } from '@/services/api/mentorship';
-import { importantActionHaptic } from '@/utils/haptics';
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -51,10 +48,10 @@ export default function HomeScreen() {
 
   const handleTopicChange = async (topicId: string | null) => {
     setCurrentTopicId(topicId);
-    
+
     // トピック切り替え時にリクエストが存在するか確認
     if (!topicId || !user) return; // トピックまたはユーザーが未選択の場合は処理しない
-    
+
     try {
       const statusResponse = (await getMentorRequestStatus(user.id, topicId)) as {
         status: string;
@@ -62,7 +59,7 @@ export default function HomeScreen() {
         to_username?: string;
         message?: string;
       };
-      
+
       // 承認済みの場合：リクエストを削除して通知してリロード
       if (statusResponse.status === 'approved') {
         if (statusResponse.request_id) {
@@ -79,7 +76,7 @@ export default function HomeScreen() {
         ]);
         return;
       }
-      
+
       // 拒否された場合：リクエストを削除して師匠選択へ
       else if (statusResponse.status === 'rejected') {
         if (statusResponse.request_id) {
@@ -96,13 +93,12 @@ export default function HomeScreen() {
         ]);
         return;
       }
-      
+
       // リクエストがない場合：師匠選択が必要か確認
       else {
         await checkMentorSelectionNeeded(topicId);
         return;
       }
-      
     } catch (error) {
       await checkMentorSelectionNeeded(topicId);
     }
@@ -116,7 +112,7 @@ export default function HomeScreen() {
         required: boolean;
         user_status?: string;
       };
-      
+
       if (selectionResponse.required) {
         // 師匠選択が必要な場合、師匠選択画面へ遷移
         router.push(`/select-level-mentor?topicId=${topicId}`);
@@ -156,8 +152,8 @@ export default function HomeScreen() {
             </Button>
           </Link>
           {phase !== 'break' && (
-            <TouchableOpacity 
-              style={styles.headerCenterButton} 
+            <TouchableOpacity
+              style={styles.headerCenterButton}
               onPress={() => {
                 importantActionHaptic();
                 handleStartPomodoro();
@@ -228,7 +224,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   infoText: {
-    
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.primary,
   },
@@ -264,6 +259,5 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.link,
     fontWeight: theme.typography.fontWeight.semibold,
-    
   },
 });

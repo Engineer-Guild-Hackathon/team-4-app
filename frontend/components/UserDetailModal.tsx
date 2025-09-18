@@ -290,7 +290,6 @@ const styles = StyleSheet.create({
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     fontWeight: 'bold',
-    
   },
   tabTextActive: {
     color: theme.colors.text.inverse,
@@ -337,13 +336,12 @@ const styles = StyleSheet.create({
   profileUsername: {
     fontSize: theme.remToPx(theme.typography.fontSize.lg),
     fontWeight: theme.typography.fontWeight.bold,
-    
+
     color: theme.colors.text.primary,
   },
   profileBio: {
     fontSize: theme.remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.secondary,
     marginTop: 2,
-    
   },
 });

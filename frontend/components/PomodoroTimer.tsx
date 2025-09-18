@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Modal, Switch, Text } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Svg, { Circle } from 'react-native-svg';
-import CreatePostForm from './CreatePostForm';
-import { useTimer } from '../contexts/TimerContext';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { buttonHaptic, importantActionHaptic, successHaptic } from '@/utils/haptics';
-import { Button } from './Shared/Button';
 import { theme } from '@/styles/theme';
+import { buttonHaptic, importantActionHaptic, successHaptic } from '@/utils/haptics';
+import { BlurView } from 'expo-blur';
+import React from 'react';
+import { Modal, Pressable, StyleSheet, Switch, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
+import { useTimer } from '../contexts/TimerContext';
+import CreatePostForm from './CreatePostForm';
+import { Button } from './Shared/Button';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -31,7 +31,7 @@ const DurationSetter = ({
   <View style={styles.setterContainer}>
     <MixedFontText style={styles.setterLabel}>{label}</MixedFontText>
     <View style={styles.setterControls}>
-      <Pressable
+      <Button
         onPress={() => {
           buttonHaptic();
           onUpdate(Math.max(1, durationMinutes - 1));
@@ -40,13 +40,13 @@ const DurationSetter = ({
         textStyle={styles.setterButtonText}
       >
         <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
-      </Pressable>
+      </Button>
       <MixedFontText style={styles.setterValue}>{durationMinutes} 分</MixedFontText>
-      <Pressable 
+      <Pressable
         onPress={() => {
           buttonHaptic();
           onUpdate(durationMinutes + 1);
-        }} 
+        }}
         style={styles.setterButton}
       >
         <MixedFontText style={styles.setterButtonText}>+</MixedFontText>
@@ -57,12 +57,20 @@ const DurationSetter = ({
 
 export default function PomodoroTimer() {
   const {
-    phase, secondsLeft, activeTopicId,
-    studyDuration, setStudyDuration,
-    outputDuration, setOutputDuration,
-    breakDuration, setBreakDuration,
-    isSoundEnabled, setIsSoundEnabled,
-    startStudy, closeTimer, endOutputAndBreak 
+    phase,
+    secondsLeft,
+    activeTopicId,
+    studyDuration,
+    setStudyDuration,
+    outputDuration,
+    setOutputDuration,
+    breakDuration,
+    setBreakDuration,
+    isSoundEnabled,
+    setIsSoundEnabled,
+    startStudy,
+    closeTimer,
+    endOutputAndBreak,
   } = useTimer();
 
   const isVisible = phase === 'idle' || phase === 'studying' || phase === 'output';
@@ -120,8 +128,8 @@ export default function PomodoroTimer() {
                 />
               </View>
             </View>
-            <Pressable 
-              style={styles.button} 
+            <Pressable
+              style={styles.button}
               onPress={() => {
                 importantActionHaptic();
                 startStudy();
@@ -129,15 +137,15 @@ export default function PomodoroTimer() {
             >
               <MixedFontText style={styles.buttonText}>開始</MixedFontText>
             </Pressable>
-            <Pressable 
-              style={styles.closeButton} 
+            <Pressable
+              style={styles.closeButton}
               onPress={() => {
                 buttonHaptic();
                 closeTimer();
               }}
             >
               <MixedFontText style={styles.closeText}>×</MixedFontText>
-            </Button>
+            </Pressable>
           </>
         )}
 
@@ -171,14 +179,16 @@ export default function PomodoroTimer() {
                 <MixedFontText
                   fontSize={theme.remToPx(theme.typography.fontSize['5xl'])}
                   style={styles.timerText}
-                >{formatTime(secondsLeft)}</MixedFontText>
+                >
+                  {formatTime(secondsLeft)}
+                </MixedFontText>
               </View>
             </View>
             <View style={styles.buttonDisabled}>
               <MixedFontText style={styles.buttonText}>集中</MixedFontText>
             </View>
-            <Pressable 
-              style={styles.closeButton} 
+            <Pressable
+              style={styles.closeButton}
               onPress={() => {
                 buttonHaptic();
                 closeTimer();
@@ -193,15 +203,19 @@ export default function PomodoroTimer() {
           <View style={styles.outputContainer}>
             <View style={styles.outputHeader}>
               <MixedFontText style={styles.outputPhaseText}>アウトプット</MixedFontText>
-              <MixedFontText style={styles.outputTimerText}>{formatTime(secondsLeft)}</MixedFontText>
+              <MixedFontText style={styles.outputTimerText}>
+                {formatTime(secondsLeft)}
+              </MixedFontText>
             </View>
             {activeTopicId ? (
               <CreatePostForm topicId={activeTopicId} />
             ) : (
-              <MixedFontText style={styles.errorText}>投稿先のトピックが選択されていません。</MixedFontText>
+              <MixedFontText style={styles.errorText}>
+                投稿先のトピックが選択されていません。
+              </MixedFontText>
             )}
-            <Pressable 
-              style={styles.PostFinishButton} 
+            <Pressable
+              style={styles.PostFinishButton}
               onPress={() => {
                 successHaptic();
                 endOutputAndBreak();
@@ -228,8 +242,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[300], 
-    borderRadius: CIRCLE_RADIUS, 
+    backgroundColor: theme.colors.neutral[300],
+    borderRadius: CIRCLE_RADIUS,
     width: CIRCLE_RADIUS * 2 - CIRCLE_STROKE_WIDTH * 2,
     height: CIRCLE_RADIUS * 2 - CIRCLE_STROKE_WIDTH * 2,
   },
@@ -283,14 +297,14 @@ const styles = StyleSheet.create({
     fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    fontFamily: theme.typography.fontFamily.latinMedium, 
+    fontFamily: theme.typography.fontFamily.latinMedium,
     color: theme.colors.text.primary,
   },
   setterUnit: {
     fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.primary, 
+    fontFamily: theme.typography.fontFamily.primary,
     marginLeft: 4,
   },
   phaseText: {
@@ -352,5 +366,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: theme.colors.danger,
+  },
+  PostFinishButton: {
+    backgroundColor: theme.colors.primary[500],
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  PostFinishText: {
+    color: '#fff',
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  buttonDisabled: {
+    marginTop: 60,
+    backgroundColor: theme.colors.neutral[400],
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: 'center',
   },
 });

@@ -7,14 +7,13 @@ type MixedFontTextProps = TextProps & {
   fontSize?: number;
 };
 
-export const MixedFontText = ({
-  children,
-  fontSize = 16,
-  style,
-  ...props
-}: MixedFontTextProps) => {
+export const MixedFontText = ({ children, fontSize = 16, style, ...props }: MixedFontTextProps) => {
   if (typeof children !== 'string') {
-    return <Text style={style} {...props}>{children}</Text>;
+    return (
+      <Text style={style} {...props}>
+        {children}
+      </Text>
+    );
   }
 
   const segments = segmentByScript(children);

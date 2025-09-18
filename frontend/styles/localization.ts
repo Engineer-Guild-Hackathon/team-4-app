@@ -3,7 +3,6 @@ export const localization = {
   japanese: {
     // Font settings optimized for Japanese text
     fontSettings: {
-      
       fontFeatureSettings: '"palt" 1', // Proportional alternate widths
       textRendering: 'optimizeLegibility',
       fontKerning: 'normal',

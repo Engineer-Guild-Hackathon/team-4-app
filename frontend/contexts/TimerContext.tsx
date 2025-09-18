@@ -12,7 +12,7 @@ type TimerPhase = 'off' | 'idle' | 'studying' | 'output' | 'break';
 interface TimerContextType {
   phase: TimerPhase;
   secondsLeft: number;
-  activeTopicId: string | null; 
+  activeTopicId: string | null;
   studyDuration: number;
   setStudyDuration: React.Dispatch<React.SetStateAction<number>>;
   outputDuration: number;
@@ -21,10 +21,10 @@ interface TimerContextType {
   setBreakDuration: React.Dispatch<React.SetStateAction<number>>;
   isSoundEnabled: boolean;
   setIsSoundEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-  startTimerSession: (topicId?: string) => void; 
-  startStudy: () => void; 
-  closeTimer: () => void; 
-  endOutputAndBreak: () => void; 
+  startTimerSession: (topicId?: string) => void;
+  startStudy: () => void;
+  closeTimer: () => void;
+  endOutputAndBreak: () => void;
 }
 
 // --- コンテキストの作成 ---
@@ -56,8 +56,8 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: false, //何の通知かわからん
-        shouldPlaySound: true, 
-        shouldSetBadge: false, 
+        shouldPlaySound: true,
+        shouldSetBadge: false,
         shouldShowBanner: false, //バナー
         shouldShowList: false, // 通知センター
       }),

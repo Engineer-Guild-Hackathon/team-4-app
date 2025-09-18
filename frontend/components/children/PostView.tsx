@@ -84,27 +84,21 @@ export default function PostView({
       <View style={styles.postHeader}>
         <View style={styles.authorInfo}>
           <Image
-            source={{ 
-              uri: item.author?.avatar || `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}` 
+            source={{
+              uri:
+                item.author?.avatar ||
+                `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}`,
             }}
             style={styles.authorAvatar}
           />
           <Text style={styles.authorUsername}>{item.author?.username}</Text>
         </View>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={() => onDelete(item.id)}
-          >
+          <Button variant="secondary" size="sm" onPress={() => onDelete(item.id)}>
             削除
           </Button>
         ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={() => handleOpenMenu(item)}
-          >
+          <Button variant="secondary" size="sm" onPress={() => handleOpenMenu(item)}>
             ⋮
           </Button>
         )}
@@ -119,7 +113,8 @@ export default function PostView({
           {item.media.map((media: PostMediaOut, index: number) => {
             const mediaUrl = media.file;
             const cacheKey = mediaUrl.split('?')[0];
-            const mediaStyle = item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
+            const mediaStyle =
+              item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
 
             if (media.media_type === 'image') {
               return (
@@ -199,7 +194,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     textAlign: 'center',
     marginTop: remToPx(theme.spacing[16]),
-    
+
     fontSize: remToPx(theme.typography.fontSize.base),
   },
   post: {
@@ -243,18 +238,17 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize['3xl']),
     lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },
-    mediaScrollView: {
-  },
+  mediaScrollView: {},
   mediaItemSingle: {
-    width: remToPx('24rem'), 
+    width: remToPx('24rem'),
     height: 250,
     backgroundColor: theme.colors.background.secondary,
   },
   mediaItemMulti: {
-    width: 250, 
-    height: 250, 
+    width: 250,
+    height: 250,
     borderRadius: remToPx(theme.borderRadius.md),
-    marginRight: remToPx(theme.spacing[2]), 
+    marginRight: remToPx(theme.spacing[2]),
     backgroundColor: theme.colors.background.secondary,
   },
   postHeader: {

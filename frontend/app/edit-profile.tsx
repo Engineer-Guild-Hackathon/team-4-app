@@ -1,6 +1,6 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/styles/theme';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -16,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { buttonHaptic, formSubmitHaptic, successHaptic, errorHaptic, selectionHaptic } from '@/utils/haptics';
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
@@ -171,7 +170,7 @@ export default function EditProfileScreen() {
             source={{
               uri: avatarUri
                 ? avatarUri
-                : `https://placehold.co/128x128/e0e0e0/555555?text=${user.username.charAt(0)}`,
+                : `https://placehold.co/64x64/e0e0e0/555555?text=${user.username.charAt(0)}`,
               cacheKey: avatarUri ? avatarUri.split('?')[0] : undefined,
             }}
             style={styles.avatar}
@@ -192,15 +191,16 @@ export default function EditProfileScreen() {
         <View style={styles.spacer} />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSubmitting}>
-          <MixedFontText style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</MixedFontText>
+          <MixedFontText style={styles.saveButtonText}>
+            {isSubmitting ? '保存中...' : '保存する'}
+          </MixedFontText>
         </TouchableOpacity>
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
 
         <View style={styles.dangerZone}>
-         
-          <TouchableOpacity 
-            style={styles.deleteButton} 
-            onPress={handleDeleteAccount} 
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
             disabled={isSubmitting}
           >
             <Text style={styles.deleteButtonText}>アカウントを削除</Text>
@@ -261,7 +261,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
-    
   },
   spacer: {
     flex: 1,

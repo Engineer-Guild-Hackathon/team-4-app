@@ -65,7 +65,9 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           <View style={styles.messageCard}>
             <MixedFontText style={styles.messageAuthor}>{item.author?.username}</MixedFontText>
             <MixedFontText style={styles.messageContent}>{item.content}</MixedFontText>
-            <MixedFontText style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</MixedFontText>
+            <MixedFontText style={styles.messageDate}>
+              {new Date(item.created_at).toLocaleString()}
+            </MixedFontText>
           </View>
         )}
         keyboardShouldPersistTaps="handled"

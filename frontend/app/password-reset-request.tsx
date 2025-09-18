@@ -93,7 +93,9 @@ export default function PasswordResetRequest() {
           onPress={handleEmailSubmit}
           disabled={loading}
         >
-          <MixedFontText style={styles.buttonText}>{loading ? '送信中...' : 'コード送信'}</MixedFontText>
+          <MixedFontText style={styles.buttonText}>
+            {loading ? '送信中...' : 'コード送信'}
+          </MixedFontText>
         </TouchableOpacity>
 
         <TouchableOpacity

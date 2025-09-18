@@ -55,11 +55,11 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
   const placeholderUrl = `https://placehold.co/${imageSize}x${imageSize}/e0e0e0/555555?text=${initialCharacter}`;
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       onPress={() => {
         selectionHaptic();
         onPress();
-      }} 
+      }}
       style={styles.container}
     >
       <Animated.View style={[styles.avatarContainer, animatedBorderStyle]}>

@@ -45,12 +45,10 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
       {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={handleLogin} 
-        disabled={loading}
-      >
-        <MixedFontText style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</MixedFontText>
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <MixedFontText style={styles.buttonText}>
+          {loading ? '認証中...' : 'ログイン'}
+        </MixedFontText>
       </TouchableOpacity>
 
       {/* パスワードリセットリンク */}
@@ -62,8 +60,8 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {/* ユーザー作成画面へのリンク */}
-      <TouchableOpacity 
-        style={styles.linkButton} 
+      <TouchableOpacity
+        style={styles.linkButton}
         onPress={() => {
           buttonHaptic();
           router.push('/signup');
@@ -100,11 +98,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: remToPx(theme.spacing[4]), // md
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
-    color: theme.colors.text.primary, 
+    color: theme.colors.text.primary,
   },
   error: {
     color: theme.colors.semantic.error.main,
-    marginBottom: remToPx(theme.spacing[4]), // md 
+    marginBottom: remToPx(theme.spacing[4]), // md
   },
   button: {
     width: '100%',

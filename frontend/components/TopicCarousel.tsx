@@ -3,14 +3,7 @@ import { TopicOut } from '@/types/topic';
 import { useRouter } from 'expo-router';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import React, { useCallback, useEffect, useRef } from 'react';
-import {
-  Animated,
-  Dimensions,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Animated, Dimensions, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { selectionHaptic } from '@/utils/haptics';
 
 interface TopicCarouselProps {
@@ -55,58 +48,61 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     }
   }, [currentIndex]);
 
-  const renderItem = useCallback(({ item, index }: { item: DisplayTopic; index: number }) => {
-    if (!item.title) {
-      return <View style={{ width: SPACER_ITEM_WIDTH }} />;
-    }
+  const renderItem = useCallback(
+    ({ item, index }: { item: DisplayTopic; index: number }) => {
+      if (!item.title) {
+        return <View style={{ width: SPACER_ITEM_WIDTH }} />;
+      }
 
-    const pageIndex = index - 1;
+      const pageIndex = index - 1;
 
-    const inputRange = [
-      (index - 2) * ITEM_FULL_WIDTH,
-      (index - 1) * ITEM_FULL_WIDTH,
-      index * ITEM_FULL_WIDTH,
-    ];
+      const inputRange = [
+        (index - 2) * ITEM_FULL_WIDTH,
+        (index - 1) * ITEM_FULL_WIDTH,
+        index * ITEM_FULL_WIDTH,
+      ];
 
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.7, 1.1, 0.7],
-      extrapolate: 'clamp',
-    });
+      const scale = scrollX.interpolate({
+        inputRange,
+        outputRange: [0.7, 1.1, 0.7],
+        extrapolate: 'clamp',
+      });
 
-    const opacity = scrollX.interpolate({
-      inputRange,
-      outputRange: [1, 1, 1],
-      extrapolate: 'clamp',
-    });
+      const opacity = scrollX.interpolate({
+        inputRange,
+        outputRange: [1, 1, 1],
+        extrapolate: 'clamp',
+      });
 
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          selectionHaptic();
-          if (currentIndex === pageIndex) {
-            router.push(`/list-post?topicId=${item.id}`);
-          } else {
-            onSelectIndex(pageIndex);
-          }
-        }}
-      >
-        <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
-          <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
-            <MixedFontText
-              style={[
-                styles.topicIconText,
-                currentIndex === pageIndex && styles.topicIconTextActive,
-              ]}
-              numberOfLines={1}
-            >
-              {item.title === '＋' ? '＋' : item.title.substring(0, 8)}
-            </MixedFontText>
-          </View>
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  }, [currentIndex, onSelectIndex, scrollX]);
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            selectionHaptic();
+            if (currentIndex === pageIndex) {
+              router.push(`/list-post?topicId=${item.id}`);
+            } else {
+              onSelectIndex(pageIndex);
+            }
+          }}
+        >
+          <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
+            <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
+              <MixedFontText
+                style={[
+                  styles.topicIconText,
+                  currentIndex === pageIndex && styles.topicIconTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                {item.title === '＋' ? '＋' : item.title.substring(0, 8)}
+              </MixedFontText>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      );
+    },
+    [currentIndex, onSelectIndex, scrollX]
+  );
 
   return (
     <View style={styles.container}>

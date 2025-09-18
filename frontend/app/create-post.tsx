@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[5]),
     color: theme.colors.text.primary,
-    
   },
   input: {
     borderWidth: 1,

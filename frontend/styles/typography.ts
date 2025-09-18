@@ -36,7 +36,7 @@ export const typography = {
     tight: '1.25',
     normal: '1.5',
     relaxed: '1.625',
-    snug: '1.375', 
+    snug: '1.375',
     loose: '2',
   },
 

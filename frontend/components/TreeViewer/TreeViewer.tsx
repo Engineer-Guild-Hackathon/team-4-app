@@ -2,13 +2,7 @@ import { hierarchy, HierarchyPointNode, tree } from 'd3-hierarchy';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { theme } from '@/styles/theme';
 import { remToPx } from '@/styles/theme';
-import {
-  ActivityIndicator,
-  Dimensions,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -185,7 +179,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
       cancelAnimation(translateX);
       cancelAnimation(translateY);
     })
-    .onUpdate((e) => {
+    .onUpdate(e => {
       translateX.value = savedTranslateX.value + e.translationX;
       translateY.value = savedTranslateY.value + e.translationY;
     })

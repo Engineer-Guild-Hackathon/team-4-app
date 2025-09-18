@@ -55,7 +55,6 @@ export const getMentorRequestStatus = async (userId: number, topicId: string) =>
   try {
     return await authedApiClient(`/api/mentorship/mentor-request-status/${userId}/${topicId}`);
   } catch (error: any) {
-  
     // 404エラーの場合は、リクエストなしとみなす
     if (error.status === 404) {
       return { status: 'none', message: 'No mentor request found' };

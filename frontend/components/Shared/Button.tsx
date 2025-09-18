@@ -68,7 +68,9 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <View style={styles.content}>
           {icon && <View style={styles.icon}>{icon}</View>}
-          <MixedFontText style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}>
+          <MixedFontText
+            style={[styles.textBase, sizeTextStyles[size], variantStyles[variant].text, textStyle]}
+          >
             {children}
           </MixedFontText>
         </View>
@@ -100,7 +102,6 @@ const styles = StyleSheet.create({
   textBase: {
     fontWeight: '600',
     textAlign: 'center',
-    
   },
   disabled: {
     opacity: 0.5,

@@ -1,13 +1,13 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { AuthProvider } from '@/hooks/AuthProvider';
+import { modalHaptic } from '@/utils/haptics';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { modalHaptic } from '@/utils/haptics';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -28,8 +28,8 @@ const BreakTimerOverlay = () => {
         <MixedFontText style={styles.breakLabelText}>休憩中</MixedFontText>
         <MixedFontText style={styles.breakTimeText}>{formatTime(secondsLeft)}</MixedFontText>
       </View>
-      <Pressable 
-        style={styles.breakCloseCircle} 
+      <Pressable
+        style={styles.breakCloseCircle}
         onPress={() => {
           modalHaptic();
           closeTimer();
@@ -72,48 +72,41 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="signup" options={{ headerShown: false }} />
-            
-            <Stack.Screen 
-            name="password-reset-request" 
-            options={{ 
-                title: 'パスワードリセット',
-                  headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="password-reset-confirm" 
-            options={{ 
-                 title: '新しいパスワード',
-                   headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="select-level-mentor" 
-            options={{ headerShown: false }} 
-          />
-            <Stack.Screen 
-              name="create-post" 
-              options={{ 
-                presentation: 'modal',
-                  title: '新規投稿',
-                headerShown: false
-              }} 
 
+            <Stack.Screen
+              name="password-reset-request"
+              options={{
+                title: 'パスワードリセット',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="password-reset-confirm"
+              options={{
+                title: '新しいパスワード',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen name="select-level-mentor" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="create-post"
+              options={{
+                presentation: 'modal',
+                title: '新規投稿',
+                headerShown: false,
+              }}
             />
             <Stack.Screen
               name="edit-profile"
               options={{
-
-                presentation: 'modal', 
+                presentation: 'modal',
                 title: 'プロフィール編集',
-                headerShown: false
-
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="list-post"
               options={{
-                presentation: 'modal', 
-                title: 'プロフィール編集',
-                headerShown: false
                 presentation: 'containedTransparentModal',
                 title: '投稿一覧',
                 headerShown: false,

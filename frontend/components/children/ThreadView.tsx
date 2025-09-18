@@ -70,9 +70,15 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
               }}
               activeOpacity={0.8}
             >
-              <MixedFontText style={styles.threadTitle}>{`starter: ${thread.starter?.username} / mentor: ${thread.mentor?.username}`}</MixedFontText>
-              <MixedFontText style={styles.threadDate}>{new Date(thread.created_at).toLocaleString()}</MixedFontText>
-              <MixedFontText style={styles.threadMsgCount}>{`メッセージ数: ${thread.messages.length}`}</MixedFontText>
+              <MixedFontText
+                style={styles.threadTitle}
+              >{`starter: ${thread.starter?.username} / mentor: ${thread.mentor?.username}`}</MixedFontText>
+              <MixedFontText style={styles.threadDate}>
+                {new Date(thread.created_at).toLocaleString()}
+              </MixedFontText>
+              <MixedFontText
+                style={styles.threadMsgCount}
+              >{`メッセージ数: ${thread.messages.length}`}</MixedFontText>
             </TouchableOpacity>
           ))}
         </ScrollView>

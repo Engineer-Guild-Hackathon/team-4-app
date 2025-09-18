@@ -279,7 +279,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <MixedFontText style={styles.capacityText}>
               定員: {capacityInfo.current_count}/{capacityInfo.capacity}人
             </MixedFontText>
-            {isCapacityFull && <MixedFontText style={styles.capacityFullText}>満員です</MixedFontText>}
+            {isCapacityFull && (
+              <MixedFontText style={styles.capacityFullText}>満員です</MixedFontText>
+            )}
           </View>
         )}
 
@@ -367,7 +369,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
               style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
               onPress={() => setActiveTab('requests')}
             >
-              <MixedFontText style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
+              <MixedFontText
+                style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}
+              >
                 リクエスト ({requests.length})
               </MixedFontText>
             </TouchableOpacity>
@@ -375,7 +379,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
               style={[styles.tab, activeTab === 'mentees' && styles.activeTab]}
               onPress={() => setActiveTab('mentees')}
             >
-              <MixedFontText style={[styles.tabText, activeTab === 'mentees' && styles.activeTabText]}>
+              <MixedFontText
+                style={[styles.tabText, activeTab === 'mentees' && styles.activeTabText]}
+              >
                 弟子 ({mentees.length})
               </MixedFontText>
             </TouchableOpacity>
@@ -386,7 +392,9 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {requests.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <MixedFontText style={styles.emptyText}>現在、師匠選択リクエストはありません</MixedFontText>
+                  <MixedFontText style={styles.emptyText}>
+                    現在、師匠選択リクエストはありません
+                  </MixedFontText>
                 </View>
               ) : (
                 <FlatList

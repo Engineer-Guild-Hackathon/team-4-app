@@ -62,7 +62,9 @@ export default function ThreadDetailModal({
               <View style={styles.messageCard}>
                 <MixedFontText style={styles.messageAuthor}>{item.author?.username}</MixedFontText>
                 <MixedFontText style={styles.messageContent}>{item.content}</MixedFontText>
-                <MixedFontText style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</MixedFontText>
+                <MixedFontText style={styles.messageDate}>
+                  {new Date(item.created_at).toLocaleString()}
+                </MixedFontText>
               </View>
             )}
             contentContainerStyle={{ paddingBottom: 80 }}
@@ -77,7 +79,9 @@ export default function ThreadDetailModal({
               maxLength={200}
             />
             <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending}>
-              <MixedFontText style={styles.sendButtonText}>{sending ? '送信中...' : '送信'}</MixedFontText>
+              <MixedFontText style={styles.sendButtonText}>
+                {sending ? '送信中...' : '送信'}
+              </MixedFontText>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>

@@ -72,10 +72,7 @@ export default function UserCreateScreen() {
         <MixedFontText style={styles.buttonText}>ユーザー作成</MixedFontText>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push('/login')}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/login')}>
         <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
       </TouchableOpacity>
     </View>
@@ -95,7 +92,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[8]),
     color: theme.colors.text.primary,
-    
   },
   input: {
     width: '100%',
@@ -109,17 +105,14 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
     color: theme.colors.text.primary,
-    
   },
   error: {
     color: theme.colors.semantic.error.main,
     marginBottom: remToPx(theme.spacing[4]),
-    
   },
   success: {
     color: theme.colors.semantic.success.main,
     marginBottom: remToPx(theme.spacing[4]),
-    
   },
   button: {
     width: '100%',

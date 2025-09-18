@@ -1,9 +1,11 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/useAuth';
 import {
   checkMentorSelectionRequired,
   createMentorRequest,
   getAvailableMentors,
+  getMentorRequestStatus,
   getUserLevel,
   noMentorSelection,
 } from '@/services/api/mentorship';
@@ -11,7 +13,13 @@ import { getPosts } from '@/services/api/post';
 import { getTopicLevelInfo, joinTopic, leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { PostMediaOut, PostOut } from '@/types/post';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
+import {
+  buttonHaptic,
+  errorHaptic,
+  formSubmitHaptic,
+  selectionHaptic,
+  successHaptic,
+} from '@/utils/haptics';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -24,7 +32,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { selectionHaptic, successHaptic, errorHaptic, formSubmitHaptic, buttonHaptic } from '@/utils/haptics';
 
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
@@ -86,7 +93,6 @@ export default function SelectLevelMentorScreen() {
     mentors: Mentor[];
     userStatus?: string;
   } | null>(null);
-
 
   // post取得
   const [posts, setPosts] = useState<PostOut[]>([]);
@@ -154,9 +160,7 @@ export default function SelectLevelMentorScreen() {
 
   // 師匠選択データを取得
   useEffect(() => {
-    
     fetchMentorData();
-
   }, [topicId]);
 
   useEffect(() => {
@@ -179,9 +183,9 @@ export default function SelectLevelMentorScreen() {
   useEffect(() => {
     const fetchRequestStatus = async () => {
       if (!user?.id) return;
-      
+
       try {
-        const status = await getMentorRequestStatus(user.id, topicId) as {
+        const status = (await getMentorRequestStatus(user.id, topicId)) as {
           status: string;
           to_username?: string;
         };
@@ -194,7 +198,6 @@ export default function SelectLevelMentorScreen() {
 
     fetchRequestStatus();
   }, [user?.id, topicId]);
-
 
   // 師匠選択処理
   const handleMentorSelection = async () => {
@@ -341,8 +344,8 @@ export default function SelectLevelMentorScreen() {
       {/* 左上に戻るボタン - 承認済みでない場合のみ表示 */}
       {requestStatus?.status !== 'approved' && (
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => {
               buttonHaptic();
               handleBack();
@@ -368,12 +371,9 @@ export default function SelectLevelMentorScreen() {
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
           <>
-
             {/* 師匠選択が必要な場合 */}
             {mentorData?.required && (
               <View style={styles.mentorSelectionContainer}>
-
-                  
                 <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
                 <Text style={styles.mentorSelectionSubtitle}>
                   {userStatus === 'GRADUATED' &&
@@ -384,7 +384,6 @@ export default function SelectLevelMentorScreen() {
                     `破門済みのため、師匠を選択してください`}
                   {userStatus === 'ACTIVE' && '師匠を選択してください'}
                 </Text>
-
 
                 <FlatList
                   data={mentorData.mentors}
@@ -411,7 +410,9 @@ export default function SelectLevelMentorScreen() {
                   style={styles.noSelectionButton}
                   onPress={handleNoMentorSelection}
                 >
-                  <MixedFontText style={styles.noSelectionButtonText}>師匠を選択しない</MixedFontText>
+                  <MixedFontText style={styles.noSelectionButtonText}>
+                    師匠を選択しない
+                  </MixedFontText>
                 </TouchableOpacity>
               </View>
             )}
@@ -430,7 +431,9 @@ export default function SelectLevelMentorScreen() {
                     return null;
                   })}
                 </View>
-                <MixedFontText style={styles.postContent}>{posts[0].content || '内容なし'}</MixedFontText>
+                <MixedFontText style={styles.postContent}>
+                  {posts[0].content || '内容なし'}
+                </MixedFontText>
               </View>
             ) : (
               <MixedFontText style={{ marginTop: 20 }}>投稿がありません</MixedFontText>
@@ -439,9 +442,9 @@ export default function SelectLevelMentorScreen() {
         )}
       </View>
       {/* 下中央にOKボタン - 適切な条件でのみ表示 */}
-      {((mentorData?.required === false) ||
+      {(mentorData?.required === false ||
         (mentorData?.required === true && selectedMentor) ||
-        (requestStatus?.status === 'approved')) && (
+        requestStatus?.status === 'approved') && (
         <View style={styles.bottomButtonContainer}>
           <View
             style={{
@@ -466,10 +469,8 @@ export default function SelectLevelMentorScreen() {
               }}
               onPress={handleJoin}
             >
-
               参加
             </MixedFontText>
-
           </View>
         </View>
       )}
