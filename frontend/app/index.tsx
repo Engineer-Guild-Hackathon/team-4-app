@@ -23,7 +23,7 @@ import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
 
 export default function HomeScreen() {
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [mentorDashboardVisible, setMentorDashboardVisible] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
@@ -170,9 +170,6 @@ export default function HomeScreen() {
           >
             <Feather name="user-plus" size={24} color="white" />
           </Button>
-          <Button variant="icon" size="icon" style={styles.logoutButton} onPress={logout}>
-            <AntDesign name="logout" size={24} color="white" />
-          </Button>
         </>
       )}
 
@@ -234,10 +231,6 @@ const styles = StyleSheet.create({
   mentorshipButton: {
     ...fabBaseStyle,
     top: 150,
-  },
-  logoutButton: {
-    ...fabBaseStyle,
-    top: 240,
   },
   headerCenterButton: {
     position: 'absolute',

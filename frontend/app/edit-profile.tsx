@@ -27,13 +27,16 @@ export default function EditProfileScreen() {
   const [avatarUri, setAvatarUri] = useState<string | null>(user?.avatar || null);
   const [newAvatarAsset, setNewAvatarAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   useEffect(() => {
-    getUser(user!.id).then(userData => {
-      setBio(userData.bio || '');
-      setAvatarUri(userData.avatar || null);
-    });
-  }, [user]);
+    if (user) {
+      getUser(user.id).then(userData => {
+        setBio(userData.bio || '');
+        setAvatarUri(userData.avatar || null);
+      });
+    }
+  }, [user]); 
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -196,6 +199,11 @@ export default function EditProfileScreen() {
             {isSubmitting ? '保存中...' : '保存する'}
           </MixedFontText>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={logout} disabled={isSubmitting}>
+          <Text style={styles.logoutButtonText}>ログアウトする</Text>
+        </TouchableOpacity>
+
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
 
         <View style={styles.dangerZone}>
@@ -305,5 +313,17 @@ const styles = StyleSheet.create({
     fontSize: theme.remToPx(theme.typography.fontSize.sm),
     fontWeight: theme.typography.fontWeight.semibold,
     fontFamily: 'Klee One',
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: theme.colors.primary[300],
+    paddingVertical: theme.remToPx(theme.spacing[4]), // md
+    borderRadius: theme.remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });
