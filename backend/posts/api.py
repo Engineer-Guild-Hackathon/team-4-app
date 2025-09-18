@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 from ninja import Router, File, Form
 from ninja.files import UploadedFile
@@ -8,16 +9,22 @@ from .schemas import PostOut
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja_jwt.authentication import JWTAuth
-from topics.models import Topic
+from topics.models import Topic, UserTopic
 
 router = Router()
 
-@router.get("/", response=List[PostOut])
-def list_posts(request, topic_id: UUID = None, author_id: int = None):
+@router.get("/", response=List[PostOut], auth=JWTAuth())
+def list_posts(request, topic_id: UUID = None, author_id: int = None, update_last_seen: int = None, created_from: str = None):
     """
     投稿の一覧を取得する。
     topic_idとauthor_idで絞り込み可能。
     """
+    if update_last_seen == 1 and topic_id:
+        user_topic = UserTopic.objects.filter(user_id=request.user.id, topic_id=topic_id).first()
+        if user_topic:
+            user_topic.last_seen_at = datetime.now(timezone.utc)
+            user_topic.save(update_fields=['last_seen_at'])
+
     posts = Post.objects.prefetch_related('media').select_related('author').all()
 
     if topic_id:
@@ -25,6 +32,13 @@ def list_posts(request, topic_id: UUID = None, author_id: int = None):
 
     if author_id:
         posts = posts.filter(author_id=author_id)
+
+    if created_from:
+        try:
+            created_from_dt = datetime.fromisoformat(created_from)
+            posts = posts.filter(created_at__gte=created_from_dt)
+        except ValueError:
+            pass
     
     return posts.order_by('-created_at')
 

@@ -67,6 +67,7 @@ def get_my_topics(request):
             "created_at": topic.created_at,
             "updated_at": topic.updated_at,
             "mentee_capacity": user_topic.mentee_capacity,
+            "last_seen_at": user_topic.last_seen_at,
         })
     
     return {"topics": topics_data, "count": len(topics_data)}

@@ -7,7 +7,7 @@ from django.core.cache import cache
 from unittest.mock import patch
 from config.urls import api
 from .api import router
-from .models import Block
+from .models import Block, UserProfile
 
 User = get_user_model()
 
@@ -26,6 +26,47 @@ class UserModelTest(TestCase):
 	def test_user_str_representation(self):
 		user = User.objects.create_user(username="struser", password="pass")
 		self.assertEqual(str(user), "struser")
+
+
+class UserProfileModelTest(TestCase):
+	def test_user_profile_creation(self):
+		"""ユーザープロフィール作成テスト"""
+		user = User.objects.create_user(username="testuser1", email="test1@example.com", password="testpass")
+		# シグナルで自動作成されたプロフィールを取得して更新
+		profile = user.profile
+		profile.bio = "これはテスト用の自己紹介です。"
+		profile.save()
+		self.assertEqual(profile.user, user)
+		self.assertEqual(profile.bio, "これはテスト用の自己紹介です。")
+
+	def test_user_profile_bio_max_length(self):
+		"""自己紹介の最大文字数テスト"""
+		user = User.objects.create_user(username="testuser2", email="test2@example.com", password="testpass")
+		max_bio = "あ" * 500
+		# シグナルで自動作成されたプロフィールを取得して更新
+		profile = user.profile
+		profile.bio = max_bio
+		profile.save()
+		self.assertEqual(len(profile.bio), 500)
+		self.assertEqual(profile.bio, max_bio)
+
+	def test_user_profile_empty_bio(self):
+		"""空の自己紹介テスト"""
+		user = User.objects.create_user(username="testuser3", email="test3@example.com", password="testpass")
+		# シグナルで自動作成されたプロフィールを取得して更新
+		profile = user.profile
+		profile.bio = ""
+		profile.save()
+		self.assertEqual(profile.bio, "")
+
+	def test_user_profile_str_representation(self):
+		"""ユーザープロフィールの文字列表現テスト"""
+		user = User.objects.create_user(username="testuser4", email="test4@example.com", password="testpass")
+		# シグナルで自動作成されたプロフィールを取得して更新
+		profile = user.profile
+		profile.bio = "テスト自己紹介"
+		profile.save()
+		self.assertEqual(str(profile), "testuser4")
 
 class UserAPITest(TestCase):
 	def setUp(self):
@@ -76,13 +117,14 @@ class UserAPITest(TestCase):
 		response_data = response.json()
 		self.assertEqual(response_data["username"], "updateduser")
 
-	def test_delete_user(self):
-		user = User.objects.create_user(username="deluser", email="del@example.com", password="pass")
-		response = self.client.delete(f"/{user.id}/", headers=self.headers)
+	def test_delete_my_account(self):
+		# 削除前のユーザーIDを保存
+		user_id = self.user.id
+		response = self.client.delete("/me/", headers=self.headers)
 		self.assertEqual(response.status_code, 200)
 		response_data = response.json()
-		self.assertTrue(response_data["success"])
-		self.assertFalse(User.objects.filter(id=user.id).exists())
+		self.assertIn("アカウントが正常に削除されました", response_data["message"])
+		self.assertFalse(User.objects.filter(id=user_id).exists())
 
 	def test_block_user_success(self):
 		user_to_block = User.objects.create_user(username="blockme", email="blockme@example.com", password="pass")

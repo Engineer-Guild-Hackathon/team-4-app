@@ -24,6 +24,25 @@ class TopicModelTest(TestCase):
         topic = Topic.objects.create(title="テストタイトル")
         self.assertEqual(str(topic), "テストタイトル")
 
+    def test_topic_title_max_length(self):
+        """トピックタイトルの最大文字数テスト"""
+        max_title = "あ" * 200
+        topic = Topic.objects.create(title=max_title, description="テスト説明")
+        self.assertEqual(len(topic.title), 200)
+        self.assertEqual(topic.title, max_title)
+
+    def test_topic_description_max_length(self):
+        """トピック説明の最大文字数テスト"""
+        max_description = "あ" * 100
+        topic = Topic.objects.create(title="テストタイトル", description=max_description)
+        self.assertEqual(len(topic.description), 100)
+        self.assertEqual(topic.description, max_description)
+
+    def test_topic_description_empty(self):
+        """トピック説明が空の場合のテスト"""
+        topic = Topic.objects.create(title="テストタイトル", description="")
+        self.assertEqual(topic.description, "")
+
 
 class TopicAPITest(TestCase):
     def setUp(self):

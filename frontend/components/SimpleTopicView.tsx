@@ -154,7 +154,7 @@ export function SimpleTopicView({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6b7280" />
+        <ActivityIndicator size="large" color={theme.colors.text.tertiary} />
       </View>
     );
   }
@@ -215,8 +215,6 @@ export function SimpleTopicView({
     </View>
   );
 }
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const styles = StyleSheet.create({
   container: {

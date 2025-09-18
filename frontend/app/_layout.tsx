@@ -2,9 +2,9 @@ import { AuthProvider } from '@/hooks/AuthProvider';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import { Pressable, StyleSheet, View } from 'react-native';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { modalHaptic } from '@/utils/haptics';
@@ -106,6 +106,18 @@ export default function RootLayout() {
                 title: 'プロフィール編集',
                 headerShown: false
 
+              }}
+            />
+            <Stack.Screen
+              name="list-post"
+              options={{
+                presentation: 'modal', 
+                title: 'プロフィール編集',
+                headerShown: false
+                presentation: 'containedTransparentModal',
+                title: '投稿一覧',
+                headerShown: false,
+                animation: 'fade',
               }}
             />
           </Stack>

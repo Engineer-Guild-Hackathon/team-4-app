@@ -1,4 +1,6 @@
 import { theme } from '@/styles/theme';
+import { TopicOut } from '@/types/topic';
+import { useRouter } from 'expo-router';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
@@ -11,13 +13,8 @@ import {
 } from 'react-native';
 import { selectionHaptic } from '@/utils/haptics';
 
-interface Topic {
-  id: string;
-  title: string;
-}
-
 interface TopicCarouselProps {
-  topics: Topic[];
+  topics: TopicOut[];
   currentIndex: number;
   onSelectIndex: (index: number) => void;
 }
@@ -25,10 +22,10 @@ interface TopicCarouselProps {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_WIDTH = 120;
 const ITEM_HEIGHT = 50;
-const ITEM_SPACING = 8;
+const ITEM_SPACING = 13;
 const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
-type DisplayTopic = { id: string; title?: string };
+type DisplayTopic = { id: string; title?: string; last_seen_at?: string };
 
 export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   topics,
@@ -37,6 +34,8 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
 }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList<DisplayTopic>>(null);
+
+  const router = useRouter();
 
   const displayData: DisplayTopic[] = [
     { id: 'left-spacer' },
@@ -82,10 +81,14 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     });
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => {
           selectionHaptic();
-          onSelectIndex(pageIndex);
+          if (currentIndex === pageIndex) {
+            router.push(`/list-post?topicId=${item.id}`);
+          } else {
+            onSelectIndex(pageIndex);
+          }
         }}
       >
         <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
@@ -137,29 +140,27 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   );
 };
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: remToPx(theme.spacing[4]), // md
+    paddingVertical: theme.remToPx(theme.spacing[4]), // md
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT + 30,
-    marginHorizontal: remToPx(theme.spacing[2]), // xs
+    marginHorizontal: theme.remToPx(theme.spacing[2]), // xs
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderRadius: remToPx(theme.borderRadius.full),
+    borderRadius: theme.remToPx(theme.borderRadius.full),
     backgroundColor: theme.colors.primary[300],
     borderColor: theme.colors.primary[300],
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    paddingHorizontal: theme.remToPx(theme.spacing[6]), // lg
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
@@ -172,10 +173,9 @@ const styles = StyleSheet.create({
     shadowColor: theme.colors.text.secondary,
   },
   topicIconText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.primary,
   },
   topicIconTextActive: {
     color: theme.colors.white,

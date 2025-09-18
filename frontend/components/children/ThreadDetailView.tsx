@@ -1,7 +1,7 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import React, { useRef, useState } from 'react'; // useRefを追加
 import { theme } from '@/styles/theme';
-import { FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../Shared/Button';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 
@@ -20,6 +20,10 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
 
   const handleSend = async () => {
     if (!content.trim()) return;
+    if (content.length > 200) {
+      Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
+      return;
+    }
     setSending(true);
     try {
       const newMessage = await onSendMessage(content);
@@ -75,6 +79,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           value={content}
           onChangeText={setContent}
           multiline
+          maxLength={200}
         />
         <Button
           style={styles.sendButton}
@@ -136,7 +141,7 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[2]), // xs
   },
   messageContent: {
-    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     lineHeight: remToPx(theme.typography.lineHeight.snug),
   },

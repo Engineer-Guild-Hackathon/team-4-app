@@ -1,6 +1,6 @@
 import { Button } from '@/components/Shared/Button';
 import { useAuth } from '@/hooks/AuthProvider';
-import { theme } from '@/styles/theme';
+import { theme, remToPx } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
@@ -198,7 +198,6 @@ export default function HomeScreen() {
   );
 }
 
-// ★ 修正点: スタイルの定義方法を改善
 const fabBaseStyle: ViewStyle = {
   position: 'absolute',
   right: remToPx(theme.spacing[6]), // 24px

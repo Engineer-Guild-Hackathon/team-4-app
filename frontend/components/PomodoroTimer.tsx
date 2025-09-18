@@ -1,11 +1,13 @@
-import { View, Text, StyleSheet, Modal, Pressable, Switch } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Modal, Switch, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
-import * as Haptics from 'expo-haptics';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { buttonHaptic, importantActionHaptic, successHaptic } from '@/utils/haptics';
+import { Button } from './Shared/Button';
+import { theme } from '@/styles/theme';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -35,6 +37,7 @@ const DurationSetter = ({
           onUpdate(Math.max(1, durationMinutes - 1));
         }}
         style={styles.setterButton}
+        textStyle={styles.setterButtonText}
       >
         <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
       </Pressable>
@@ -94,21 +97,27 @@ export default function PomodoroTimer() {
               <DurationSetter
                 label="学習"
                 durationMinutes={studyDuration / 60}
-                onUpdate={mins => setStudyDuration(mins * 10)}
+                onUpdate={mins => setStudyDuration(mins * 60)}
               />
               <DurationSetter
                 label="アウトプット"
                 durationMinutes={outputDuration / 60}
-                onUpdate={mins => setOutputDuration(mins * 10)}
+                onUpdate={mins => setOutputDuration(mins * 60)}
               />
               <DurationSetter
                 label="休憩"
                 durationMinutes={breakDuration / 60}
-                onUpdate={mins => setBreakDuration(mins * 10)}
+                onUpdate={mins => setBreakDuration(mins * 60)}
               />
               <View style={styles.setterContainer}>
-                <Text style={styles.setterLabel}>通知音</Text>
-                <Switch value={isSoundEnabled} onValueChange={setIsSoundEnabled} />
+                <MixedFontText style={styles.setterLabel}>通知音</MixedFontText>
+                <Switch
+                  trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[300] }}
+                  thumbColor={theme.colors.neutral[50]}
+                  ios_backgroundColor={theme.colors.neutral[300]}
+                  value={isSoundEnabled}
+                  onValueChange={setIsSoundEnabled}
+                />
               </View>
             </View>
             <Pressable 
@@ -128,7 +137,7 @@ export default function PomodoroTimer() {
               }}
             >
               <MixedFontText style={styles.closeText}>×</MixedFontText>
-            </Pressable>
+            </Button>
           </>
         )}
 
@@ -140,24 +149,29 @@ export default function PomodoroTimer() {
                   cx={CIRCLE_RADIUS}
                   cy={CIRCLE_RADIUS}
                   r={CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2}
-                  stroke="rgba(0,0,0,0.1)"
+                  stroke={theme.colors.neutral[300]}
                   strokeWidth={CIRCLE_STROKE_WIDTH}
+                  fill="none"
                 />
                 <Circle
                   cx={CIRCLE_RADIUS}
                   cy={CIRCLE_RADIUS}
                   r={CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2}
-                  stroke="#007AFF"
+                  stroke={theme.colors.primary[500]}
                   strokeWidth={CIRCLE_STROKE_WIDTH}
                   strokeDasharray={CIRCLE_CIRCUMFERENCE}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
                   transform={`rotate(-90, ${CIRCLE_RADIUS}, ${CIRCLE_RADIUS})`}
+                  fill="none"
                 />
               </Svg>
               <View style={styles.timerTextContainer}>
                 <MixedFontText style={styles.phaseText}>{getPhaseText()}</MixedFontText>
-                <MixedFontText style={styles.timerText}>{formatTime(secondsLeft)}</MixedFontText>
+                <MixedFontText
+                  fontSize={theme.remToPx(theme.typography.fontSize['5xl'])}
+                  style={styles.timerText}
+                >{formatTime(secondsLeft)}</MixedFontText>
               </View>
             </View>
             <View style={styles.buttonDisabled}>
@@ -214,17 +228,21 @@ const styles = StyleSheet.create({
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.neutral[300], 
+    borderRadius: CIRCLE_RADIUS, 
+    width: CIRCLE_RADIUS * 2 - CIRCLE_STROKE_WIDTH * 2,
+    height: CIRCLE_RADIUS * 2 - CIRCLE_STROKE_WIDTH * 2,
   },
   configContainer: {
     width: '80%',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 20,
     alignItems: 'center',
   },
   configTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
     marginBottom: 20,
   },
   setterContainer: {
@@ -235,113 +253,104 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   setterLabel: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   setterControls: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   setterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    padding: 0,
   },
   setterButtonText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#555',
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.secondary,
   },
-  setterValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  setterValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
     marginHorizontal: 15,
     width: 60,
+  },
+  setterValue: {
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
+    fontFamily: theme.typography.fontFamily.latinMedium, 
+    color: theme.colors.text.primary,
+  },
+  setterUnit: {
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.primary, 
+    marginLeft: 4,
   },
   phaseText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    fontFamily: 'Hiragino Mincho ProN',
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     marginBottom: 10,
   },
   timerText: {
-    fontSize: 56,
-    fontWeight: 'bold',
-    color: '#111',
-    fontFamily: 'Courier New',
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary[400],
+    fontVariant: ['tabular-nums'],
     letterSpacing: 2,
   },
   button: {
     marginTop: 60,
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
-    borderRadius: 30,
-  },
-  buttonDisabled: {
-    marginTop: 60,
-    backgroundColor: '#aaa',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
-    borderRadius: 30,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   closeButton: {
     position: 'absolute',
     top: 60,
     right: 30,
+    backgroundColor: theme.colors.neutral[200],
   },
   closeText: {
-    fontSize: 30,
-    color: '#555',
-    fontWeight: '300',
+    fontSize: parseFloat(theme.typography.fontSize['3xl']) * 16,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.regular,
   },
   outputContainer: {
     width: '90%',
-    height: '70%',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    height: '80%',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 15,
+    flexDirection: 'column',
   },
   outputHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    flexShrink: 0,
   },
   outputPhaseText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   outputTimerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'Courier New',
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontVariant: ['tabular-nums'],
+    color: theme.colors.text.primary,
   },
-  PostFinishButton: {
-    marginTop: 10,
-    backgroundColor: '#FF3B30',
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  PostFinishText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+  postFinishButton: {
+    marginTop: 'auto',
   },
   errorText: {
     textAlign: 'center',
     marginTop: 20,
-    color: 'red',
+    color: theme.colors.danger,
   },
 });

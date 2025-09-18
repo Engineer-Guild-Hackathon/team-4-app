@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     color: theme.colors.text.inverse, // replaces #fff
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16, // 18px
   },
 });

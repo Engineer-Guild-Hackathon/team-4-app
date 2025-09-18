@@ -422,8 +422,6 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   );
 }
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -432,29 +430,29 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
-    paddingTop: remToPx(theme.spacing[24]), // 5xl
-    paddingBottom: remToPx(theme.spacing[6]),
+    paddingHorizontal: theme.remToPx(theme.spacing[6]), // lg
+    paddingTop: theme.remToPx(theme.spacing[24]), // 5xl
+    paddingBottom: theme.remToPx(theme.spacing[6]),
     backgroundColor: theme.colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.background.tertiary,
   },
   closeButton: {
-    marginRight: remToPx(theme.spacing[6]),
+    marginRight: theme.remToPx(theme.spacing[6]),
   },
   closeButtonText: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
     color: theme.colors.primary[300],
     fontWeight: theme.typography.fontWeight.bold,
   },
   title: {
-    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontSize: theme.remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
   },
   content: {
     flex: 1,
-    padding: remToPx(theme.spacing[6]),
+    padding: theme.remToPx(theme.spacing[6]),
   },
   emptyContainer: {
     flex: 1,
@@ -462,15 +460,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   requestCard: {
     backgroundColor: theme.colors.background.primary,
-    borderRadius: remToPx(theme.borderRadius.lg),
-    padding: remToPx(theme.spacing[6]),
-    marginBottom: remToPx(theme.spacing[4]),
+    borderRadius: theme.remToPx(theme.borderRadius.lg),
+    padding: theme.remToPx(theme.spacing[6]),
+    marginBottom: theme.remToPx(theme.spacing[4]),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -478,22 +476,22 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   requestHeader: {
-    marginBottom: remToPx(theme.spacing[3]),
+    marginBottom: theme.remToPx(theme.spacing[3]),
   },
   userName: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
   },
   username: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
-    marginTop: remToPx(theme.spacing[1]), // xxs
+    marginTop: theme.remToPx(theme.spacing[1]), // xxs
   },
   topicTitle: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
-    marginBottom: remToPx(theme.spacing[2]), // xs
+    marginBottom: theme.remToPx(theme.spacing[2]), // xs
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -501,20 +499,20 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    marginHorizontal: remToPx(theme.spacing[2]), // xs
+    marginHorizontal: theme.remToPx(theme.spacing[2]), // xs
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: remToPx(theme.spacing[6]),
+    marginBottom: theme.remToPx(theme.spacing[6]),
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.borderRadius.md,
-    padding: remToPx(theme.spacing[2]), // xs
+    padding: theme.remToPx(theme.spacing[2]), // xs
   },
   tab: {
     flex: 1,
-    paddingVertical: remToPx(theme.spacing[3]), // sm
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
-    borderRadius: remToPx(theme.borderRadius.sm),
+    paddingVertical: theme.remToPx(theme.spacing[3]), // sm
+    paddingHorizontal: theme.remToPx(theme.spacing[6]), // lg
+    borderRadius: theme.remToPx(theme.borderRadius.sm),
     alignItems: 'center',
   },
   activeTab: {
@@ -526,7 +524,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   tabText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.regular,
     color: theme.colors.text.secondary,
   },
@@ -536,9 +534,9 @@ const styles = StyleSheet.create({
   },
   menteeCard: {
     backgroundColor: theme.colors.background.primary,
-    borderRadius: remToPx(theme.borderRadius.lg),
-    padding: remToPx(theme.spacing[6]),
-    marginBottom: remToPx(theme.spacing[4]),
+    borderRadius: theme.remToPx(theme.borderRadius.lg),
+    padding: theme.remToPx(theme.spacing[6]),
+    marginBottom: theme.remToPx(theme.spacing[4]),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -546,49 +544,49 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   menteeHeader: {
-    marginBottom: remToPx(theme.spacing[3]),
+    marginBottom: theme.remToPx(theme.spacing[3]),
   },
   menteeName: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
   },
   menteeUsername: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
-    marginTop: remToPx(theme.spacing[1]),
+    marginTop: theme.remToPx(theme.spacing[1]),
   },
   menteeLevel: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
-    marginBottom: remToPx(theme.spacing[2]),
+    marginBottom: theme.remToPx(theme.spacing[2]),
   },
   menteeDate: {
-    fontSize: remToPx(theme.typography.fontSize.sm),
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.tertiary,
-    marginBottom: remToPx(theme.spacing[4]),
+    marginBottom: theme.remToPx(theme.spacing[4]),
   },
   menteeButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   capacityInfo: {
-    marginBottom: remToPx(theme.spacing[3]),
-    padding: remToPx(theme.spacing[2]),
+    marginBottom: theme.remToPx(theme.spacing[3]),
+    padding: theme.remToPx(theme.spacing[2]),
     backgroundColor: theme.colors.background.secondary,
-    borderRadius: remToPx(theme.borderRadius.sm),
+    borderRadius: theme.remToPx(theme.borderRadius.sm),
   },
   capacityText: {
-    fontSize: remToPx(theme.typography.fontSize.sm),
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   capacityFullText: {
-    fontSize: remToPx(theme.typography.fontSize.sm),
-    color: '#dc2626',
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.semantic.error.main,
     fontWeight: theme.typography.fontWeight.semibold,
     textAlign: 'center',
-    marginTop: remToPx(theme.spacing[1]),
+    marginTop: theme.remToPx(theme.spacing[1]),
   },
   disabledButton: {
     opacity: 0.5,

@@ -222,3 +222,32 @@ class ThreadApiTestCase(TestCase):
 			HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
 		)
 		self.assertEqual(response.status_code, 404)
+
+	def test_thread_message_max_length(self):
+		"""スレッドメッセージの最大文字数テスト"""
+		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
+		MentorRelation.objects.create(
+			mentor=self.mentor,
+			mentee=self.user,
+			topic=self.topic
+		)
+		
+		# 最大文字数（200文字）でメッセージ作成
+		max_content = "あ" * 200
+		message = ThreadMessage.objects.create(
+			thread=thread,
+			author=self.user,
+			content=max_content
+		)
+		self.assertEqual(len(message.content), 200)
+		self.assertEqual(message.content, max_content)
+
+	def test_thread_message_empty_content(self):
+		"""空のスレッドメッセージ作成テスト"""
+		thread = Thread.objects.create(topic=self.topic, starter=self.user, mentor=self.mentor)
+		message = ThreadMessage.objects.create(
+			thread=thread,
+			author=self.user,
+			content=""
+		)
+		self.assertEqual(message.content, "")

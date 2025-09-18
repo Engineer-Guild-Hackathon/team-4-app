@@ -4,7 +4,6 @@ import {
   checkMentorSelectionRequired,
   createMentorRequest,
   getAvailableMentors,
-  getMentorRequestStatus,
   getUserLevel,
   noMentorSelection,
 } from '@/services/api/mentorship';
@@ -353,7 +352,6 @@ export default function SelectLevelMentorScreen() {
           </TouchableOpacity>
         </View>
       )}
-
       {/* 右側レベル選択UI */}
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector
@@ -370,35 +368,23 @@ export default function SelectLevelMentorScreen() {
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
           <>
-            {/* 師匠選択リクエストの状態表示 */}
-            {requestStatus &&
-              requestStatus.status !== 'none' &&
-              requestStatus.status !== 'approved' && (
-                <View style={styles.requestStatusContainer}>
-                  <MixedFontText style={styles.requestStatusTitle}>師匠選択リクエストの状態</MixedFontText>
-                  <MixedFontText style={styles.requestStatusMessage}>
-                    {requestStatus.status === 'pending'
-                      ? `@${requestStatus.to_username} へのリクエストが保留中です`
-                      : requestStatus.status === 'rejected'
-                      ? `@${requestStatus.to_username} がリクエストを拒否しました`
-                      : ''}
-                  </MixedFontText>
-                </View>
-              )}
 
             {/* 師匠選択が必要な場合 */}
             {mentorData?.required && (
               <View style={styles.mentorSelectionContainer}>
-                <MixedFontText style={styles.mentorSelectionTitle}>師匠を選択してください</MixedFontText>
-                <MixedFontText style={styles.mentorSelectionSubtitle}>
-                  {userStatus === 'GRADUATED' && userLevel !== null
-                    ? `卒業済みのため、レベル${userLevel + 1}以上の師匠を選択してください`
-                    : userStatus === 'EXPELLED' && userLevel !== null
-                    ? `破門済みのため、レベル${userLevel}以下の師匠を選択してください`
-                    : userStatus === 'ACTIVE'
-                    ? '師匠を選択してください'
-                    : ''}
-                </MixedFontText>
+
+                  
+                <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
+                <Text style={styles.mentorSelectionSubtitle}>
+                  {userStatus === 'GRADUATED' &&
+                    userLevel !== null &&
+                    `卒業済みのため、師匠を選択してください`}
+                  {userStatus === 'EXPELLED' &&
+                    userLevel !== null &&
+                    `破門済みのため、師匠を選択してください`}
+                  {userStatus === 'ACTIVE' && '師匠を選択してください'}
+                </Text>
+
 
                 <FlatList
                   data={mentorData.mentors}
@@ -480,8 +466,10 @@ export default function SelectLevelMentorScreen() {
               }}
               onPress={handleJoin}
             >
-              {requestStatus?.status === 'approved' ? '戻る' : '参加'}
+
+              参加
             </MixedFontText>
+
           </View>
         </View>
       )}
