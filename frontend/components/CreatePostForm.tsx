@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
-  Button,
   Image,
   ScrollView,
   Alert,
@@ -14,6 +12,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { Button } from './Shared/Button';
+import { theme } from '@/styles/theme';
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
@@ -107,13 +107,15 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
         onChangeText={setContent}
         multiline
       />
-      <View style={styles.buttonContainer}>
-        <Button
-          title={isPickingMedia ? '...' : 'メディア選択'}
-          onPress={pickMedia}
-          disabled={isPickingMedia}
-        />
-      </View>
+      <Button
+        variant="secondary"
+        size="sm"
+        onPress={pickMedia}
+        loading={isPickingMedia}
+        style={styles.mediaButton}
+      >
+        {isPickingMedia ? '...' : 'メディア選択'}
+      </Button>
       <ScrollView horizontal style={styles.previewContainer}>
         {mediaAssets.map(asset =>
           asset.type === 'image' ? (
@@ -124,10 +126,13 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
         )}
       </ScrollView>
       <Button
-        title={isSubmitting ? '投稿中...' : '投稿する'}
+        variant="primary"
         onPress={handlePost}
-        disabled={isSubmitting}
-      />
+        loading={isSubmitting}
+        style={styles.postButton}
+      >
+        アウトプットを投稿する
+      </Button>
       {isSubmitting && <ActivityIndicator />}
     </View>
   );
@@ -136,31 +141,39 @@ export default function CreatePostForm({ topicId }: CreatePostFormProps) {
 const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
-    padding: 10,
+    paddingVertical: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    padding: theme.remToPx(theme.spacing[3]),
+    borderRadius: theme.remToPx(theme.borderRadius.md),
     height: 120,
     textAlignVertical: 'top',
-    marginBottom: 10,
-    fontSize: 16,
+    marginBottom: theme.remToPx(theme.spacing[4]),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    fontFamily: theme.typography.fontFamily.primary,
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.background.secondary,
   },
-  buttonContainer: {
+  mediaButton: {
     alignItems: 'flex-start',
-    marginBottom: 10,
+    alignSelf: 'flex-start',
+    marginBottom: theme.remToPx(theme.spacing[4]),
   },
   previewContainer: {
-    maxHeight: 80,
-    marginBottom: 10,
+    maxHeight: 100,
+    marginBottom: theme.remToPx(theme.spacing[4]),
   },
   previewImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 10,
-    backgroundColor: '#e0e0e0',
+    width: 100,
+    height: 100,
+    borderRadius: theme.remToPx(theme.borderRadius.md),
+    marginRight: theme.remToPx(theme.spacing[3]),
+    backgroundColor: theme.colors.neutral[300],
+  },
+  postButton: {
+    marginTop: 'auto',
+    marginBottom: theme.remToPx(theme.spacing[2]),
   },
 });

@@ -137,29 +137,27 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   );
 };
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: remToPx(theme.spacing[4]), // md
+    paddingVertical: theme.remToPx(theme.spacing[4]), // md
   },
   topicIconWrapper: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT + 30,
-    marginHorizontal: remToPx(theme.spacing[2]), // xs
+    marginHorizontal: theme.remToPx(theme.spacing[2]), // xs
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicIcon: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderRadius: remToPx(theme.borderRadius.full),
+    borderRadius: theme.remToPx(theme.borderRadius.full),
     backgroundColor: theme.colors.primary[300],
     borderColor: theme.colors.primary[300],
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: remToPx(theme.spacing[6]), // lg
+    paddingHorizontal: theme.remToPx(theme.spacing[6]), // lg
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
@@ -172,10 +170,9 @@ const styles = StyleSheet.create({
     shadowColor: theme.colors.text.secondary,
   },
   topicIconText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.primary,
   },
   topicIconTextActive: {
     color: theme.colors.white,

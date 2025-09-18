@@ -361,8 +361,6 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
   );
 }
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -374,49 +372,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.tertiary,
     
   },
   manageContainer: {
     flex: 1,
-    paddingHorizontal: remToPx(theme.spacing[8]), // xl
-    paddingTop: remToPx(theme.spacing[32]), // 6xl
-    paddingBottom: remToPx(theme.spacing[8]),
+    paddingHorizontal: theme.remToPx(theme.spacing[8]), // xl
+    paddingTop: theme.remToPx(theme.spacing[32]), // 6xl
+    paddingBottom: theme.remToPx(theme.spacing[8]),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: remToPx(theme.spacing[12]), // 3xl
+    marginBottom: theme.remToPx(theme.spacing[12]), // 3xl
   },
   manageTitle: {
-    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontSize: theme.remToPx(theme.typography.fontSize['2xl']),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     
   },
   createSection: {
-    marginBottom: remToPx(theme.spacing[12]),
+    marginBottom: theme.remToPx(theme.spacing[12]),
   },
   listSection: {
-    marginBottom: remToPx(theme.spacing[12]),
+    marginBottom: theme.remToPx(theme.spacing[12]),
   },
   sectionTitle: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
-    marginBottom: remToPx(theme.spacing[6]) - 1,
+    marginBottom: theme.remToPx(theme.spacing[6]) - 1,
     
   },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
-    paddingHorizontal: remToPx(theme.spacing[4]), // md
-    paddingVertical: remToPx(theme.spacing[4]) - 2,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    marginBottom: remToPx(theme.spacing[4]) - 2,
+    paddingHorizontal: theme.remToPx(theme.spacing[4]), // md
+    paddingVertical: theme.remToPx(theme.spacing[4]) - 2,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    marginBottom: theme.remToPx(theme.spacing[4]) - 2,
     backgroundColor: theme.colors.background.primary,
     color: theme.colors.text.primary,
     
@@ -430,47 +428,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.borderRadius.md,
-    padding: remToPx(theme.spacing[6]) - 1,
-    marginBottom: remToPx(theme.spacing[4]) - 2,
+    padding: theme.remToPx(theme.spacing[6]) - 1,
+    marginBottom: theme.remToPx(theme.spacing[4]) - 2,
   },
   topicInfo: {
     flex: 1,
   },
   topicItemTitle: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    marginBottom: remToPx(theme.spacing[2]), // xs
+    marginBottom: theme.remToPx(theme.spacing[2]), // xs
     
   },
   topicItemDescription: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
     
   },
   emptyTopicsContainer: {
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.borderRadius.md,
-    padding: remToPx(theme.spacing[8]),
+    padding: theme.remToPx(theme.spacing[8]),
     alignItems: 'center',
   },
   emptyTopicsText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.tertiary,
-    marginBottom: remToPx(theme.spacing[3]),
+    marginBottom: theme.remToPx(theme.spacing[3]),
     textAlign: 'center',
     
   },
   emptyTopicsSubText: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.placeholder,
     textAlign: 'center',
-    lineHeight: remToPx(theme.typography.lineHeight.tight),
+    lineHeight: theme.remToPx(theme.typography.lineHeight.tight),
     
   },
   joinSection: {
-    marginBottom: remToPx(theme.spacing[12]),
+    marginBottom: theme.remToPx(theme.spacing[12]),
   },
   modalContainer: {
     flex: 1,
@@ -480,55 +478,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: remToPx(theme.spacing[6]),
-    paddingTop: remToPx(theme.spacing[6]),
-    paddingBottom: remToPx(theme.spacing[8]),
+    paddingHorizontal: theme.remToPx(theme.spacing[6]),
+    paddingTop: theme.remToPx(theme.spacing[6]),
+    paddingBottom: theme.remToPx(theme.spacing[8]),
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.background.tertiary,
   },
   modalTitle: {
-    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontSize: theme.remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: remToPx(theme.spacing[8]),
-    paddingTop: remToPx(theme.spacing[8]),
+    paddingHorizontal: theme.remToPx(theme.spacing[8]),
+    paddingTop: theme.remToPx(theme.spacing[8]),
   },
   availableTopicItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.borderRadius.md,
-    padding: remToPx(theme.spacing[6]) - 1,
-    marginBottom: remToPx(theme.spacing[4]) - 2,
+    padding: theme.remToPx(theme.spacing[6]) - 1,
+    marginBottom: theme.remToPx(theme.spacing[4]) - 2,
   },
   availableTopicInfo: {
     flex: 1,
   },
   availableTopicTitle: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    marginBottom: remToPx(theme.spacing[2]),
+    marginBottom: theme.remToPx(theme.spacing[2]),
     
   },
   availableTopicDescription: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
     
   },
   capacitySection: {
-    marginTop: 8,
+    marginTop: theme.remToPx(theme.spacing[2]),
     flexDirection: 'row',
     alignItems: 'center',
   },
   capacityLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginRight: 8,
+    fontSize: theme.remToPx(theme.typography.fontSize.xs),
+    color: theme.colors.text.tertiary,
+    marginRight: theme.remToPx(theme.spacing[2]),
   },
   capacityInputContainer: {
     flexDirection: 'row',
@@ -536,19 +534,19 @@ const styles = StyleSheet.create({
   },
   capacityInput: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    fontSize: 12,
-    color: '#374151',
-    backgroundColor: '#ffffff',
+    borderColor: theme.colors.border,
+    borderRadius: theme.remToPx(theme.borderRadius.sm),
+    paddingHorizontal: theme.remToPx(theme.spacing[2]),
+    paddingVertical: theme.remToPx(theme.spacing[1]),
+    fontSize: theme.remToPx(theme.typography.fontSize.xs),
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.background.primary,
     minWidth: 40,
     textAlign: 'center',
   },
   capacityUnit: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginLeft: 4,
+    fontSize: theme.remToPx(theme.typography.fontSize.xs),
+    color: theme.colors.text.tertiary,
+    marginLeft: theme.remToPx(theme.spacing[1]),
   },
 });

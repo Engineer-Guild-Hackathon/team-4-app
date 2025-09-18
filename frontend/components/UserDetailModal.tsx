@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   tabText: {
-    fontSize: parseFloat(theme.typography.fontSize.base) * 16,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     fontWeight: 'bold',
     
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   closeButtonText: {
-    fontSize: 28,
+    fontSize: theme.remToPx(theme.typography.fontSize['2xl']),
   },
   profileHeader: {
     flexDirection: 'row',
@@ -335,13 +335,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileUsername: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
     
     color: theme.colors.text.primary,
   },
   profileBio: {
-    fontSize: 14,
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.secondary,
     marginTop: 2,
     

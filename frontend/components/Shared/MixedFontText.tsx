@@ -24,10 +24,11 @@ export const MixedFontText = ({
     <Text style={style} {...props}>
       {segments.map(({ segment, isJapanese }, index) => (
         <Text
-          key={index.toString()} 
+          key={index.toString()}
           style={[
-            style as StyleProp<TextStyle>, 
-            { fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular', fontSize }
+            { fontSize }, // Default/prop fontSize
+            style as StyleProp<TextStyle>, // User-provided styles (can override fontSize)
+            { fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular' }, // Font family override
           ]}
         >
           {segment}
