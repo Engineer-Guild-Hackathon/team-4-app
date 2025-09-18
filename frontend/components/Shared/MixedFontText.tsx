@@ -8,6 +8,10 @@ type MixedFontTextProps = TextProps & {
 };
 
 export const MixedFontText = ({ children, fontSize = 16, ...props }: MixedFontTextProps) => {
+  if (typeof children !== 'string') {
+    return <Text {...props}>{children}</Text>;
+  }
+
   const segments = segmentByScript(children);
 
   return (
@@ -15,9 +19,13 @@ export const MixedFontText = ({ children, fontSize = 16, ...props }: MixedFontTe
       {segments.map(({ segment, isJapanese }, index) => (
         <Text
           key={index}
-          style={{
-            fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular',
-          }}
+          style={[
+            {
+              fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular',
+              fontSize,
+            },
+            props.style,
+          ]}
         >
           {segment}
         </Text>
