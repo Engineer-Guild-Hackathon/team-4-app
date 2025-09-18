@@ -3,6 +3,8 @@ import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
+import * as Haptics from 'expo-haptics';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -24,17 +26,17 @@ const DurationSetter = ({
   onUpdate: (newDuration: number) => void;
 }) => (
   <View style={styles.setterContainer}>
-    <Text style={styles.setterLabel}>{label}</Text>
+    <MixedFontText style={styles.setterLabel}>{label}</MixedFontText>
     <View style={styles.setterControls}>
       <Pressable
         onPress={() => onUpdate(Math.max(1, durationMinutes - 1))}
         style={styles.setterButton}
       >
-        <Text style={styles.setterButtonText}>-</Text>
+        <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
       </Pressable>
-      <Text style={styles.setterValue}>{durationMinutes} 分</Text>
+      <MixedFontText style={styles.setterValue}>{durationMinutes} 分</MixedFontText>
       <Pressable onPress={() => onUpdate(durationMinutes + 1)} style={styles.setterButton}>
-        <Text style={styles.setterButtonText}>+</Text>
+        <MixedFontText style={styles.setterButtonText}>+</MixedFontText>
       </Pressable>
     </View>
   </View>
@@ -78,7 +80,7 @@ export default function PomodoroTimer() {
         {phase === 'idle' && (
           <>
             <View style={styles.configContainer}>
-              <Text style={styles.configTitle}>集中時間の設定</Text>
+              <MixedFontText style={styles.configTitle}>集中時間の設定</MixedFontText>
               <DurationSetter
                 label="学習"
                 durationMinutes={studyDuration / 60}
@@ -100,10 +102,10 @@ export default function PomodoroTimer() {
               </View>
             </View>
             <Pressable style={styles.button} onPress={startStudy}>
-              <Text style={styles.buttonText}>開始</Text>
+              <MixedFontText style={styles.buttonText}>開始</MixedFontText>
             </Pressable>
             <Pressable style={styles.closeButton} onPress={closeTimer}>
-              <Text style={styles.closeText}>×</Text>
+              <MixedFontText style={styles.closeText}>×</MixedFontText>
             </Pressable>
           </>
         )}
@@ -132,15 +134,15 @@ export default function PomodoroTimer() {
                 />
               </Svg>
               <View style={styles.timerTextContainer}>
-                <Text style={styles.phaseText}>{getPhaseText()}</Text>
-                <Text style={styles.timerText}>{formatTime(secondsLeft)}</Text>
+                <MixedFontText style={styles.phaseText}>{getPhaseText()}</MixedFontText>
+                <MixedFontText style={styles.timerText}>{formatTime(secondsLeft)}</MixedFontText>
               </View>
             </View>
             <View style={styles.buttonDisabled}>
-              <Text style={styles.buttonText}>集中</Text>
+              <MixedFontText style={styles.buttonText}>集中</MixedFontText>
             </View>
             <Pressable style={styles.closeButton} onPress={closeTimer}>
-              <Text style={styles.closeText}>×</Text>
+              <MixedFontText style={styles.closeText}>×</MixedFontText>
             </Pressable>
           </>
         )}
@@ -148,16 +150,16 @@ export default function PomodoroTimer() {
         {phase === 'output' && (
           <View style={styles.outputContainer}>
             <View style={styles.outputHeader}>
-              <Text style={styles.outputPhaseText}>アウトプット</Text>
-              <Text style={styles.outputTimerText}>{formatTime(secondsLeft)}</Text>
+              <MixedFontText style={styles.outputPhaseText}>アウトプット</MixedFontText>
+              <MixedFontText style={styles.outputTimerText}>{formatTime(secondsLeft)}</MixedFontText>
             </View>
             {activeTopicId ? (
               <CreatePostForm topicId={activeTopicId} />
             ) : (
-              <Text style={styles.errorText}>投稿先のトピックが選択されていません。</Text>
+              <MixedFontText style={styles.errorText}>投稿先のトピックが選択されていません。</MixedFontText>
             )}
             <Pressable style={styles.PostFinishButton} onPress={endOutputAndBreak}>
-              <Text style={styles.PostFinishText}>投稿を終了して休憩する</Text>
+              <MixedFontText style={styles.PostFinishText}>投稿を終了して休憩する</MixedFontText>
             </Pressable>
           </View>
         )}

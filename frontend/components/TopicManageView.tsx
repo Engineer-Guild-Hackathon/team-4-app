@@ -16,6 +16,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from './Shared/Button';
+import { MixedFontText } from './Shared/MixedFontText';
+
 
 interface TopicManageViewProps {
   onBack: () => void;
@@ -229,7 +231,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
     <View style={styles.container}>
       <ScrollView style={styles.manageContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.manageTitle}>トピック管理</Text>
+          <MixedFontText style={styles.manageTitle}>トピック管理</MixedFontText>
           <Button variant="secondary" size="sm" onPress={onBack}>
             戻る
           </Button>
@@ -238,28 +240,28 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
         {/* 新規トピック作成 */}
 
         <View style={styles.createSection}>
-          <Text style={styles.sectionTitle}>新規トピック作成</Text>
+          <MixedFontText style={styles.sectionTitle}>新規トピック作成</MixedFontText>
           <Button variant="primary" onPress={openCreateModal}>
             新規トピック作成
           </Button>
         </View>
 
         {/* トピック参加 */}
-        <Text style={styles.sectionTitle}>参加可能なトピック</Text>
+        <MixedFontText style={styles.sectionTitle}>参加可能なトピック</MixedFontText>
         <ScrollView style={styles.joinSection}>
           {availableTopics.length === 0 ? (
             <View style={styles.emptyTopicsContainer}>
-              <Text style={styles.emptyTopicsText}>参加可能なトピックがありません</Text>
-              <Text style={styles.emptyTopicsSubText}>
+              <MixedFontText style={styles.emptyTopicsText}>参加可能なトピックがありません</MixedFontText>
+              <MixedFontText style={styles.emptyTopicsSubText}>
                 新しいトピックを作成するか、他のユーザーがトピックを作成するまでお待ちください
-              </Text>
+              </MixedFontText>
             </View>
           ) : (
             availableTopics.map(topic => (
               <View key={topic.id} style={styles.availableTopicItem}>
                 <View style={styles.availableTopicInfo}>
-                  <Text style={styles.availableTopicTitle}>{topic.title}</Text>
-                  <Text style={styles.availableTopicDescription}>{topic.description}</Text>
+                  <MixedFontText style={styles.availableTopicTitle}>{topic.title}</MixedFontText>
+                  <MixedFontText style={styles.availableTopicDescription}>{topic.description}</MixedFontText>
                 </View>
                 <Button variant="primary" size="sm" onPress={() => handleJoinTopic(topic.id)}>
                   参加
@@ -271,20 +273,20 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
 
         {/* 参加中トピック一覧 */}
         <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>参加中のトピック</Text>
+          <MixedFontText style={styles.sectionTitle}>参加中のトピック</MixedFontText>
           {myTopics.length === 0 ? (
             <View style={styles.emptyTopicsContainer}>
-              <Text style={styles.emptyTopicsText}>参加しているトピックがありません</Text>
-              <Text style={styles.emptyTopicsSubText}>トピックを作成してください</Text>
+              <MixedFontText style={styles.emptyTopicsText}>参加しているトピックがありません</MixedFontText>
+              <MixedFontText style={styles.emptyTopicsSubText}>トピックを作成してください</MixedFontText>
             </View>
           ) : (
             myTopics.map(topic => (
               <View key={topic.id} style={styles.topicItem}>
                 <View style={styles.topicInfo}>
-                  <Text style={styles.topicItemTitle}>{topic.title}</Text>
-                  <Text style={styles.topicItemDescription}>{topic.description}</Text>
+                  <MixedFontText style={styles.topicItemTitle}>{topic.title}</MixedFontText>
+                  <MixedFontText style={styles.topicItemDescription}>{topic.description}</MixedFontText>
                   <View style={styles.capacitySection}>
-                    <Text style={styles.capacityLabel}>弟子定員:</Text>
+                    <MixedFontText style={styles.capacityLabel}>弟子定員:</MixedFontText>
                     <View style={styles.capacityInputContainer}>
                       <TextInput
                         style={styles.capacityInput}
@@ -295,7 +297,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
                         onBlur={() => handleCapacityInputSubmit(topic.id)}
                         onSubmitEditing={() => handleCapacityInputSubmit(topic.id)}
                       />
-                      <Text style={styles.capacityUnit}>人</Text>
+                      <MixedFontText style={styles.capacityUnit}>人</MixedFontText>
                     </View>
                   </View>
                 </View>
@@ -318,7 +320,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>新規トピック作成</Text>
+            <MixedFontText style={styles.modalTitle}>新規トピック作成</MixedFontText>
             <Button variant="secondary" size="sm" onPress={() => setShowCreateModal(false)}>
               閉じる
             </Button>
@@ -364,7 +366,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.tertiary,
-    fontFamily: 'Klee One',
+    
   },
   manageContainer: {
     flex: 1,
@@ -382,7 +384,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize['2xl']),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   createSection: {
     marginBottom: remToPx(theme.spacing[12]),
@@ -395,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
     marginBottom: remToPx(theme.spacing[6]) - 1,
-    fontFamily: 'Klee One',
+    
   },
   input: {
     borderWidth: 1,
@@ -407,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[4]) - 2,
     backgroundColor: theme.colors.background.primary,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   textArea: {
     height: 80,
@@ -429,12 +431,12 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: remToPx(theme.spacing[2]), // xs
-    fontFamily: 'Klee One',
+    
   },
   topicItemDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    fontFamily: 'Klee One',
+    
   },
   emptyTopicsContainer: {
     backgroundColor: theme.colors.background.secondary,
@@ -448,14 +450,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     marginBottom: remToPx(theme.spacing[3]),
     textAlign: 'center',
-    fontFamily: 'Klee One',
+    
   },
   emptyTopicsSubText: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.placeholder,
     textAlign: 'center',
     lineHeight: remToPx(theme.typography.lineHeight.tight),
-    fontFamily: 'Klee One',
+    
   },
   joinSection: {
     marginBottom: remToPx(theme.spacing[12]),
@@ -478,7 +480,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   modalContent: {
     flex: 1,
@@ -501,12 +503,12 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: remToPx(theme.spacing[2]),
-    fontFamily: 'Klee One',
+    
   },
   availableTopicDescription: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.tertiary,
-    fontFamily: 'Klee One',
+    
   },
   capacitySection: {
     marginTop: 8,

@@ -1,6 +1,7 @@
 import { Button } from '@/components/Shared/Button';
 import { useAuth } from '@/hooks/AuthProvider';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
@@ -80,7 +81,7 @@ export default function HomeScreen() {
           </Link>
           {phase !== 'break' && (
             <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
-              <Text style={styles.pomodoroButtonText}>集中</Text>
+              <MixedFontText style={styles.pomodoroButtonText}>集中</MixedFontText>
             </TouchableOpacity>
           )}
           <Button
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   infoText: {
-    fontFamily: 'Klee One',
+    
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.primary,
   },
@@ -182,6 +183,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.link,
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
+    
   },
 });

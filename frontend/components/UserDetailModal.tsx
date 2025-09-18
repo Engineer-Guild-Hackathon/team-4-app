@@ -20,6 +20,7 @@ import PagerView from 'react-native-pager-view';
 import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
 import { Button } from './Shared/Button';
+import { MixedFontText } from './Shared/MixedFontText';
 
 interface UserProfile {
   id: number;
@@ -135,10 +136,10 @@ export default function UserDetailModal({
                   style={styles.avatar}
                 />
                 <View style={styles.profileTextContainer}>
-                  <Text style={styles.profileUsername}>{profile.username}</Text>
-                  <Text style={styles.profileBio} numberOfLines={2}>
+                  <MixedFontText style={styles.profileUsername}>{profile.username}</MixedFontText>
+                  <MixedFontText style={styles.profileBio} numberOfLines={2}>
                     {profile.bio}
-                  </Text>
+                  </MixedFontText>
                 </View>
                 {selfUserId !== userId &&
                   (profile.blocking ? (
@@ -198,7 +199,7 @@ export default function UserDetailModal({
                   ))}
               </View>
             ) : (
-              <Text>プロフィールを読み込めませんでした</Text>
+              <MixedFontText>プロフィールを読み込めませんでした</MixedFontText>
             )}
           </View>
           {/* タブエリア */}
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
     fontSize: parseFloat(theme.typography.fontSize.base) * 16,
     color: theme.colors.text.secondary,
     fontWeight: 'bold',
-    fontFamily: 'Klee One',
+    
   },
   tabTextActive: {
     color: theme.colors.text.inverse,
@@ -336,13 +337,13 @@ const styles = StyleSheet.create({
   profileUsername: {
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'Klee One',
+    
     color: theme.colors.text.primary,
   },
   profileBio: {
     fontSize: 14,
     color: theme.colors.text.secondary,
     marginTop: 2,
-    fontFamily: 'Klee One',
+    
   },
 });

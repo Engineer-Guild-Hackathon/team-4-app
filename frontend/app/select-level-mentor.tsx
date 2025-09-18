@@ -12,6 +12,7 @@ import { getPosts } from '@/services/api/post';
 import { getTopicLevelInfo, joinTopic, leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { PostMediaOut, PostOut } from '@/types/post';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -397,7 +398,7 @@ export default function SelectLevelMentorScreen() {
       {requestStatus?.status !== 'approved' && (
         <View style={styles.backButtonContainer}>
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backButtonText}>← 戻る</Text>
+            <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
           </TouchableOpacity>
         </View>
       )}
@@ -413,7 +414,7 @@ export default function SelectLevelMentorScreen() {
       </View>
       {/* 中央にpost表示とタイトル */}
       <View style={styles.centerContent}>
-        {/* <Text style={styles.levelDisplay}>選択中のレベル: {level}</Text> */}
+        {/* <MixedFontText style={styles.levelDisplay}>選択中のレベル: {level}</MixedFontText> */}
         {loading ? (
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
@@ -423,29 +424,30 @@ export default function SelectLevelMentorScreen() {
               requestStatus.status !== 'none' &&
               requestStatus.status !== 'approved' && (
                 <View style={styles.requestStatusContainer}>
-                  <Text style={styles.requestStatusTitle}>師匠選択リクエストの状態</Text>
-                  <Text style={styles.requestStatusMessage}>
-                    {requestStatus.status === 'pending' &&
-                      `@${requestStatus.to_username} へのリクエストが保留中です`}
-                    {requestStatus.status === 'rejected' &&
-                      `@${requestStatus.to_username} がリクエストを拒否しました`}
-                  </Text>
+                  <MixedFontText style={styles.requestStatusTitle}>師匠選択リクエストの状態</MixedFontText>
+                  <MixedFontText style={styles.requestStatusMessage}>
+                    {requestStatus.status === 'pending'
+                      ? `@${requestStatus.to_username} へのリクエストが保留中です`
+                      : requestStatus.status === 'rejected'
+                      ? `@${requestStatus.to_username} がリクエストを拒否しました`
+                      : ''}
+                  </MixedFontText>
                 </View>
               )}
 
             {/* 師匠選択が必要な場合 */}
             {mentorData?.required && requestStatus?.status === 'none' && (
               <View style={styles.mentorSelectionContainer}>
-                <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
-                <Text style={styles.mentorSelectionSubtitle}>
-                  {userStatus === 'GRADUATED' &&
-                    userLevel !== null &&
-                    `卒業済みのため、レベル${userLevel + 1}以上の師匠を選択してください`}
-                  {userStatus === 'EXPELLED' &&
-                    userLevel !== null &&
-                    `破門済みのため、レベル${userLevel}以下の師匠を選択してください`}
-                  {userStatus === 'ACTIVE' && '師匠を選択してください'}
-                </Text>
+                <MixedFontText style={styles.mentorSelectionTitle}>師匠を選択してください</MixedFontText>
+                <MixedFontText style={styles.mentorSelectionSubtitle}>
+                  {userStatus === 'GRADUATED' && userLevel !== null
+                    ? `卒業済みのため、レベル${userLevel + 1}以上の師匠を選択してください`
+                    : userStatus === 'EXPELLED' && userLevel !== null
+                    ? `破門済みのため、レベル${userLevel}以下の師匠を選択してください`
+                    : userStatus === 'ACTIVE'
+                    ? '師匠を選択してください'
+                    : ''}
+                </MixedFontText>
 
                 <FlatList
                   data={mentorData.mentors}
@@ -458,7 +460,7 @@ export default function SelectLevelMentorScreen() {
                       ]}
                       onPress={() => setSelectedMentor(item)}
                     >
-                      <Text style={styles.mentorName}>{item.username}</Text>
+                      <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
                     </TouchableOpacity>
                   )}
                   style={styles.mentorList}
@@ -469,7 +471,7 @@ export default function SelectLevelMentorScreen() {
                   style={styles.noSelectionButton}
                   onPress={handleNoMentorSelection}
                 >
-                  <Text style={styles.noSelectionButtonText}>師匠を選択しない</Text>
+                  <MixedFontText style={styles.noSelectionButtonText}>師匠を選択しない</MixedFontText>
                 </TouchableOpacity>
               </View>
             )}
@@ -488,10 +490,10 @@ export default function SelectLevelMentorScreen() {
                     return null;
                   })}
                 </View>
-                <Text style={styles.postContent}>{posts[0].content || '内容なし'}</Text>
+                <MixedFontText style={styles.postContent}>{posts[0].content || '内容なし'}</MixedFontText>
               </View>
             ) : (
-              <Text style={{ marginTop: 20 }}>投稿がありません</Text>
+              <MixedFontText style={{ marginTop: 20 }}>投稿がありません</MixedFontText>
             )}
           </>
         )}
@@ -515,7 +517,7 @@ export default function SelectLevelMentorScreen() {
               minWidth: 180,
             }}
           >
-            <Text
+            <MixedFontText
               style={{
                 color: '#fff',
                 fontSize: 18,
@@ -525,7 +527,7 @@ export default function SelectLevelMentorScreen() {
               onPress={handleJoin}
             >
               {requestStatus?.status === 'approved' ? '戻る' : '参加'}
-            </Text>
+            </MixedFontText>
           </View>
         </View>
       )}

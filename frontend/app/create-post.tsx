@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -133,7 +134,7 @@ export default function CreatePostScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>新規投稿</Text>
+      <MixedFontText style={styles.title}>新規投稿</MixedFontText>
 
       <TextInput
         style={styles.input}
@@ -144,9 +145,9 @@ export default function CreatePostScreen() {
       />
 
       <TouchableOpacity style={styles.button} onPress={pickMedia} disabled={isPickingMedia}>
-        <Text style={styles.buttonText}>
+        <MixedFontText style={styles.buttonText}>
           {isPickingMedia ? 'メディアを読み込み中...' : '画像・動画を選択'}
-        </Text>
+        </MixedFontText>
       </TouchableOpacity>
 
       <ScrollView horizontal style={styles.previewContainer}>
@@ -177,9 +178,9 @@ export default function CreatePostScreen() {
         onPress={handlePost}
         disabled={isSubmitting}
       >
-        <Text style={[styles.buttonText, styles.submitButtonText]}>
+        <MixedFontText style={[styles.buttonText, styles.submitButtonText]}>
           {isSubmitting ? '投稿中...' : '投稿する'}
-        </Text>
+        </MixedFontText>
       </TouchableOpacity>
       {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
     </View>
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[5]),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   input: {
     borderWidth: 1,
@@ -210,7 +211,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
     backgroundColor: theme.colors.background.secondary,
-    fontFamily: 'Klee One',
   },
   previewContainer: {
     marginTop: remToPx(theme.spacing[4]),
@@ -236,13 +236,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   submitButton: {
     marginTop: remToPx(theme.spacing[4]),
   },
   submitButtonText: {
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
 });
