@@ -1,6 +1,7 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import { useState } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -30,6 +31,10 @@ export default function ThreadDetailModal({
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    if (message.length > 200) {
+      Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
+      return;
+    }
     setSending(true);
     try {
       await onSendMessage?.(message);
@@ -66,6 +71,7 @@ export default function ThreadDetailModal({
               value={message}
               onChangeText={setMessage}
               multiline
+              maxLength={200}
             />
             <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending}>
               <Text style={styles.sendButtonText}>{sending ? '送信中...' : '送信'}</Text>

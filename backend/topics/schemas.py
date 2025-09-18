@@ -1,18 +1,19 @@
 import typing
 from ninja import Schema
+from pydantic import Field
 from datetime import datetime
 from typing import Optional, List
 import uuid
 
 
 class TopicCreateIn(Schema):
-    title: str
-    description: Optional[str] = ""
+    title: str = Field(..., max_length=200)
+    description: Optional[str] = Field("", max_length=100)
 
 
 class TopicUpdateIn(Schema):
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = Field(None, max_length=100)
 
 
 class TopicOut(Schema):

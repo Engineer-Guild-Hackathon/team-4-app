@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from typing import List, Optional
 
 from ninja import ModelSchema, Schema
-from pydantic import computed_field
+from pydantic import computed_field, Field
 from topics.schemas import TopicOut
 
 User = get_user_model()
@@ -51,7 +51,7 @@ class UserIn(Schema):
     password: str
 
 class UserProfileUpdateIn(Schema):
-    bio: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=500)
 
 class PasswordResetRequestIn(Schema):
     email: str

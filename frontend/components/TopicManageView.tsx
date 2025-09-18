@@ -78,6 +78,14 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
       Alert.alert('エラー', 'タイトルを入力してください');
       return;
     }
+    if (newTopicTitle.length > 200) {
+      Alert.alert('エラー', 'タイトルは200文字以内で入力してください');
+      return;
+    }
+    if (newTopicDescription.length > 100) {
+      Alert.alert('エラー', '説明は100文字以内で入力してください');
+      return;
+    }
     try {
       await createTopic(newTopicTitle.trim(), newTopicDescription.trim());
       setNewTopicTitle('');
@@ -330,6 +338,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               placeholder="タイトル"
               value={newTopicTitle}
               onChangeText={setNewTopicTitle}
+              maxLength={200}
             />
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -338,6 +347,7 @@ export function TopicManageView({ onBack }: TopicManageViewProps) {
               onChangeText={setNewTopicDescription}
               multiline
               numberOfLines={3}
+              maxLength={100}
             />
             <Button variant="primary" onPress={handleCreateTopic}>
               作成

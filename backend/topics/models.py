@@ -8,7 +8,7 @@ class Topic(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID"
     )
     title = models.CharField(max_length=200, verbose_name="タイトル")
-    description = models.TextField(blank=True, verbose_name="説明")
+    description = models.TextField(blank=True, verbose_name="説明", max_length=100)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
     users = models.ManyToManyField(
