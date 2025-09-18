@@ -1,4 +1,5 @@
 import { theme } from '@/styles/theme';
+import { TopicOut } from '@/types/topic';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -11,13 +12,8 @@ import {
   View,
 } from 'react-native';
 
-interface Topic {
-  id: string;
-  title: string;
-}
-
 interface TopicCarouselProps {
-  topics: Topic[];
+  topics: TopicOut[];
   currentIndex: number;
   onSelectIndex: (index: number) => void;
 }
@@ -25,10 +21,10 @@ interface TopicCarouselProps {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_WIDTH = 120;
 const ITEM_HEIGHT = 50;
-const ITEM_SPACING = 8;
+const ITEM_SPACING = 13;
 const ITEM_FULL_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const SPACER_ITEM_WIDTH = (SCREEN_WIDTH - ITEM_WIDTH) / 2;
-type DisplayTopic = { id: string; title?: string };
+type DisplayTopic = { id: string; title?: string; last_seen_at?: string };
 
 export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   topics,

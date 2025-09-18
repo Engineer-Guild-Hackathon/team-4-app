@@ -52,6 +52,7 @@ class UserTopic(models.Model):
         default=Status.ACTIVE, 
         verbose_name="ステータス"
     )
+    last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name="最終アクセス日時")
 
     class Meta:
         unique_together = ("user", "topic")

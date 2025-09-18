@@ -1,10 +1,21 @@
 import { PostOut } from '@/types/post';
 import { authedApiClient } from '@/utils/authedApiClient';
 
-export const getPosts = async (topicId?: string, userId?: number): Promise<PostOut[]> => {
+export const getPosts = async (
+  topicId?: string,
+  userId?: number,
+  updateLastSeen?: number,
+  createdFrom?: string
+): Promise<PostOut[]> => {
   let url = `/api/posts/?topic_id=${topicId}`;
   if (userId !== undefined) {
     url += `&author_id=${userId}`;
+  }
+  if (updateLastSeen !== undefined) {
+    url += `&update_last_seen=${updateLastSeen}`;
+  }
+  if (createdFrom !== undefined) {
+    url += `&created_from=${createdFrom}`;
   }
   const res = await authedApiClient(url);
   return Array.isArray(res) ? res : [];

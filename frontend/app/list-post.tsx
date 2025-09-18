@@ -201,7 +201,12 @@ export default function ListPostScreen() {
     const loadPosts = async () => {
       try {
         setLoading(true);
-        const fetchedPosts = await getPosts(params.topicId as string);
+        const fetchedPosts = await getPosts(
+          params.topicId as string,
+          undefined,
+          1,
+          new Date().toISOString()
+        );
         setPosts(fetchedPosts);
       } catch (e: unknown) {
         if (e instanceof Error) {
@@ -233,12 +238,10 @@ export default function ListPostScreen() {
     if (error) {
       return <Text style={styles.infoText}>{error}</Text>;
     }
-    if (posts.length === 0) {
-      return <Text style={styles.infoText}>このトピックにはもう投稿がありません。</Text>;
-    }
 
     return (
       <View style={styles.deckContainer}>
+        <Text>{new Date().toISOString()}</Text>
         {posts
           .map((post, index) => (
             <PostCard
