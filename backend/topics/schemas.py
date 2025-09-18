@@ -32,6 +32,9 @@ class MyTopicOut(Schema):
     created_at: datetime
     updated_at: datetime
     mentee_capacity: int
+    last_seen_at: Optional[datetime] = None
+
+
 
 
 class TopicListOut(Schema):
