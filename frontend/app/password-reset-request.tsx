@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { apiClient } from '@/utils/apiClient';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -67,14 +68,14 @@ export default function PasswordResetRequest() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>パスワードリセット</Text>
-        <Text style={styles.description}>
+        <MixedFontText style={styles.title}>パスワードリセット</MixedFontText>
+        <MixedFontText style={styles.description}>
           登録されているメールアドレスを入力してください。
           パスワードリセット用の6桁コードをメールでお送りします。
-        </Text>
+        </MixedFontText>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>メールアドレス</Text>
+          <MixedFontText style={styles.label}>メールアドレス</MixedFontText>
           <TextInput
             style={styles.input}
             value={email}
@@ -92,7 +93,7 @@ export default function PasswordResetRequest() {
           onPress={handleEmailSubmit}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? '送信中...' : 'コード送信'}</Text>
+          <MixedFontText style={styles.buttonText}>{loading ? '送信中...' : 'コード送信'}</MixedFontText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -100,7 +101,7 @@ export default function PasswordResetRequest() {
           onPress={() => router.push('/login')}
           disabled={loading}
         >
-          <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
+          <MixedFontText style={styles.backButtonText}>ログイン画面に戻る</MixedFontText>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -123,7 +124,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: remToPx(theme.spacing[5]),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   description: {
     fontSize: remToPx(theme.typography.fontSize.base),
@@ -131,7 +131,6 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[8]),
     color: theme.colors.text.secondary,
     lineHeight: 22,
-    fontFamily: 'Klee One',
   },
   inputContainer: {
     marginBottom: remToPx(theme.spacing[5]),
@@ -141,7 +140,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[2]),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   input: {
     borderWidth: 1,
@@ -151,7 +149,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   button: {
     backgroundColor: theme.colors.primary[300],
@@ -167,7 +164,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   backButton: {
     alignItems: 'center',
@@ -176,6 +172,5 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
-    fontFamily: 'Klee One',
   },
 });

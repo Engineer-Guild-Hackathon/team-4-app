@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
 import { theme } from '@/styles/theme';
 import { Button } from './Shared/Button';
+import { MixedFontText } from './Shared/MixedFontText';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import {
@@ -264,21 +265,21 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
     return (
       <View style={styles.requestCard}>
         <View style={styles.requestHeader}>
-          <Text style={styles.userName}>
+          <MixedFontText style={styles.userName}>
             {item.from_user.first_name} {item.from_user.last_name}
-          </Text>
-          <Text style={styles.username}>@{item.from_user.username}</Text>
+          </MixedFontText>
+          <MixedFontText style={styles.username}>@{item.from_user.username}</MixedFontText>
         </View>
 
-        <Text style={styles.topicTitle}>トピック: {item.topic.title}</Text>
+        <MixedFontText style={styles.topicTitle}>トピック: {item.topic.title}</MixedFontText>
 
         {/* 定員情報表示 */}
         {capacityInfo && (
           <View style={styles.capacityInfo}>
-            <Text style={styles.capacityText}>
+            <MixedFontText style={styles.capacityText}>
               定員: {capacityInfo.current_count}/{capacityInfo.capacity}人
-            </Text>
-            {isCapacityFull && <Text style={styles.capacityFullText}>満員です</Text>}
+            </MixedFontText>
+            {isCapacityFull && <MixedFontText style={styles.capacityFullText}>満員です</MixedFontText>}
           </View>
         )}
 
@@ -310,15 +311,15 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
   const renderMentee = ({ item }: { item: Mentee }) => (
     <View style={styles.menteeCard}>
       <View style={styles.menteeHeader}>
-        <Text style={styles.menteeName}>
+        <MixedFontText style={styles.menteeName}>
           {item.first_name} {item.last_name}
-        </Text>
-        <Text style={styles.menteeUsername}>@{item.username}</Text>
+        </MixedFontText>
+        <MixedFontText style={styles.menteeUsername}>@{item.username}</MixedFontText>
       </View>
 
-      <Text style={styles.menteeDate}>
+      <MixedFontText style={styles.menteeDate}>
         入門日: {new Date(item.created_at).toLocaleDateString()}
-      </Text>
+      </MixedFontText>
 
       <View style={styles.menteeButtonContainer}>
         <Button
@@ -356,7 +357,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
           >
             ✕
           </Button>
-          <Text style={styles.title}>師匠ダッシュボード</Text>
+          <MixedFontText style={styles.title}>師匠ダッシュボード</MixedFontText>
         </View>
 
         <View style={styles.content}>
@@ -366,17 +367,17 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
               style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
               onPress={() => setActiveTab('requests')}
             >
-              <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
+              <MixedFontText style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
                 リクエスト ({requests.length})
-              </Text>
+              </MixedFontText>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, activeTab === 'mentees' && styles.activeTab]}
               onPress={() => setActiveTab('mentees')}
             >
-              <Text style={[styles.tabText, activeTab === 'mentees' && styles.activeTabText]}>
+              <MixedFontText style={[styles.tabText, activeTab === 'mentees' && styles.activeTabText]}>
                 弟子 ({mentees.length})
-              </Text>
+              </MixedFontText>
             </TouchableOpacity>
           </View>
 
@@ -385,7 +386,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {requests.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>現在、師匠選択リクエストはありません</Text>
+                  <MixedFontText style={styles.emptyText}>現在、師匠選択リクエストはありません</MixedFontText>
                 </View>
               ) : (
                 <FlatList
@@ -403,7 +404,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <>
               {mentees.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>現在、弟子はいません</Text>
+                  <MixedFontText style={styles.emptyText}>現在、弟子はいません</MixedFontText>
                 </View>
               ) : (
                 <FlatList

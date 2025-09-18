@@ -112,7 +112,6 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     """
     弟子入りリクエストを作成します。定員内の場合は直接師弟関係を作成し、
     定員超過の場合は承認制でリクエストを作成します。
-
     - 認証が必要です。
     - 自分自身にリクエストを送ることはできません。
     - 既に師弟関係にある、またはリクエスト中のユーザーには再度リクエストできません。
@@ -132,15 +131,6 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
         from_user=from_user, to_user=to_user, topic=topic, status="pending"
     ).exists():
         return 400, {"message": "既にリクエストが送信されています"}
-
-    # 師匠のレベルが弟子より高いかチェック
-    try:
-        from_user_topic = UserTopic.objects.get(user=from_user, topic=topic)
-        to_user_topic = UserTopic.objects.get(user=to_user, topic=topic)
-        if to_user_topic.level <= from_user_topic.level:
-            return 400, {"message": "師匠のレベルが弟子より高くなければなりません"}
-    except UserTopic.DoesNotExist:
-        return 400, {"message": "指定されたトピックのユーザー情報が見つかりません"}
 
     # 師匠の定員をチェック
     is_within_capacity, current_count, capacity = _check_mentor_capacity(to_user, payload.topic_id)
@@ -174,12 +164,10 @@ def create_mentor_request(request: HttpRequest, payload: MentorRequestIn):
     else:
         # 定員超過の場合：承認制でリクエストを作成
         mentor_request = MentorRelationRequest.objects.create(
-            from_user=from_user, to_user=to_user, topic=topic
+            from_user=from_user, to_user=to_user, topic=topic, status="pending"
         )
         return mentor_request
 
-
-# completed 阿部TODO: リクエストが来る→定員に達しているので、既存の弟子を破門or卒業させる→弟子が新しく入る。の流れを実装する
 @router.post(
     "/requests/{request_id}/approve",
     response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
@@ -269,12 +257,39 @@ def reject_mentor_request(request: HttpRequest, request_id: int):
     return {"message": "リクエストを拒否しました"}
 
 
+@router.delete(
+    "/requests/{request_id}",
+    response={200: ErrorOut, 403: ErrorOut, 404: ErrorOut},
+    summary="師匠選択リクエストを削除する",
+    auth=JWTAuth(),
+)
+def delete_mentor_request(request: HttpRequest, request_id: int):
+    """
+    師匠選択リクエストを削除します。
+
+    - リクエストの送信者（from_user）である本人しか削除できません。
+    """
+    mentor_request = get_object_or_404(
+        MentorRelationRequest, id=request_id
+    )
+
+    # リクエストの送信者本人かチェック
+    if request.user.id != mentor_request.from_user.id:
+        return 403, {"message": "この操作を実行する権限がありません"}
+
+    # リクエストを削除
+    mentor_request.delete()
+
+    return {"message": "リクエストを削除しました"}
+
+
 @router.post(
     "/mentees/{mentee_id}/expel",
     response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を破門する",
     auth=JWTAuth(),
 )
+@transaction.atomic
 def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
     自身の弟子を破門し、師弟関係を解消します。
@@ -303,14 +318,13 @@ def expel_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     
     return _remove_relation(mentorship, action="expel")
 
-
-# completed 阿部TODO: 現時点は弟子と同レベルであることを想定しているが、弟子の方が高レベルの場合、delta + 1とし、元師匠より1レベル高くさせる
 @router.post(
     "/mentees/{mentee_id}/graduate",
     response={200: MenteeActionStatusOut, 404: ErrorOut},
     summary="弟子を卒業させる",
     auth=JWTAuth(),
 )
+@transaction.atomic
 def graduate_mentee(request: HttpRequest, mentee_id: int, data: TopicId):
     """
     自身の弟子を卒業させ、師弟関係を解消します。
@@ -426,30 +440,29 @@ def check_mentor_selection_required(request: HttpRequest, topic_id: str):
     except UserTopic.DoesNotExist:
         return 404, {"message": "ユーザートピックが見つかりません"}
 @router.get(
-    "/mentor-request-status/{topic_id}",
+    "/mentor-request-status/{user_id}/{topic_id}",
     summary="師匠選択リクエストの状態を取得",
-    response={200: dict, 400: dict},
+    response={200: dict, 404: dict},
     auth=JWTAuth(),
 )
-def get_mentor_request_status(request: HttpRequest, topic_id: str):
+def get_mentor_request_status(request: HttpRequest, user_id: int, topic_id: str):
     """
-    指定されたトピックでの師匠選択リクエストの状態を取得します。
+    指定されたユーザーとトピックでの師匠選択リクエストの状態を取得します。
+    最新のリクエスト（承認済み、拒否済み、保留中）を返します。
     """
     try:
-        # 最新の師匠選択リクエストを取得
+        # 指定されたユーザーの最新の師匠選択リクエストを取得
         latest_request = MentorRelationRequest.objects.filter(
-            from_user=request.user, topic_id=topic_id
+            from_user_id=user_id, topic_id=topic_id
         ).order_by('-created_at').first()
         
         if not latest_request:
-            return {"status": "none", "message": "メンターリクエストが見つかりません"}
+            return 404, {"message": "リクエストが見つかりません"}
         
         return {
             "status": latest_request.status,
-            "to_user_id": latest_request.to_user.id,
+            "request_id": latest_request.id,
             "to_username": latest_request.to_user.username,
-            "created_at": latest_request.created_at,
-            "message": f"{latest_request.to_user.username}へのリクエストは{latest_request.status}です"
         }
     except Exception as e:
         return 400, {"message": "リクエストステータスの取得に失敗しました"}
@@ -530,23 +543,25 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
             usertopic__topic_id=topic_id
         ).exclude(id=request.user.id)
         
-        # 師匠は弟子より高いレベルでなければならない
-        available_users = available_users.filter(
-            usertopic__topic_id=topic_id,
-            usertopic__level__gt=user_topic.level
-        )
-        
-        # 既に師弟関係にあるユーザーを除外
-        existing_mentors = MentorRelation.objects.filter(
-            mentee=request.user, topic_id=topic_id
-        ).values_list('mentor_id', flat=True)
-        available_users = available_users.exclude(id__in=existing_mentors)
-        
-        # 保留中のリクエストを送信済みユーザーを除外
-        pending_requests = MentorRelationRequest.objects.filter(
-            from_user=request.user, topic_id=topic_id, status="pending"
-        ).values_list('to_user_id', flat=True)
-        available_users = available_users.exclude(id__in=pending_requests)
+        # 師匠のレベル制限をユーザーステータスに応じて適用
+        if user_topic.status == UserTopic.Status.EXPELLED:
+            # 破門済みの場合は自分のレベル以下の師匠を選択可能
+            available_users = available_users.filter(
+                usertopic__topic_id=topic_id,
+                usertopic__level__lte=user_topic.level
+            )
+        elif user_topic.status == UserTopic.Status.GRADUATED:
+            # 卒業済みの場合は自分のレベル+1以上の師匠を選択可能
+            available_users = available_users.filter(
+                usertopic__topic_id=topic_id,
+                usertopic__level__gte=user_topic.level + 1
+            )
+        else:
+            # 通常の場合は師匠は弟子より高いレベルでなければならない
+            available_users = available_users.filter(
+                usertopic__topic_id=topic_id,
+                usertopic__level__gt=user_topic.level
+            )
         
         return [
             UserEasyOut(id=user.id, username=user.username)
