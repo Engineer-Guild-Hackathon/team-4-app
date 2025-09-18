@@ -423,7 +423,7 @@ export default function SelectLevelMentorScreen() {
             >
 
               参加
-            </Text>
+            </MixedFontText>
 
           </View>
         </View>
