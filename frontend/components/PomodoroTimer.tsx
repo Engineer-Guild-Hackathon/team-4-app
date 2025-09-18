@@ -175,12 +175,11 @@ export default function PomodoroTimer() {
               <MixedFontText style={styles.errorText}>投稿先のトピックが選択されていません。</MixedFontText>
             )}
             <Button
-              variant="secondary"
+              variant="primary"
               style={styles.postFinishButton}
-              textStyle={styles.postFinishText}
               onPress={endOutputAndBreak}
             >
-              投稿を終了して休憩する
+              休憩を開始する
             </Button>
           </View>
         )}
@@ -295,16 +294,18 @@ const styles = StyleSheet.create({
   },
   outputContainer: {
     width: '90%',
-    height: '70%',
+    height: '80%',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 15,
+    flexDirection: 'column',
   },
   outputHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    flexShrink: 0,
   },
   outputPhaseText: {
     fontSize: remToPx(theme.typography.fontSize.xl),
@@ -318,13 +319,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   postFinishButton: {
-    marginTop: 10,
-    backgroundColor: theme.colors.primary[600],
-  },
-  postFinishText: {
-    color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
-    fontWeight: theme.typography.fontWeight.semibold,
+    marginTop: 'auto',
   },
   errorText: {
     textAlign: 'center',
