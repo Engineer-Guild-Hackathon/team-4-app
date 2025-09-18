@@ -67,6 +67,13 @@ export default function UserCreateScreen() {
       <TouchableOpacity style={styles.button} onPress={handleCreate}>
         <MixedFontText style={styles.buttonText}>ユーザー作成</MixedFontText>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push('/login')}
+      >
+        <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -123,5 +130,15 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
+  },
+  backButton: {
+    alignItems: 'center',
+    padding: remToPx(theme.spacing[3]),
+    marginTop: remToPx(theme.spacing[4]),
+  },
+  backButtonText: {
+    color: theme.colors.text.link,
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontFamily: 'Klee One',
   },
 });
