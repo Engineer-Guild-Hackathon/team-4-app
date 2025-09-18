@@ -1,12 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, Switch } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
-import * as Haptics from 'expo-haptics';
 
-// 時間フォーマット関数
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -17,7 +14,6 @@ const CIRCLE_RADIUS = 120;
 const CIRCLE_STROKE_WIDTH = 15;
 const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
 
-// 時間設定用のUIコンポーネント
 const DurationSetter = ({
   label,
   durationMinutes,
@@ -45,35 +41,15 @@ const DurationSetter = ({
 );
 
 export default function PomodoroTimer() {
-  // グローバルなstateと関数を取得
   const {
-    phase,
-    secondsLeft,
-    activeTopicId,
-    studyDuration,
-    setStudyDuration,
-    outputDuration,
-    setOutputDuration,
-    breakDuration,
-    setBreakDuration,
-    startStudy,
-    closeTimer,
-    endOutputAndBreak,
+    phase, secondsLeft, activeTopicId,
+    studyDuration, setStudyDuration,
+    outputDuration, setOutputDuration,
+    breakDuration, setBreakDuration,
+    isSoundEnabled, setIsSoundEnabled,
+    startStudy, closeTimer, endOutputAndBreak 
   } = useTimer();
 
-  const phaseRef = useRef(phase);
-  useEffect(() => {
-    // 最初の表示時ではなく、フェーズが実際に切り替わった時だけ実行
-    if (
-      phaseRef.current !== phase &&
-      (phase === 'studying' || phase === 'output' || phase === 'break')
-    ) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    phaseRef.current = phase;
-  }, [phase]);
-
-  // モーダルを表示するのは idle, studying, output のいずれかのフェーズ
   const isVisible = phase === 'idle' || phase === 'studying' || phase === 'output';
   if (!isVisible) {
     return null;
@@ -106,18 +82,22 @@ export default function PomodoroTimer() {
               <DurationSetter
                 label="学習"
                 durationMinutes={studyDuration / 60}
-                onUpdate={mins => setStudyDuration(mins * 60)}
+                onUpdate={mins => setStudyDuration(mins * 10)}
               />
               <DurationSetter
                 label="アウトプット"
                 durationMinutes={outputDuration / 60}
-                onUpdate={mins => setOutputDuration(mins * 60)}
+                onUpdate={mins => setOutputDuration(mins * 10)}
               />
               <DurationSetter
                 label="休憩"
                 durationMinutes={breakDuration / 60}
-                onUpdate={mins => setBreakDuration(mins * 60)}
+                onUpdate={mins => setBreakDuration(mins * 10)}
               />
+              <View style={styles.setterContainer}>
+                <Text style={styles.setterLabel}>通知音</Text>
+                <Switch value={isSoundEnabled} onValueChange={setIsSoundEnabled} />
+              </View>
             </View>
             <Pressable style={styles.button} onPress={startStudy}>
               <Text style={styles.buttonText}>開始</Text>

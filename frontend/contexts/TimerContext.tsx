@@ -12,19 +12,19 @@ type TimerPhase = 'off' | 'idle' | 'studying' | 'output' | 'break';
 interface TimerContextType {
   phase: TimerPhase;
   secondsLeft: number;
-  activeTopicId: string | null; // セッション中のトピックIDを記憶
+  activeTopicId: string | null; 
   studyDuration: number;
   setStudyDuration: React.Dispatch<React.SetStateAction<number>>;
   outputDuration: number;
   setOutputDuration: React.Dispatch<React.SetStateAction<number>>;
   breakDuration: number;
   setBreakDuration: React.Dispatch<React.SetStateAction<number>>;
-  isSoundEnabled: boolean; // ★ 通知音設定
-  setIsSoundEnabled: React.Dispatch<React.SetStateAction<boolean>>; // ★
-  startTimerSession: (topicId?: string) => void; // タイマーセッションを開始する新しい関数
-  startStudy: () => void; // 学習を開始
-  closeTimer: () => void; // タイマーを閉じる
-  endOutputAndBreak: () => void; // アウトプットを終了して休憩へ
+  isSoundEnabled: boolean;
+  setIsSoundEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  startTimerSession: (topicId?: string) => void; 
+  startStudy: () => void; 
+  closeTimer: () => void; 
+  endOutputAndBreak: () => void; 
 }
 
 // --- コンテキストの作成 ---
@@ -55,11 +55,11 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
 
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true, // 通知をアラートとして表示
-        shouldPlaySound: true, // 通知音の再生
-        shouldSetBadge: false, // アプリアイコンのバッジの設定
-        shouldShowBanner: true, // バナーの表示
-        shouldShowList: true, // 通知リストへの表示
+        shouldShowAlert: false, //何の通知かわからん
+        shouldPlaySound: true, 
+        shouldSetBadge: false, 
+        shouldShowBanner: false, //バナー
+        shouldShowList: false, // 通知センター
       }),
     });
   }, []);
