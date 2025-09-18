@@ -1,12 +1,11 @@
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   Animated,
   Dimensions,
   FlatList,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -36,7 +35,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
   onSelectIndex,
 }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<DisplayTopic>>(null);
 
   const displayData: DisplayTopic[] = [
     { id: 'left-spacer' },
@@ -56,7 +55,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     }
   }, [currentIndex]);
 
-  const renderItem = ({ item, index }: { item: DisplayTopic; index: number }) => {
+  const renderItem = useCallback(({ item, index }: { item: DisplayTopic; index: number }) => {
     if (!item.title) {
       return <View style={{ width: SPACER_ITEM_WIDTH }} />;
     }
@@ -92,13 +91,13 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
               ]}
               numberOfLines={1}
             >
-              {item.title === '+' ? '+' : item.title.substring(0, 8)}
+              {item.title === '＋' ? '＋' : item.title.substring(0, 8)}
             </MixedFontText>
           </View>
         </Animated.View>
       </TouchableOpacity>
     );
-  };
+  }, [currentIndex, onSelectIndex, scrollX]);
 
   return (
     <View style={styles.container}>

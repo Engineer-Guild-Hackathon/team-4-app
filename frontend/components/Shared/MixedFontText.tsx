@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextProps } from 'react-native';
+import { Text, TextProps, StyleProp, TextStyle } from 'react-native';
 import { segmentByScript } from '../../utils/language';
 
 type MixedFontTextProps = TextProps & {
@@ -7,24 +7,27 @@ type MixedFontTextProps = TextProps & {
   fontSize?: number;
 };
 
-export const MixedFontText = ({ children, fontSize = 16, ...props }: MixedFontTextProps) => {
+export const MixedFontText = ({
+  children,
+  fontSize = 16,
+  style,
+  ...props
+}: MixedFontTextProps) => {
   if (typeof children !== 'string') {
-    return <Text {...props}>{children}</Text>;
+    return <Text style={style} {...props}>{children}</Text>;
   }
 
   const segments = segmentByScript(children);
 
+  // Concatenate all segments into a single Text element
   return (
-    <Text {...props} style={[{ fontSize }, props.style]}>
+    <Text style={style} {...props}>
       {segments.map(({ segment, isJapanese }, index) => (
         <Text
-          key={index}
+          key={index.toString()} 
           style={[
-            {
-              fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular',
-              fontSize,
-            },
-            props.style,
+            style as StyleProp<TextStyle>, 
+            { fontFamily: isJapanese ? 'Klee One' : 'SourceSerif4-Regular', fontSize }
           ]}
         >
           {segment}
