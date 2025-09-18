@@ -4,14 +4,17 @@ PODS:
   - EXAV (16.0.7):
     - ExpoModulesCore
     - ReactCommon/turbomodule/core
-  - EXConstants (18.0.8):
+  - EXConstants (18.0.9):
     - ExpoModulesCore
   - EXImageLoader (6.0.0):
     - ExpoModulesCore
     - React-Core
+  - EXJSONUtils (0.15.0)
+  - EXManifests (1.0.8):
+    - ExpoModulesCore
   - EXNotifications (0.32.11):
     - ExpoModulesCore
-  - Expo (54.0.7):
+  - Expo (54.0.8):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -36,6 +39,177 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - expo-dev-client (6.0.12):
+    - EXManifests
+    - expo-dev-launcher
+    - expo-dev-menu
+    - expo-dev-menu-interface
+    - EXUpdatesInterface
+  - expo-dev-launcher (6.0.11):
+    - EXManifests
+    - expo-dev-launcher/Main (= 6.0.11)
+    - expo-dev-menu
+    - expo-dev-menu-interface
+    - ExpoModulesCore
+    - EXUpdatesInterface
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-jsinspector
+    - React-NativeModulesApple
+    - React-RCTAppDelegate
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactAppDependencyProvider
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - expo-dev-launcher/Main (6.0.11):
+    - EXManifests
+    - expo-dev-launcher/Unsafe
+    - expo-dev-menu
+    - expo-dev-menu-interface
+    - ExpoModulesCore
+    - EXUpdatesInterface
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-jsinspector
+    - React-NativeModulesApple
+    - React-RCTAppDelegate
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactAppDependencyProvider
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - expo-dev-launcher/Unsafe (6.0.11):
+    - EXManifests
+    - expo-dev-menu
+    - expo-dev-menu-interface
+    - ExpoModulesCore
+    - EXUpdatesInterface
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-jsinspector
+    - React-NativeModulesApple
+    - React-RCTAppDelegate
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactAppDependencyProvider
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - expo-dev-menu (7.0.11):
+    - expo-dev-menu/Main (= 7.0.11)
+    - expo-dev-menu/ReactNativeCompatibles (= 7.0.11)
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - expo-dev-menu-interface (2.0.0)
+  - expo-dev-menu/Main (7.0.11):
+    - EXManifests
+    - expo-dev-menu-interface
+    - ExpoModulesCore
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-jsinspector
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - expo-dev-menu/ReactNativeCompatibles (7.0.11):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - ExpoAsset (12.0.8):
     - ExpoModulesCore
   - ExpoBlur (15.0.7):
@@ -46,7 +220,7 @@ PODS:
     - ExpoModulesCore
   - ExpoHaptics (15.0.7):
     - ExpoModulesCore
-  - ExpoHead (6.0.5):
+  - ExpoHead (6.0.6):
     - ExpoModulesCore
     - RNScreens
   - ExpoImage (3.0.8):
@@ -64,7 +238,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLinking (8.0.8):
     - ExpoModulesCore
-  - ExpoModulesCore (3.0.15):
+  - ExpoModulesCore (3.0.16):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -98,6 +272,8 @@ PODS:
   - ExpoVideo (3.0.11):
     - ExpoModulesCore
   - ExpoWebBrowser (15.0.7):
+    - ExpoModulesCore
+  - EXUpdatesInterface (2.0.0):
     - ExpoModulesCore
   - FBLazyVector (0.81.4)
   - hermes-engine (0.81.4):
@@ -2161,8 +2337,14 @@ DEPENDENCIES:
   - EXAV (from `../node_modules/expo-av/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
+  - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
+  - EXManifests (from `../node_modules/expo-manifests/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - Expo (from `../node_modules/expo`)
+  - expo-dev-client (from `../node_modules/expo-dev-client/ios`)
+  - expo-dev-launcher (from `../node_modules/expo-dev-launcher`)
+  - expo-dev-menu (from `../node_modules/expo-dev-menu`)
+  - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
@@ -2181,6 +2363,7 @@ DEPENDENCIES:
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - ExpoVideo (from `../node_modules/expo-video/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
+  - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2278,10 +2461,22 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-constants/ios"
   EXImageLoader:
     :path: "../node_modules/expo-image-loader/ios"
+  EXJSONUtils:
+    :path: "../node_modules/expo-json-utils/ios"
+  EXManifests:
+    :path: "../node_modules/expo-manifests/ios"
   EXNotifications:
     :path: "../node_modules/expo-notifications/ios"
   Expo:
     :path: "../node_modules/expo"
+  expo-dev-client:
+    :path: "../node_modules/expo-dev-client/ios"
+  expo-dev-launcher:
+    :path: "../node_modules/expo-dev-launcher"
+  expo-dev-menu:
+    :path: "../node_modules/expo-dev-menu"
+  expo-dev-menu-interface:
+    :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
   ExpoBlur:
@@ -2318,6 +2513,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-video/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
+  EXUpdatesInterface:
+    :path: "../node_modules/expo-updates-interface/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2475,28 +2672,35 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   EXApplication: 296622817d459f46b6c5fe8691f4aac44d2b79e7
   EXAV: e3fefaca88f14624bca01d9a128562a5f8e738f8
-  EXConstants: 7e4654405af367ff908c863fe77a8a22d60bd37d
+  EXConstants: a95804601ee4a6aa7800645f9b070d753b1142b3
   EXImageLoader: 189e3476581efe3ad4d1d3fb4735b7179eb26f05
+  EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
+  EXManifests: 224345a575fca389073c416297b6348163f28d1a
   EXNotifications: 7a2975f4e282b827a0bc78bb1d232650cb569bbd
-  Expo: 170291b86adbf5fe95d36bc7a90288203cec739e
+  Expo: 4875e1cc72ae1398e33bcd6632943a4e93926ecd
+  expo-dev-client: f3434d6ca09ecb14ae48c2a3912bdbb07464cc85
+  expo-dev-launcher: b9538b1e0dc3fd2ddad75017b6ee9c8dfb206925
+  expo-dev-menu: 8f868d1bab6d673d59e5a08ca610056b290dd555
+  expo-dev-menu-interface: 600df12ea01efecdd822daaf13cc0ac091775533
   ExpoAsset: 84810d6fed8179f04d4a7a4a6b37028bbd726e26
   ExpoBlur: 2dd8f64aa31f5d405652c21d3deb2d2588b1852f
   ExpoFileSystem: 4fb06865906e781329eb67166bd64fc4749c3019
   ExpoFont: 86ceec09ffed1c99cfee36ceb79ba149074901b5
   ExpoHaptics: 807476b0c39e9d82b7270349d6487928ce32df84
-  ExpoHead: bd65071c501ef18c54b68e5003d595154e04f896
+  ExpoHead: 78f14a8573ae5b882123b272c0af20a80bfa58f6
   ExpoImage: e88f500585913969b930e13a4be47277eb7c6de8
   ExpoImagePicker: d251aab45a1b1857e4156fed88511b278b4eee1c
   ExpoKeepAwake: 1a2e820692e933c94a565ec3fbbe38ac31658ffe
   ExpoLinearGradient: a464898cb95153125e3b81894fd479bcb1c7dd27
   ExpoLinking: f051f28e50ea9269ff539317c166adec81d9342d
-  ExpoModulesCore: 9281d8f1cda9d0c37dbce34c26014212b22eb8c0
+  ExpoModulesCore: a28d1b4a5a9fbdacc41ca8d0c777a2d73496b022
   ExpoSecureStore: 9c6571fe3fcb045a671c4011c451546eaaab98fd
   ExpoSplashScreen: cbb839de72110dea1851dd3e85080b7923af2540
   ExpoSymbols: 1ae04ce686de719b9720453b988d8bc5bf776c68
   ExpoSystemUI: 6cd74248a2282adf6dec488a75fa532d69dee314
   ExpoVideo: 6ffaf450d18b2ca33bdf92acaea80271b4a06c92
   ExpoWebBrowser: 533bc2a1b188eec1c10e4926decf658f1687b5e5
+  EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: 9e0cd874afd81d9a4d36679daca991b58b260d42
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7

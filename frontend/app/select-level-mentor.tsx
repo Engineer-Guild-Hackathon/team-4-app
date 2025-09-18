@@ -11,6 +11,7 @@ import { getPosts } from '@/services/api/post';
 import { getTopicLevelInfo, joinTopic, leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
 import { PostMediaOut, PostOut } from '@/types/post';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -301,12 +302,14 @@ export default function SelectLevelMentorScreen() {
 
   return (
     <View style={styles.container}>
+
       {/* 左上に戻るボタン */}
       <View style={styles.backButtonContainer}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backButtonText}>← 戻る</Text>
         </TouchableOpacity>
       </View>
+
 
       {/* 右側レベル選択UI */}
       <View style={styles.rightBarContainer}>
@@ -319,14 +322,17 @@ export default function SelectLevelMentorScreen() {
       </View>
       {/* 中央にpost表示とタイトル */}
       <View style={styles.centerContent}>
-        {/* <Text style={styles.levelDisplay}>選択中のレベル: {level}</Text> */}
+        {/* <MixedFontText style={styles.levelDisplay}>選択中のレベル: {level}</MixedFontText> */}
         {loading ? (
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
           <>
+
             {/* 師匠選択が必要な場合 */}
             {mentorData?.required && (
               <View style={styles.mentorSelectionContainer}>
+
+                  
                 <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
                 <Text style={styles.mentorSelectionSubtitle}>
                   {userStatus === 'GRADUATED' &&
@@ -337,6 +343,7 @@ export default function SelectLevelMentorScreen() {
                     `破門済みのため、師匠を選択してください`}
                   {userStatus === 'ACTIVE' && '師匠を選択してください'}
                 </Text>
+
 
                 <FlatList
                   data={mentorData.mentors}
@@ -349,7 +356,7 @@ export default function SelectLevelMentorScreen() {
                       ]}
                       onPress={() => setSelectedMentor(item)}
                     >
-                      <Text style={styles.mentorName}>{item.username}</Text>
+                      <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
                     </TouchableOpacity>
                   )}
                   style={styles.mentorList}
@@ -360,7 +367,7 @@ export default function SelectLevelMentorScreen() {
                   style={styles.noSelectionButton}
                   onPress={handleNoMentorSelection}
                 >
-                  <Text style={styles.noSelectionButtonText}>師匠を選択しない</Text>
+                  <MixedFontText style={styles.noSelectionButtonText}>師匠を選択しない</MixedFontText>
                 </TouchableOpacity>
               </View>
             )}
@@ -379,10 +386,10 @@ export default function SelectLevelMentorScreen() {
                     return null;
                   })}
                 </View>
-                <Text style={styles.postContent}>{posts[0].content || '内容なし'}</Text>
+                <MixedFontText style={styles.postContent}>{posts[0].content || '内容なし'}</MixedFontText>
               </View>
             ) : (
-              <Text style={{ marginTop: 20 }}>投稿がありません</Text>
+              <MixedFontText style={{ marginTop: 20 }}>投稿がありません</MixedFontText>
             )}
           </>
         )}
@@ -405,7 +412,7 @@ export default function SelectLevelMentorScreen() {
               minWidth: 180,
             }}
           >
-            <Text
+            <MixedFontText
               style={{
                 color: '#fff',
                 fontSize: 18,
@@ -414,8 +421,10 @@ export default function SelectLevelMentorScreen() {
               }}
               onPress={handleJoin}
             >
+
               参加
             </Text>
+
           </View>
         </View>
       )}

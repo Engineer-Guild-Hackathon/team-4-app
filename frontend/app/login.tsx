@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-nativ
 import { useAuth } from '@/hooks/AuthProvider';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -24,7 +25,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>ログイン</Text>
+      <MixedFontText style={styles.title}>ログイン</MixedFontText>
       <TextInput
         style={styles.input}
         placeholder="ユーザー名"
@@ -39,9 +40,9 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <MixedFontText style={styles.error}>{error}</MixedFontText> : null}
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</Text>
+        <MixedFontText style={styles.buttonText}>{loading ? '認証中...' : 'ログイン'}</MixedFontText>
       </TouchableOpacity>
 
       {/* パスワードリセットリンク */}
@@ -49,12 +50,12 @@ export default function LoginScreen() {
         style={styles.linkButton}
         onPress={() => router.push('/password-reset-request')}
       >
-        <Text style={styles.linkText}>パスワードを忘れた方</Text>
+        <MixedFontText style={styles.linkText}>パスワードを忘れた方</MixedFontText>
       </TouchableOpacity>
 
       {/* ユーザー作成画面へのリンク */}
       <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/signup')}>
-        <Text style={styles.linkButtonText}>新規ユーザー登録はこちら</Text>
+        <MixedFontText style={styles.linkButtonText}>新規ユーザー登録はこちら</MixedFontText>
       </TouchableOpacity>
     </View>
   );
@@ -73,7 +74,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[20]), // xxl
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   input: {
     width: '100%',
@@ -86,13 +86,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: remToPx(theme.spacing[4]), // md
     fontSize: remToPx(theme.typography.fontSize.base),
     backgroundColor: theme.colors.background.secondary,
-    color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    color: theme.colors.text.primary, 
   },
   error: {
     color: theme.colors.semantic.error.main,
-    marginBottom: remToPx(theme.spacing[4]), // md
-    fontFamily: 'Klee One',
+    marginBottom: remToPx(theme.spacing[4]), // md 
   },
   button: {
     width: '100%',
@@ -106,7 +104,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   linkButton: {
     marginTop: remToPx(theme.spacing[4]), // md
@@ -115,12 +112,10 @@ const styles = StyleSheet.create({
   linkButtonText: {
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
-    fontFamily: 'Klee One',
   },
   linkText: {
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
     textAlign: 'center',
-    fontFamily: 'Klee One',
   },
 });
