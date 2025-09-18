@@ -32,6 +32,7 @@ export const typography = {
     '4xl': '2.25rem', // 36px
     '5xl': '3rem', // 48px
     '6xl': '3.75rem', // 60px
+    '7xl': '4.5rem', // 72px
   },
 
   fontWeight: {
@@ -44,7 +45,7 @@ export const typography = {
     tight: '1.25',
     normal: '1.5',
     relaxed: '1.625',
-    snug: '1.375', // Added for message content
+    snug: '1.375', 
     loose: '2',
   },
 
