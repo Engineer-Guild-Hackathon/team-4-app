@@ -56,7 +56,7 @@ class ThreadMessage(models.Model):
         related_name="thread_messages",
         verbose_name="投稿者",
     )
-    content = models.TextField(verbose_name="メッセージ内容")
+    content = models.TextField(verbose_name="メッセージ内容", max_length=200)
     parent = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,

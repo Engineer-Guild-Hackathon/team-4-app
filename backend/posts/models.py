@@ -4,7 +4,7 @@ from topics.models import Topic
 
 class Post(models.Model):
     """投稿モデル"""
-    content = models.TextField("投稿内容")
+    content = models.TextField("投稿内容", max_length=500)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name="投稿者")
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='posts', verbose_name="トピック")
 

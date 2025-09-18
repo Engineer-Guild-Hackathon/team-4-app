@@ -82,6 +82,10 @@ export default function CreatePostScreen() {
       Alert.alert('エラー', '投稿内容を入力するか、メディアを選択してください');
       return;
     }
+    if (content.length > 500) {
+      Alert.alert('エラー', '投稿内容は500文字以内で入力してください');
+      return;
+    }
     if (!topicId) {
       Alert.alert('エラー', '投稿先のトピックが見つかりません');
       return;
@@ -142,6 +146,7 @@ export default function CreatePostScreen() {
         value={content}
         onChangeText={setContent}
         multiline
+        maxLength={500}
       />
 
       <TouchableOpacity style={styles.button} onPress={pickMedia} disabled={isPickingMedia}>

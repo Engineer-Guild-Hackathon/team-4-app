@@ -60,6 +60,10 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!user || !accessToken) return;
+    if (bio.length > 500) {
+      Alert.alert('エラー', '自己紹介は500文字以内で入力してください');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -183,6 +187,7 @@ export default function EditProfileScreen() {
           onChangeText={setBio}
           placeholder="自己紹介を入力..."
           multiline
+          maxLength={500}
         />
 
         <View style={styles.spacer} />
