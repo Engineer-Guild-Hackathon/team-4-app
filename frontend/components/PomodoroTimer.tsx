@@ -5,6 +5,7 @@ import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { buttonHaptic, importantActionHaptic, successHaptic } from '@/utils/haptics';
 import { Button } from './Shared/Button';
 import { theme } from '@/styles/theme';
 
@@ -30,28 +31,26 @@ const DurationSetter = ({
   <View style={styles.setterContainer}>
     <MixedFontText style={styles.setterLabel}>{label}</MixedFontText>
     <View style={styles.setterControls}>
-      <Button
-        variant="secondary"
-        size="icon"
-        onPress={() => onUpdate(Math.max(1, durationMinutes - 1))}
+      <Pressable
+        onPress={() => {
+          buttonHaptic();
+          onUpdate(Math.max(1, durationMinutes - 1));
+        }}
         style={styles.setterButton}
         textStyle={styles.setterButtonText}
       >
-        −
-      </Button>
-      <View style={styles.setterValueContainer}>
-        <MixedFontText style={styles.setterValue}>{durationMinutes}</MixedFontText>
-        <MixedFontText style={styles.setterUnit}>分</MixedFontText>
-      </View>
-      <Button
-        variant="secondary"
-        size="icon"
-        onPress={() => onUpdate(durationMinutes + 1)}
+        <MixedFontText style={styles.setterButtonText}>-</MixedFontText>
+      </Pressable>
+      <MixedFontText style={styles.setterValue}>{durationMinutes} 分</MixedFontText>
+      <Pressable 
+        onPress={() => {
+          buttonHaptic();
+          onUpdate(durationMinutes + 1);
+        }} 
         style={styles.setterButton}
-        textStyle={styles.setterButtonText}
       >
-        ＋
-      </Button>
+        <MixedFontText style={styles.setterButtonText}>+</MixedFontText>
+      </Pressable>
     </View>
   </View>
 );
@@ -121,10 +120,22 @@ export default function PomodoroTimer() {
                 />
               </View>
             </View>
-            <Button variant="primary" size="lg" style={styles.button} onPress={startStudy}>
-              開始
-            </Button>
-            <Button variant="icon" size="icon" style={styles.closeButton} onPress={closeTimer}>
+            <Pressable 
+              style={styles.button} 
+              onPress={() => {
+                importantActionHaptic();
+                startStudy();
+              }}
+            >
+              <MixedFontText style={styles.buttonText}>開始</MixedFontText>
+            </Pressable>
+            <Pressable 
+              style={styles.closeButton} 
+              onPress={() => {
+                buttonHaptic();
+                closeTimer();
+              }}
+            >
               <MixedFontText style={styles.closeText}>×</MixedFontText>
             </Button>
           </>
@@ -163,7 +174,18 @@ export default function PomodoroTimer() {
                 >{formatTime(secondsLeft)}</MixedFontText>
               </View>
             </View>
-            <Button variant="icon" size="icon" style={styles.closeButton} onPress={closeTimer}><MixedFontText style={styles.closeText}>×</MixedFontText></Button>
+            <View style={styles.buttonDisabled}>
+              <MixedFontText style={styles.buttonText}>集中</MixedFontText>
+            </View>
+            <Pressable 
+              style={styles.closeButton} 
+              onPress={() => {
+                buttonHaptic();
+                closeTimer();
+              }}
+            >
+              <MixedFontText style={styles.closeText}>×</MixedFontText>
+            </Pressable>
           </>
         )}
 
@@ -178,13 +200,15 @@ export default function PomodoroTimer() {
             ) : (
               <MixedFontText style={styles.errorText}>投稿先のトピックが選択されていません。</MixedFontText>
             )}
-            <Button
-              variant="primary"
-              style={styles.postFinishButton}
-              onPress={endOutputAndBreak}
+            <Pressable 
+              style={styles.PostFinishButton} 
+              onPress={() => {
+                successHaptic();
+                endOutputAndBreak();
+              }}
             >
-              休憩を開始する
-            </Button>
+              <MixedFontText style={styles.PostFinishText}>投稿を終了して休憩する</MixedFontText>
+            </Pressable>
           </View>
         )}
       </BlurView>

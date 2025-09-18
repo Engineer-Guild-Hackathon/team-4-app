@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { buttonHaptic, formSubmitHaptic, successHaptic, errorHaptic, selectionHaptic } from '@/utils/haptics';
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得

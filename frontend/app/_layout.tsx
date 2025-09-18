@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { modalHaptic } from '@/utils/haptics';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -27,7 +28,13 @@ const BreakTimerOverlay = () => {
         <MixedFontText style={styles.breakLabelText}>休憩中</MixedFontText>
         <MixedFontText style={styles.breakTimeText}>{formatTime(secondsLeft)}</MixedFontText>
       </View>
-      <Pressable style={styles.breakCloseCircle} onPress={closeTimer}>
+      <Pressable 
+        style={styles.breakCloseCircle} 
+        onPress={() => {
+          modalHaptic();
+          closeTimer();
+        }}
+      >
         <MixedFontText style={styles.breakCloseButtonText}>×</MixedFontText>
       </Pressable>
     </View>
@@ -63,14 +70,12 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="signup" options={{ headerShown: false }} />
             
             <Stack.Screen 
             name="password-reset-request" 
             options={{ 
-
                 title: 'パスワードリセット',
                   headerShown: false }} 
           />
@@ -106,6 +111,9 @@ export default function RootLayout() {
             <Stack.Screen
               name="list-post"
               options={{
+                presentation: 'modal', 
+                title: 'プロフィール編集',
+                headerShown: false
                 presentation: 'containedTransparentModal',
                 title: '投稿一覧',
                 headerShown: false,

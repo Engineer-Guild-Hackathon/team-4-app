@@ -21,6 +21,9 @@ import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
 import { getMentorRequestStatus, deleteMentorRequest } from '@/services/api/mentorship';
+import { importantActionHaptic } from '@/utils/haptics';
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -153,7 +156,13 @@ export default function HomeScreen() {
             </Button>
           </Link>
           {phase !== 'break' && (
-            <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
+            <TouchableOpacity 
+              style={styles.headerCenterButton} 
+              onPress={() => {
+                importantActionHaptic();
+                handleStartPomodoro();
+              }}
+            >
               <MixedFontText style={styles.pomodoroButtonText}>集中</MixedFontText>
             </TouchableOpacity>
           )}
@@ -189,7 +198,6 @@ export default function HomeScreen() {
   );
 }
 
-// ★ 修正点: スタイルの定義方法を改善
 const fabBaseStyle: ViewStyle = {
   position: 'absolute',
   right: remToPx(theme.spacing[6]), // 24px

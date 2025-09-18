@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { selectionHaptic } from '@/utils/haptics';
 
 interface TopicCarouselProps {
   topics: TopicOut[];
@@ -82,6 +83,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
     return (
       <TouchableOpacity
         onPress={() => {
+          selectionHaptic();
           if (currentIndex === pageIndex) {
             router.push(`/list-post?topicId=${item.id}`);
           } else {
@@ -128,6 +130,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
         onMomentumScrollEnd={e => {
           const newPageIndex = Math.round(e.nativeEvent.contentOffset.x / ITEM_FULL_WIDTH);
           if (newPageIndex !== currentIndex) {
+            selectionHaptic();
             onSelectIndex(newPageIndex);
           }
         }}

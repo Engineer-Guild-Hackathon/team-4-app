@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { buttonHaptic, formSubmitHaptic, successHaptic, errorHaptic } from '@/utils/haptics';
 
 interface ThreadDetailModalProps {
   visible: boolean;

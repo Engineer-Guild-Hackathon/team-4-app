@@ -163,6 +163,7 @@ export const deleteMentorRequest = async (requestId: number): Promise<void> => {
       method: 'DELETE',
     });
   } catch (error: any) {
-   
+    console.error('リクエスト削除エラー:', error);
+    throw error;
   }
 };

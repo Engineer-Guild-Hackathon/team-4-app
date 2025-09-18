@@ -24,6 +24,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { selectionHaptic, successHaptic, errorHaptic, formSubmitHaptic, buttonHaptic } from '@/utils/haptics';
 
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
@@ -54,6 +55,12 @@ export default function SelectLevelMentorScreen() {
   // ユーザーの現在レベルとステータス
   const [userLevel, setUserLevel] = useState<number | null>(null);
   const [userStatus, setUserStatus] = useState<string | null>(null);
+
+  // 師匠選択リクエストの状態
+  const [requestStatus, setRequestStatus] = useState<{
+    status: string;
+    to_username?: string;
+  } | null>(null);
 
   // レベルセレクターの制限を計算
   const getLevelConstraints = () => {
@@ -168,14 +175,36 @@ export default function SelectLevelMentorScreen() {
     fetchPosts();
   }, [topicId]);
 
+  // 師匠選択リクエストの状態を取得
+  useEffect(() => {
+    const fetchRequestStatus = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const status = await getMentorRequestStatus(user.id, topicId) as {
+          status: string;
+          to_username?: string;
+        };
+        setRequestStatus(status);
+      } catch (error) {
+        console.error('リクエスト状態取得エラー:', error);
+        setRequestStatus(null);
+      }
+    };
+
+    fetchRequestStatus();
+  }, [user?.id, topicId]);
+
 
   // 師匠選択処理
   const handleMentorSelection = async () => {
     if (!selectedMentor) {
+      errorHaptic();
       Alert.alert('エラー', '師匠を選択してください');
       return;
     }
 
+    formSubmitHaptic();
     try {
       // 師匠選択リクエストを作成
       const response = (await createMentorRequest(selectedMentor.id, topicId)) as {
@@ -190,6 +219,7 @@ export default function SelectLevelMentorScreen() {
       // レスポンスの内容に応じてメッセージを変更
       if (response.status === 'approved') {
         // 定員内の場合：無条件で師弟関係成立
+        successHaptic();
         Alert.alert('参加完了', '師匠選択が完了しました。トピックに参加しました。', [
           {
             text: 'OK',
@@ -198,6 +228,7 @@ export default function SelectLevelMentorScreen() {
         ]);
       } else {
         // 定員超過の場合：承認待ち
+        successHaptic();
         Alert.alert(
           'リクエスト送信完了',
           '師匠選択リクエストを送信しました。師匠の承認をお待ちください。',
@@ -210,6 +241,7 @@ export default function SelectLevelMentorScreen() {
         );
       }
     } catch (error) {
+      errorHaptic();
       console.error('師匠選択エラー:', error);
       Alert.alert('エラー', '師匠選択に失敗しました');
     }
@@ -217,17 +249,20 @@ export default function SelectLevelMentorScreen() {
 
   // 師匠選択をしない処理
   const handleNoMentorSelection = async () => {
+    selectionHaptic();
     Alert.alert('確認', '師匠を選択せずに参加しますか？\n最高レベル+1に設定されます。', [
       { text: 'キャンセル', style: 'cancel' },
       {
         text: '参加する',
         onPress: async () => {
+          formSubmitHaptic();
           try {
             const response = (await noMentorSelection(topicId)) as {
               message?: string;
               new_level?: number;
             };
 
+            successHaptic();
             Alert.alert(
               '参加完了',
               `師匠選択をスキップしました。レベル${response.new_level}で参加しました。`,
@@ -239,6 +274,7 @@ export default function SelectLevelMentorScreen() {
               ]
             );
           } catch (error) {
+            errorHaptic();
             console.error('師匠選択スキップエラー:', error);
             Alert.alert('エラー', '参加に失敗しました');
           }
@@ -302,15 +338,20 @@ export default function SelectLevelMentorScreen() {
 
   return (
     <View style={styles.container}>
-
-      {/* 左上に戻るボタン */}
-      <View style={styles.backButtonContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backButtonText}>← 戻る</Text>
-        </TouchableOpacity>
-      </View>
-
-
+      {/* 左上に戻るボタン - 承認済みでない場合のみ表示 */}
+      {requestStatus?.status !== 'approved' && (
+        <View style={styles.backButtonContainer}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => {
+              buttonHaptic();
+              handleBack();
+            }}
+          >
+            <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
+          </TouchableOpacity>
+        </View>
+      )}
       {/* 右側レベル選択UI */}
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector
@@ -354,7 +395,10 @@ export default function SelectLevelMentorScreen() {
                         styles.mentorItem,
                         selectedMentor?.id === item.id && styles.selectedMentorItem,
                       ]}
-                      onPress={() => setSelectedMentor(item)}
+                      onPress={() => {
+                        selectionHaptic();
+                        setSelectedMentor(item);
+                      }}
                     >
                       <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
                     </TouchableOpacity>
@@ -395,8 +439,9 @@ export default function SelectLevelMentorScreen() {
         )}
       </View>
       {/* 下中央にOKボタン - 適切な条件でのみ表示 */}
-      {(mentorData?.required === false ||
-        (mentorData?.required === true && selectedMentor)) && (
+      {((mentorData?.required === false) ||
+        (mentorData?.required === true && selectedMentor) ||
+        (requestStatus?.status === 'approved')) && (
         <View style={styles.bottomButtonContainer}>
           <View
             style={{
@@ -571,5 +616,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     fontWeight: '500',
+  },
+  requestStatusContainer: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    width: 300,
+  },
+  requestStatusTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  requestStatusMessage: {
+    fontSize: 14,
+    color: '#92400e',
+    textAlign: 'center',
   },
 });
