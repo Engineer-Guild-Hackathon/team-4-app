@@ -273,30 +273,30 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
   dangerZone: {
-    marginTop: remToPx(theme.spacing[8]), // xl
-    padding: remToPx(theme.spacing[6]), // lg
+    marginTop: theme.remToPx(theme.spacing[8]), // xl
+    padding: theme.remToPx(theme.spacing[6]), // lg
     borderWidth: 1,
     borderColor: '#ef4444',
-    borderRadius: remToPx(theme.borderRadius.md),
+    borderRadius: theme.remToPx(theme.borderRadius.md),
     backgroundColor: '#fef2f2',
   },
   dangerZoneTitle: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
     fontWeight: theme.typography.fontWeight.semibold,
     color: '#dc2626',
-    marginBottom: remToPx(theme.spacing[4]), // md
+    marginBottom: theme.remToPx(theme.spacing[4]), // md
     fontFamily: 'Klee One',
   },
   deleteButton: {
     backgroundColor: '#dc2626',
-    paddingVertical: remToPx(theme.spacing[3]), // sm
-    paddingHorizontal: remToPx(theme.spacing[4]), // md
-    borderRadius: remToPx(theme.borderRadius.md),
+    paddingVertical: theme.remToPx(theme.spacing[3]), // sm
+    paddingHorizontal: theme.remToPx(theme.spacing[4]), // md
+    borderRadius: theme.remToPx(theme.borderRadius.md),
     alignItems: 'center',
   },
   deleteButtonText: {
     color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.sm),
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
     fontWeight: theme.typography.fontWeight.semibold,
     fontFamily: 'Klee One',
   },
