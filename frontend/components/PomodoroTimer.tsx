@@ -1,14 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Modal } from 'react-native';
+import { View, StyleSheet, Modal, Switch, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
-import * as Haptics from 'expo-haptics';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { Button } from './Shared/Button';
 import { theme } from '@/styles/theme';
-import { remToPx } from '@/styles/typography';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -100,17 +98,17 @@ export default function PomodoroTimer() {
               <DurationSetter
                 label="学習"
                 durationMinutes={studyDuration / 60}
-                onUpdate={mins => setStudyDuration(mins * 10)}
+                onUpdate={mins => setStudyDuration(mins * 60)}
               />
               <DurationSetter
                 label="アウトプット"
                 durationMinutes={outputDuration / 60}
-                onUpdate={mins => setOutputDuration(mins * 10)}
+                onUpdate={mins => setOutputDuration(mins * 60)}
               />
               <DurationSetter
                 label="休憩"
                 durationMinutes={breakDuration / 60}
-                onUpdate={mins => setBreakDuration(mins * 10)}
+                onUpdate={mins => setBreakDuration(mins * 60)}
               />
               <View style={styles.setterContainer}>
                 <Text style={styles.setterLabel}>通知音</Text>
@@ -154,7 +152,7 @@ export default function PomodoroTimer() {
               <View style={styles.timerTextContainer}>
                 <MixedFontText style={styles.phaseText}>{getPhaseText()}</MixedFontText>
                 <MixedFontText
-                  fontSize={remToPx(theme.typography.fontSize['5xl'])}
+                  fontSize={theme.remToPx(theme.typography.fontSize['5xl'])}
                   style={styles.timerText}
                 >{formatTime(secondsLeft)}</MixedFontText>
               </View>
@@ -213,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   configTitle: {
-    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: 20,
   },
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   setterLabel: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
   },
@@ -240,8 +238,8 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   setterButtonText: {
-    fontSize: remToPx(theme.typography.fontSize['2xl']),
-    lineHeight: remToPx(theme.typography.fontSize['3xl']) * 1.1,
+    fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
+    lineHeight: parseFloat(theme.typography.fontSize['3xl']) * 16 * 1.1,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
   },
@@ -253,21 +251,21 @@ const styles = StyleSheet.create({
     width: 60,
   },
   setterValue: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
     fontFamily: theme.typography.fontFamily.latinMedium, 
     color: theme.colors.text.primary,
   },
   setterUnit: {
-    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.primary, 
     marginLeft: 4,
   },
   phaseText: {
-    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: 10,
@@ -288,7 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.neutral[200],
   },
   closeText: {
-    fontSize: remToPx(theme.typography.fontSize['3xl']),
+    fontSize: parseFloat(theme.typography.fontSize['3xl']) * 16,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.regular,
   },
@@ -308,12 +306,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   outputPhaseText: {
-    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
   },
   outputTimerText: {
-    fontSize: remToPx(theme.typography.fontSize.xl),
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     fontVariant: ['tabular-nums'],
     color: theme.colors.text.primary,

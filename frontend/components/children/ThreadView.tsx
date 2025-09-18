@@ -130,26 +130,23 @@ const styles = StyleSheet.create({
   threadTitle: {
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.link,
-    fontFamily: theme.typography.fontFamily.primary,
+    color: theme.colors.text.primary,
     marginBottom: remToPx(theme.spacing[2]), // xs
   },
   threadDate: {
     fontSize: remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.tertiary,
-    fontFamily: theme.typography.fontFamily.primary,
     marginBottom: remToPx(theme.spacing[2]),
   },
   threadMsgCount: {
-    fontSize: remToPx(theme.typography.fontSize.sm) + 1,
+    fontSize: remToPx(theme.typography.fontSize.sm),
     color: theme.colors.semantic.success.main,
     fontWeight: theme.typography.fontWeight.bold,
   },
   emptyText: {
     color: theme.colors.text.tertiary,
     textAlign: 'center',
-    marginTop: remToPx(theme.spacing[16]), // 4xl
-    fontFamily: theme.typography.fontFamily.primary,
+    marginTop: remToPx(theme.spacing[16]), // 4xl,
     fontSize: remToPx(theme.typography.fontSize.base),
   },
   errorText: {
@@ -157,13 +154,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: remToPx(theme.spacing[16]),
     fontSize: remToPx(theme.typography.fontSize.base),
-    fontFamily: theme.typography.fontFamily.primary,
     fontWeight: theme.typography.fontWeight.bold,
   },
   detailContainer: {
     flex: 1,
     padding: remToPx(theme.spacing[8]),
-    fontFamily: theme.typography.fontFamily.primary,
     backgroundColor: theme.colors.background.primary,
   },
   backButton: {
@@ -177,21 +172,18 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: theme.colors.text.link,
     fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: theme.typography.fontFamily.primary,
-    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    fontSize: remToPx(theme.typography.fontSize.base),
   },
   detailTitle: {
     fontSize: remToPx(theme.typography.fontSize.xl),
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: remToPx(theme.spacing[4]) - 2,
-    fontFamily: theme.typography.fontFamily.primary,
     color: theme.colors.text.primary,
   },
   detailLabel: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     marginBottom: remToPx(theme.spacing[2]),
-    fontFamily: theme.typography.fontFamily.primary,
   },
   messagesContainer: {
     marginTop: remToPx(theme.spacing[6]),
@@ -205,19 +197,16 @@ const styles = StyleSheet.create({
   messageAuthor: {
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.link,
-    fontFamily: theme.typography.fontFamily.primary,
     marginBottom: remToPx(theme.spacing[1]), // xxs
   },
   messageContent: {
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.primary,
     marginBottom: remToPx(theme.spacing[1]),
   },
   messageDate: {
     fontSize: remToPx(theme.typography.fontSize.sm),
     color: theme.colors.text.tertiary,
-    fontFamily: theme.typography.fontFamily.primary,
   },
   fab: {
     position: 'absolute',

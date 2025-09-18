@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     marginBottom: remToPx(theme.spacing[2]), // xs
   },
   messageContent: {
-    fontSize: remToPx(theme.typography.fontSize.base) + 1,
+    fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.secondary,
     lineHeight: remToPx(theme.typography.lineHeight.snug),
   },

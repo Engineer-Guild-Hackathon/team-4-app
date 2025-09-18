@@ -17,8 +17,6 @@ import {
   View,
 } from 'react-native';
 
-const remToPx = (rem: string) => parseFloat(rem) * 16;
-
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
   const { user, accessToken, logout } = useAuth();
@@ -213,7 +211,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   innerContainer: {
-    padding: remToPx(theme.spacing[8]), // xl
+    padding: theme.remToPx(theme.spacing[8]), // xl
   },
   centered: {
     flex: 1,
@@ -222,14 +220,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: remToPx(theme.typography.fontSize['2xl']),
+    fontSize: theme.remToPx(theme.typography.fontSize['2xl']),
     fontWeight: theme.typography.fontWeight.semibold,
-    marginBottom: remToPx(theme.spacing[8]), // xl
+    marginBottom: theme.remToPx(theme.spacing[8]), // xl
     color: theme.colors.text.primary,
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: remToPx(theme.spacing[12]), // 3xl
+    marginBottom: theme.remToPx(theme.spacing[12]), // 3xl
   },
   avatar: {
     width: 128,
@@ -238,40 +236,40 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
   },
   avatarEditText: {
-    marginTop: remToPx(theme.spacing[2]), // sm
+    marginTop: theme.remToPx(theme.spacing[2]), // sm
     color: theme.colors.primary[300],
     fontWeight: theme.typography.fontWeight.semibold,
   },
   label: {
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    marginBottom: remToPx(theme.spacing[2]), // sm
+    marginBottom: theme.remToPx(theme.spacing[2]), // sm
     color: theme.colors.text.secondary,
   },
   bioInput: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: remToPx(theme.borderRadius.md),
-    padding: remToPx(theme.spacing[4]), // md
+    borderRadius: theme.remToPx(theme.borderRadius.md),
+    padding: theme.remToPx(theme.spacing[4]), // md
     height: 100,
     textAlignVertical: 'top',
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
     
   },
   spacer: {
     flex: 1,
-    minHeight: remToPx(theme.spacing[16]), // 4xl
+    minHeight: theme.remToPx(theme.spacing[16]), // 4xl
   },
   saveButton: {
     backgroundColor: theme.colors.primary[300],
-    paddingVertical: remToPx(theme.spacing[4]), // md
-    borderRadius: remToPx(theme.borderRadius.md),
+    paddingVertical: theme.remToPx(theme.spacing[4]), // md
+    borderRadius: theme.remToPx(theme.borderRadius.md),
     alignItems: 'center',
   },
   saveButtonText: {
     color: theme.colors.text.inverse,
-    fontSize: remToPx(theme.typography.fontSize.base),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
   },
   dangerZone: {

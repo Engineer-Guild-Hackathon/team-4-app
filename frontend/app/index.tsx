@@ -1,6 +1,6 @@
 import { Button } from '@/components/Shared/Button';
 import { useAuth } from '@/hooks/AuthProvider';
-import { theme } from '@/styles/theme';
+import { theme, remToPx } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
@@ -21,8 +21,6 @@ import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
 import { getMentorRequestStatus, deleteMentorRequest } from '@/services/api/mentorship';
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function HomeScreen() {
   const { user, loading: authLoading, logout } = useAuth();

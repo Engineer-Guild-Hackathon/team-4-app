@@ -14,7 +14,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { Button } from './Shared/Button';
 import { theme } from '@/styles/theme';
-import { remToPx } from '@/styles/typography';
 
 const VideoPreviewItem = ({ uri, style }: { uri: string; style: any }) => {
   const player = useVideoPlayer(uri, player => {
@@ -147,12 +146,12 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    padding: remToPx(theme.spacing[3]),
-    borderRadius: remToPx(theme.borderRadius.md),
+    padding: theme.remToPx(theme.spacing[3]),
+    borderRadius: theme.remToPx(theme.borderRadius.md),
     height: 120,
     textAlignVertical: 'top',
-    marginBottom: remToPx(theme.spacing[4]),
-    fontSize: remToPx(theme.typography.fontSize.base),
+    marginBottom: theme.remToPx(theme.spacing[4]),
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontFamily: theme.typography.fontFamily.primary,
     color: theme.colors.text.primary,
     backgroundColor: theme.colors.background.secondary,
@@ -160,21 +159,21 @@ const styles = StyleSheet.create({
   mediaButton: {
     alignItems: 'flex-start',
     alignSelf: 'flex-start',
-    marginBottom: remToPx(theme.spacing[4]),
+    marginBottom: theme.remToPx(theme.spacing[4]),
   },
   previewContainer: {
     maxHeight: 100,
-    marginBottom: remToPx(theme.spacing[4]),
+    marginBottom: theme.remToPx(theme.spacing[4]),
   },
   previewImage: {
     width: 100,
     height: 100,
-    borderRadius: remToPx(theme.borderRadius.md),
-    marginRight: remToPx(theme.spacing[3]),
+    borderRadius: theme.remToPx(theme.borderRadius.md),
+    marginRight: theme.remToPx(theme.spacing[3]),
     backgroundColor: theme.colors.neutral[300],
   },
   postButton: {
     marginTop: 'auto',
-    marginBottom: remToPx(theme.spacing[2]),
+    marginBottom: theme.remToPx(theme.spacing[2]),
   },
 });

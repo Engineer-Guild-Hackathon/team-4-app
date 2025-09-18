@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '@/styles/theme';
+import { theme, remToPx } from '@/styles/theme';
 import { Button } from '../Shared/Button';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 
@@ -9,8 +9,6 @@ interface ReportModalProps {
   onClose: () => void;
   onSubmit: (reason: string) => Promise<void>;
 }
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function ReportModal({ visible, onClose, onSubmit }: ReportModalProps) {
   const [reason, setReason] = useState('');

@@ -1,6 +1,6 @@
 import { createThread } from '@/services/api/thread';
 import React, { useState } from 'react';
-import { theme } from '@/styles/theme';
+import { theme, remToPx } from '@/styles/theme';
 import {
   Alert,
   Keyboard,
@@ -100,8 +100,6 @@ export default function ThreadCreateModal({
     </Modal>
   );
 }
-
-const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const styles = StyleSheet.create({
   overlay: {
