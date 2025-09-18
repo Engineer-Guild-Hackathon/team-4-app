@@ -3,7 +3,7 @@ import { apiClient } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TextInput, View, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { formSubmitHaptic, successHaptic, errorHaptic } from '@/utils/haptics';
@@ -43,6 +43,11 @@ export default function UserCreateScreen() {
   };
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
       <MixedFontText style={styles.title}>ユーザー作成</MixedFontText>
       <TextInput
@@ -76,6 +81,8 @@ export default function UserCreateScreen() {
         <Text style={styles.backButtonText}>ログイン画面に戻る</Text>
       </TouchableOpacity>
     </View>
+    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -137,5 +144,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text.link,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontFamily: 'Klee One',
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
   },
 });

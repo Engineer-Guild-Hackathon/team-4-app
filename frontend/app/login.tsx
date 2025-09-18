@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
 import { useAuth } from '@/hooks/AuthProvider';
 import { useRouter } from 'expo-router';
 import { theme } from '@/styles/theme';
@@ -28,6 +28,11 @@ export default function LoginScreen() {
   };
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
       <MixedFontText style={styles.title}>ログイン</MixedFontText>
       <TextInput
@@ -70,6 +75,8 @@ export default function LoginScreen() {
         <MixedFontText style={styles.linkButtonText}>新規ユーザー登録はこちら</MixedFontText>
       </TouchableOpacity>
     </View>
+    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -130,4 +137,7 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     textAlign: 'center',
   },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  }, 
 });
