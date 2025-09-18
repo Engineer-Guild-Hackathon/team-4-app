@@ -1,6 +1,7 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { theme } from '@/styles/theme';
 import { buttonHaptic, importantActionHaptic, successHaptic } from '@/utils/haptics';
+import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Switch, View } from 'react-native';
@@ -8,7 +9,6 @@ import Svg, { Circle } from 'react-native-svg';
 import { useTimer } from '../contexts/TimerContext';
 import CreatePostForm from './CreatePostForm';
 import { Button } from './Shared/Button';
-import { Feather } from '@expo/vector-icons';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -411,11 +411,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 20, 
+    top: 60, 
     right: 40, 
     width: 44,
     height: 44,
     borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.background.primary, 
     borderWidth: 1,
     borderColor: theme.colors.border,
