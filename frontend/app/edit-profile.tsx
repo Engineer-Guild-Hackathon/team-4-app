@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -109,7 +110,7 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
-        <Text style={styles.title}>プロフィール編集</Text>
+        <MixedFontText style={styles.title}>プロフィール編集</MixedFontText>
 
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
           <Image
@@ -121,10 +122,10 @@ export default function EditProfileScreen() {
             }}
             style={styles.avatar}
           />
-          <Text style={styles.avatarEditText}>画像を変更</Text>
+          <MixedFontText style={styles.avatarEditText}>画像を変更</MixedFontText>
         </TouchableOpacity>
 
-        <Text style={styles.label}>自己紹介</Text>
+        <MixedFontText style={styles.label}>自己紹介</MixedFontText>
         <TextInput
           style={styles.bioInput}
           value={bio}
@@ -136,7 +137,7 @@ export default function EditProfileScreen() {
         <View style={styles.spacer} />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSubmitting}>
-          <Text style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</Text>
+          <MixedFontText style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</MixedFontText>
         </TouchableOpacity>
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
       </View>
@@ -163,7 +164,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[8]), // xl
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   avatarContainer: {
     alignItems: 'center',
@@ -179,14 +179,12 @@ const styles = StyleSheet.create({
     marginTop: remToPx(theme.spacing[2]), // sm
     color: theme.colors.primary[300],
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   label: {
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[2]), // sm
     color: theme.colors.text.secondary,
-    fontFamily: 'Klee One',
   },
   bioInput: {
     borderWidth: 1,
@@ -197,7 +195,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   spacer: {
     flex: 1,
@@ -213,6 +211,5 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
 });

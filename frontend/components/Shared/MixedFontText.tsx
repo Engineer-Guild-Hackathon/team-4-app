@@ -3,7 +3,7 @@ import { Text, TextProps } from 'react-native';
 import { segmentByScript } from '../../utils/language';
 
 type MixedFontTextProps = TextProps & {
-  children: string;
+  children: React.ReactNode;
   fontSize?: number;
 };
 

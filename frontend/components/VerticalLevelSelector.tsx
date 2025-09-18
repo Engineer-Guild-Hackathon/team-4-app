@@ -88,7 +88,7 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
           colors={[theme.colors.primary[300], theme.colors.primary[500]]}
           style={styles.knobGradient}
         >
-          <Text style={styles.levelText}></Text>
+          <MixedFontText style={styles.levelText}></MixedFontText>
         </LinearGradient>
       </Animated.View>
     </View>

@@ -19,6 +19,7 @@ import Svg, { G, Line } from 'react-native-svg';
 import { useTreeData } from '../../hooks/useTreeData';
 import { NODE_HEIGHT, NODE_WIDTH, TreeNodeView } from './TreeNode';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -248,7 +249,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   if (!rootNode) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>表示できるデータがありません。</Text>
+        <MixedFontText style={styles.text}>表示できるデータがありません。</MixedFontText>
       </View>
     );
   }
@@ -257,13 +258,13 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={styles.controlButton} onPress={fitToNetwork} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>⛶</Text>
+          <MixedFontText style={styles.controlButtonText}>⛶</MixedFontText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={zoomIn} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>＋</Text>
+          <MixedFontText style={styles.controlButtonText}>＋</MixedFontText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.controlButton} onPress={zoomOut} activeOpacity={0.7}>
-          <Text style={styles.controlButtonText}>－</Text>
+          <MixedFontText style={styles.controlButtonText}>－</MixedFontText>
         </TouchableOpacity>
       </View>
       <GestureDetector gesture={composedGesture}>

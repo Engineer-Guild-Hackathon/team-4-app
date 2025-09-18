@@ -2,7 +2,7 @@ import { theme } from '@/styles/theme';
 import { HierarchyPointNode } from 'd3-hierarchy';
 import { Image } from 'expo-image'; // ★ expo-image を使用
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { TreeNode as D3TreeNode } from './treeUtils';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface Props {
   node: HierarchyPointNode<D3TreeNode>;
@@ -61,12 +62,12 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
         />
       </Animated.View>
 
-      <Text style={styles.mainLabel} numberOfLines={1}>
+      <MixedFontText style={styles.mainLabel} numberOfLines={1}>
         {mainLabel}
-      </Text>
-      <Text style={styles.subLabel} numberOfLines={1}>
+      </MixedFontText>
+      <MixedFontText style={styles.subLabel} numberOfLines={1}>
         {subLabel}
-      </Text>
+      </MixedFontText>
     </TouchableOpacity>
   );
 };

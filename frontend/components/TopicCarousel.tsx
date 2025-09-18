@@ -1,4 +1,5 @@
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
@@ -84,7 +85,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
       <TouchableOpacity onPress={() => onSelectIndex(pageIndex)}>
         <Animated.View style={[styles.topicIconWrapper, { transform: [{ scale }], opacity }]}>
           <View style={[styles.topicIcon, currentIndex === pageIndex && styles.topicIconActive]}>
-            <Text
+            <MixedFontText
               style={[
                 styles.topicIconText,
                 currentIndex === pageIndex && styles.topicIconTextActive,
@@ -92,7 +93,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
               numberOfLines={1}
             >
               {item.title === '+' ? '+' : item.title.substring(0, 8)}
-            </Text>
+            </MixedFontText>
           </View>
         </Animated.View>
       </TouchableOpacity>
