@@ -111,8 +111,14 @@ export default function PomodoroTimer() {
                 onUpdate={mins => setBreakDuration(mins * 60)}
               />
               <View style={styles.setterContainer}>
-                <Text style={styles.setterLabel}>通知音</Text>
-                <Switch value={isSoundEnabled} onValueChange={setIsSoundEnabled} />
+                <MixedFontText style={styles.setterLabel}>通知音</MixedFontText>
+                <Switch
+                  trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[300] }}
+                  thumbColor={theme.colors.neutral[50]}
+                  ios_backgroundColor={theme.colors.neutral[300]}
+                  value={isSoundEnabled}
+                  onValueChange={setIsSoundEnabled}
+                />
               </View>
             </View>
             <Button variant="primary" size="lg" style={styles.button} onPress={startStudy}>
@@ -232,14 +238,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   setterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     padding: 0,
   },
   setterButtonText: {
-    fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
-    lineHeight: parseFloat(theme.typography.fontSize['3xl']) * 16 * 1.1,
+    fontSize: parseFloat(theme.typography.fontSize.xl) * 16,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.secondary,
   },
