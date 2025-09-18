@@ -1,12 +1,14 @@
 import { Button } from '@/components/Shared/Button';
 import { useAuth } from '@/hooks/AuthProvider';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +20,7 @@ import PomodoroTimer from '../components/PomodoroTimer';
 import { SimpleTopicView } from '../components/SimpleTopicView';
 import UserDetailModal from '../components/UserDetailModal';
 import { useTimer } from '../contexts/TimerContext';
+import { getMentorRequestStatus, deleteMentorRequest } from '@/services/api/mentorship';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -45,8 +48,81 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  const handleTopicChange = (topicId: string | null) => {
+  const handleTopicChange = async (topicId: string | null) => {
     setCurrentTopicId(topicId);
+    
+    // トピック切り替え時にリクエストが存在するか確認
+    if (!topicId || !user) return; // トピックまたはユーザーが未選択の場合は処理しない
+    
+    try {
+      const statusResponse = (await getMentorRequestStatus(user.id, topicId)) as {
+        status: string;
+        request_id?: number;
+        to_username?: string;
+        message?: string;
+      };
+      
+      // 承認済みの場合：リクエストを削除して通知してリロード
+      if (statusResponse.status === 'approved') {
+        if (statusResponse.request_id) {
+          await deleteMentorRequest(statusResponse.request_id);
+        }
+        Alert.alert('承認されました！', '師匠選択が承認されました。', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // リロード（画面を再描画）
+              setRenderKey(prevKey => prevKey + 1);
+            },
+          },
+        ]);
+        return;
+      }
+      
+      // 拒否された場合：リクエストを削除して師匠選択へ
+      else if (statusResponse.status === 'rejected') {
+        if (statusResponse.request_id) {
+          await deleteMentorRequest(statusResponse.request_id);
+        }
+        Alert.alert('拒否されました', '師匠選択リクエストが拒否されました。', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // 師匠選択画面へ遷移
+              router.push(`/select-level-mentor?topicId=${topicId}`);
+            },
+          },
+        ]);
+        return;
+      }
+      
+      // リクエストがない場合：師匠選択が必要か確認
+      else {
+        await checkMentorSelectionNeeded(topicId);
+        return;
+      }
+      
+    } catch (error) {
+      await checkMentorSelectionNeeded(topicId);
+    }
+  };
+
+  // 師匠選択が必要か確認する関数
+  const checkMentorSelectionNeeded = async (topicId: string) => {
+    try {
+      const { checkMentorSelectionRequired } = await import('@/services/api/mentorship');
+      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
+        required: boolean;
+        user_status?: string;
+      };
+      
+      if (selectionResponse.required) {
+        // 師匠選択が必要な場合、師匠選択画面へ遷移
+        router.push(`/select-level-mentor?topicId=${topicId}`);
+      }
+    } catch (error) {
+      console.error('師匠選択必要確認エラー:', error);
+    }
   };
 
   const handleMentorSelectionRequired = (topicId: string) => {
@@ -68,7 +144,7 @@ export default function HomeScreen() {
         key={renderKey}
         onUserPress={handleUserPress}
         onMentorSelectionRequired={handleMentorSelectionRequired}
-        onTopicChange={topicId => setCurrentTopicId(topicId)}
+        onTopicChange={handleTopicChange}
       />
 
       {currentTopicId && (
@@ -80,7 +156,7 @@ export default function HomeScreen() {
           </Link>
           {phase !== 'break' && (
             <TouchableOpacity style={styles.headerCenterButton} onPress={handleStartPomodoro}>
-              <Text style={styles.pomodoroButtonText}>集中</Text>
+              <MixedFontText style={styles.pomodoroButtonText}>集中</MixedFontText>
             </TouchableOpacity>
           )}
           <Button
@@ -146,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   infoText: {
-    fontFamily: 'Klee One',
+    
     fontSize: remToPx(theme.typography.fontSize.lg),
     color: theme.colors.text.primary,
   },
@@ -182,6 +258,6 @@ const styles = StyleSheet.create({
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.link,
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
+    
   },
 });

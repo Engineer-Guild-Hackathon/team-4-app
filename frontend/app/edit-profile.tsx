@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -20,7 +21,7 @@ const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 export default function EditProfileScreen() {
   // useAuthから必要な情報を取得
-  const { user, accessToken } = useAuth();
+  const { user, accessToken, logout } = useAuth();
   const router = useRouter();
 
   const [bio, setBio] = useState(user?.bio || '');
@@ -59,6 +60,10 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!user || !accessToken) return;
+    if (bio.length > 500) {
+      Alert.alert('エラー', '自己紹介は500文字以内で入力してください');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -102,6 +107,57 @@ export default function EditProfileScreen() {
     }
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'アカウント削除',
+      'アカウントを削除すると、すべてのデータが永久に削除され、復元できません。本当に削除しますか？',
+      [
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+        },
+        {
+          text: '削除する',
+          style: 'destructive',
+          onPress: confirmDeleteAccount,
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!user || !accessToken) return;
+    setIsSubmitting(true);
+
+    try {
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+      const response = await fetch(`${API_BASE_URL}/api/users/me/`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
+      }
+
+      // アカウント削除成功後、即座にログアウト処理を実行
+      await logout();
+
+      Alert.alert('削除完了', 'アカウントが正常に削除されました。');
+    } catch (error: any) {
+      console.error('アカウント削除エラー:', JSON.stringify(error, null, 2));
+      Alert.alert(
+        'エラー',
+        (error as { message?: string })?.message || 'アカウントの削除に失敗しました。'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!user) {
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
@@ -109,7 +165,7 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
-        <Text style={styles.title}>プロフィール編集</Text>
+        <MixedFontText style={styles.title}>プロフィール編集</MixedFontText>
 
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
           <Image
@@ -121,24 +177,36 @@ export default function EditProfileScreen() {
             }}
             style={styles.avatar}
           />
-          <Text style={styles.avatarEditText}>画像を変更</Text>
+          <MixedFontText style={styles.avatarEditText}>画像を変更</MixedFontText>
         </TouchableOpacity>
 
-        <Text style={styles.label}>自己紹介</Text>
+        <MixedFontText style={styles.label}>自己紹介</MixedFontText>
         <TextInput
           style={styles.bioInput}
           value={bio}
           onChangeText={setBio}
           placeholder="自己紹介を入力..."
           multiline
+          maxLength={500}
         />
 
         <View style={styles.spacer} />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSubmitting}>
-          <Text style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</Text>
+          <MixedFontText style={styles.saveButtonText}>{isSubmitting ? '保存中...' : '保存する'}</MixedFontText>
         </TouchableOpacity>
         {isSubmitting && <ActivityIndicator style={{ marginTop: 10 }} />}
+
+        <View style={styles.dangerZone}>
+         
+          <TouchableOpacity 
+            style={styles.deleteButton} 
+            onPress={handleDeleteAccount} 
+            disabled={isSubmitting}
+          >
+            <Text style={styles.deleteButtonText}>アカウントを削除</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -163,7 +231,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[8]), // xl
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
   },
   avatarContainer: {
     alignItems: 'center',
@@ -179,14 +246,12 @@ const styles = StyleSheet.create({
     marginTop: remToPx(theme.spacing[2]), // sm
     color: theme.colors.primary[300],
     fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: 'Klee One',
   },
   label: {
     fontSize: remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: remToPx(theme.spacing[2]), // sm
     color: theme.colors.text.secondary,
-    fontFamily: 'Klee One',
   },
   bioInput: {
     borderWidth: 1,
@@ -197,7 +262,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: remToPx(theme.typography.fontSize.base),
     color: theme.colors.text.primary,
-    fontFamily: 'Klee One',
+    
   },
   spacer: {
     flex: 1,
@@ -212,6 +277,33 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: theme.colors.text.inverse,
     fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  dangerZone: {
+    marginTop: remToPx(theme.spacing[8]), // xl
+    padding: remToPx(theme.spacing[6]), // lg
+    borderWidth: 1,
+    borderColor: '#ef4444',
+    borderRadius: remToPx(theme.borderRadius.md),
+    backgroundColor: '#fef2f2',
+  },
+  dangerZoneTitle: {
+    fontSize: remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: '#dc2626',
+    marginBottom: remToPx(theme.spacing[4]), // md
+    fontFamily: 'Klee One',
+  },
+  deleteButton: {
+    backgroundColor: '#dc2626',
+    paddingVertical: remToPx(theme.spacing[3]), // sm
+    paddingHorizontal: remToPx(theme.spacing[4]), // md
+    borderRadius: remToPx(theme.borderRadius.md),
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: remToPx(theme.typography.fontSize.sm),
     fontWeight: theme.typography.fontWeight.semibold,
     fontFamily: 'Klee One',
   },

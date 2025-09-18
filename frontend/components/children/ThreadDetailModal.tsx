@@ -1,6 +1,7 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import { useState } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface ThreadDetailModalProps {
   visible: boolean;
@@ -30,6 +32,10 @@ export default function ThreadDetailModal({
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    if (message.length > 200) {
+      Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
+      return;
+    }
     setSending(true);
     try {
       await onSendMessage?.(message);
@@ -46,15 +52,15 @@ export default function ThreadDetailModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
-          <Text style={styles.title}>スレッド詳細</Text>
+          <MixedFontText style={styles.title}>スレッド詳細</MixedFontText>
           <FlatList
             data={thread.messages}
             keyExtractor={msg => msg.id.toString()}
             renderItem={({ item }: { item: ThreadMessageOut }) => (
               <View style={styles.messageCard}>
-                <Text style={styles.messageAuthor}>{item.author?.username}</Text>
-                <Text style={styles.messageContent}>{item.content}</Text>
-                <Text style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</Text>
+                <MixedFontText style={styles.messageAuthor}>{item.author?.username}</MixedFontText>
+                <MixedFontText style={styles.messageContent}>{item.content}</MixedFontText>
+                <MixedFontText style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</MixedFontText>
               </View>
             )}
             contentContainerStyle={{ paddingBottom: 80 }}
@@ -66,13 +72,14 @@ export default function ThreadDetailModal({
               value={message}
               onChangeText={setMessage}
               multiline
+              maxLength={200}
             />
             <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending}>
-              <Text style={styles.sendButtonText}>{sending ? '送信中...' : '送信'}</Text>
+              <MixedFontText style={styles.sendButtonText}>{sending ? '送信中...' : '送信'}</MixedFontText>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>閉じる</Text>
+            <MixedFontText style={styles.closeButtonText}>閉じる</MixedFontText>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

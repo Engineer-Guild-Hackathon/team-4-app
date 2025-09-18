@@ -2,7 +2,7 @@ import { theme } from '@/styles/theme';
 import { HierarchyPointNode } from 'd3-hierarchy';
 import { Image } from 'expo-image'; // ★ expo-image を使用
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { TreeNode as D3TreeNode } from './treeUtils';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface Props {
   node: HierarchyPointNode<D3TreeNode>;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 const NODE_RADIUS = 40;
+
+const remToPx = (rem: string) => parseFloat(rem) * 16;
 
 const splitLabelByParentheses = (label: string): [string, string] => {
   const match = label.match(/^(.*?)\s*(\([^)]*\)|（[^））]*）)?$/);
@@ -61,23 +64,21 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
         />
       </Animated.View>
 
-      <Text style={styles.mainLabel} numberOfLines={1}>
+      <MixedFontText style={styles.mainLabel} numberOfLines={1}>
         {mainLabel}
-      </Text>
-      <Text style={styles.subLabel} numberOfLines={1}>
+      </MixedFontText>
+      <MixedFontText style={styles.subLabel} numberOfLines={1}>
         {subLabel}
-      </Text>
+      </MixedFontText>
     </TouchableOpacity>
   );
 };
 
 export const NODE_WIDTH = 90; // 親コンポーネントが中央揃えに使うための幅
-export const NODE_HEIGHT = 80; // 親コンポーネントが中央揃えに使うための高さ
+export const NODE_HEIGHT = 125; // 親コンポーネントが中央揃えに使うための高さ
 
 const styles = StyleSheet.create({
   container: {
-    width: NODE_WIDTH,
-    height: NODE_HEIGHT,
     alignItems: 'center',
   },
   avatarContainer: {
@@ -96,13 +97,13 @@ const styles = StyleSheet.create({
   mainLabel: {
     marginTop: 4,
     color: theme.colors.text.primary,
-    fontSize: parseFloat(theme.typography.fontSize.sm) * 16,
+    fontSize: remToPx(theme.typography.fontSize.base),
     fontFamily: theme.typography.fontFamily.primary,
     textAlign: 'center',
   },
   subLabel: {
     color: theme.colors.text.tertiary,
-    fontSize: parseFloat(theme.typography.fontSize.xs) * 16,
+    fontSize: remToPx(theme.typography.fontSize.sm),
     fontFamily: theme.typography.fontFamily.primary,
     textAlign: 'center',
   },

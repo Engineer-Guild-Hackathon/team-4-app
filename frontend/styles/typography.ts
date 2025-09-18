@@ -6,6 +6,9 @@
 export const typography = {
   fontFamily: {
     primary: 'Klee One',
+    latinLight: 'SourceSerif4-Light',
+    latinRegular: 'SourceSerif4-Regular',
+    latinMedium: 'SourceSerif4-Medium',
     mono: 'Geist Mono, monospace',
   },
 
@@ -215,6 +218,30 @@ export const japaneseTypography = {
   },
 } as const;
 
+export const latinTypography = {
+  headingLatin: {
+    fontFamily: typography.fontFamily.latinMedium,
+    fontSize: typography.fontSize['3xl'],
+    lineHeight: '1.25',
+    letterSpacing: typography.letterSpacing.normal,
+    color: 'var(--text-primary)',
+  },
+  bodyLatin: {
+    fontFamily: typography.fontFamily.latinRegular,
+    fontSize: typography.fontSize.base,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.normal,
+    color: 'var(--text-primary)',
+  },
+  captionLatin: {
+    fontFamily: typography.fontFamily.latinLight,
+    fontSize: typography.fontSize.xs,
+    lineHeight: '1.4',
+    letterSpacing: typography.letterSpacing.wide,
+    color: 'var(--text-tertiary)',
+  },
+} as const;
+
 export const typographyClasses = {
   // Headers
   'text-h1': textStyles.h1,
@@ -241,8 +268,14 @@ export const typographyClasses = {
   'text-body-ja': japaneseTypography.bodyJapanese,
   'text-heading-ja': japaneseTypography.headingJapanese,
   'text-caption-ja': japaneseTypography.captionJapanese,
+
+  // Latin variants
+  'text-heading-latin': latinTypography.headingLatin,
+  'text-body-latin': latinTypography.bodyLatin,
+  'text-caption-latin': latinTypography.captionLatin,
 } as const;
 
 export type TextStyles = typeof textStyles;
 export type JapaneseTypography = typeof japaneseTypography;
+export type LatinTypography = typeof latinTypography;
 export type TypographyClasses = typeof typographyClasses;

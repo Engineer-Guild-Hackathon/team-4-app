@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '../Shared/Button';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface ThreadCreateModalProps {
   visible: boolean;
@@ -45,6 +46,10 @@ export default function ThreadCreateModal({
       Alert.alert('エラー', 'メッセージ内容を入力してください');
       return;
     }
+    if (content.length > 200) {
+      Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
+      return;
+    }
     setLoading(true);
     try {
       await createThread({
@@ -72,13 +77,14 @@ export default function ThreadCreateModal({
       <TouchableWithoutFeedback onPress={handleOverlayPress} accessible={false}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.title}>新規スレッド作成</Text>
+            <MixedFontText style={styles.title}>新規スレッド作成</MixedFontText>
             <TextInput
               style={styles.input}
               placeholder="最初のメッセージ内容"
               value={content}
               onChangeText={setContent}
               multiline
+              maxLength={200}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />

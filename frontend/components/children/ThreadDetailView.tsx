@@ -1,8 +1,9 @@
 import { ThreadMessageOut, ThreadOut } from '@/types/thread';
 import React, { useRef, useState } from 'react'; // useRefを追加
 import { theme } from '@/styles/theme';
-import { FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../Shared/Button';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface ThreadDetailViewProps {
   thread: ThreadOut;
@@ -19,6 +20,10 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
 
   const handleSend = async () => {
     if (!content.trim()) return;
+    if (content.length > 200) {
+      Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
+      return;
+    }
     setSending(true);
     try {
       const newMessage = await onSendMessage(content);
@@ -41,9 +46,9 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           ← 戻る
         </Button>
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {thread.mentor.username} : {thread.starter.username}
-          </Text>
+          <MixedFontText style={styles.title} numberOfLines={1}>
+            {`${thread.mentor.username} : ${thread.starter.username}`}
+          </MixedFontText>
         </View>
         <View style={{ width: styles.backButton.width }} />
       </View>
@@ -58,9 +63,9 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
         inverted // invertedはチャットUIの基本
         renderItem={({ item }: { item: ThreadMessageOut }) => (
           <View style={styles.messageCard}>
-            <Text style={styles.messageAuthor}>{item.author?.username}</Text>
-            <Text style={styles.messageContent}>{item.content}</Text>
-            <Text style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</Text>
+            <MixedFontText style={styles.messageAuthor}>{item.author?.username}</MixedFontText>
+            <MixedFontText style={styles.messageContent}>{item.content}</MixedFontText>
+            <MixedFontText style={styles.messageDate}>{new Date(item.created_at).toLocaleString()}</MixedFontText>
           </View>
         )}
         keyboardShouldPersistTaps="handled"
@@ -74,6 +79,7 @@ export default function ThreadDetailView({ thread, onBack, onSendMessage }: Thre
           value={content}
           onChangeText={setContent}
           multiline
+          maxLength={200}
         />
         <Button
           style={styles.sendButton}

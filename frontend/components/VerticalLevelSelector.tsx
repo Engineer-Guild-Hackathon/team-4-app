@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/styles/theme';
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 
 interface VerticalLevelSelectorProps {
   min: number;
@@ -88,7 +89,7 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
           colors={[theme.colors.primary[300], theme.colors.primary[500]]}
           style={styles.knobGradient}
         >
-          <Text style={styles.levelText}></Text>
+          <MixedFontText style={styles.levelText}>{value}</MixedFontText>
         </LinearGradient>
       </Animated.View>
     </View>

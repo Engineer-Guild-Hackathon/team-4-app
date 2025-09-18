@@ -11,7 +11,8 @@ class UserProfile(models.Model):
     bio = models.TextField(
         '自己紹介', 
         null=True, 
-        blank=True
+        blank=True,
+        max_length=500
     )
     avatar = models.ImageField(
         'アバター画像', 

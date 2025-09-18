@@ -1,6 +1,7 @@
 from ninja import Schema
 from datetime import datetime
 from typing import List
+from pydantic import Field
 from .models import Post, PostMedia
 
 class AuthorOut(Schema):
@@ -31,5 +32,7 @@ class PostOut(Schema):
 
     @staticmethod
     def resolve_media(obj: Post) -> List[PostMediaOut]:
-
         return list(obj.media.all())
+
+class PostCreateIn(Schema):
+    content: str = Field(..., max_length=500)
