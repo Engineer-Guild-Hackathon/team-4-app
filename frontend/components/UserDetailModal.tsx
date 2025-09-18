@@ -1,5 +1,6 @@
 import { deletePost, getPosts } from '@/services/api/post';
 import { blockUser, getUser, unblockUser } from '@/services/api/user';
+import { theme } from '@/styles/theme';
 import { PostOut } from '@/types/post';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
@@ -18,7 +19,6 @@ import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import PagerView from 'react-native-pager-view';
 import PostView from './children/PostView';
 import ThreadView from './children/ThreadView';
-import { theme } from '@/styles/theme';
 import { Button } from './Shared/Button';
 
 interface UserProfile {
@@ -241,6 +241,7 @@ export default function UserDetailModal({
               loading={loading}
               error={error}
               selfUserId={selfUserId}
+              topicId={topicId!}
               onDelete={handleDeletePost}
             />
             {/* 掲示板ページ */}

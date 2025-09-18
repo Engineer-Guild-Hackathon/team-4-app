@@ -1,7 +1,9 @@
 import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
+import Fontisto from '@expo/vector-icons/Fontisto';
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
 import {
@@ -21,6 +23,7 @@ interface PostViewProps {
   loading: boolean;
   error: string | null;
   selfUserId?: number;
+  topicId: string;
   onDelete: (postId: number) => void;
 }
 
@@ -44,9 +47,18 @@ const VideoItem = ({ uri, style }: { uri: string; style: ImageStyle }) => {
   );
 };
 
-export default function PostView({ posts, loading, error, selfUserId, onDelete }: PostViewProps) {
+export default function PostView({
+  posts,
+  loading,
+  error,
+  selfUserId,
+  onDelete,
+  topicId,
+}: PostViewProps) {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
+
+  const router = useRouter();
 
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('投稿メニュー', '', [
@@ -142,6 +154,14 @@ export default function PostView({ posts, loading, error, selfUserId, onDelete }
           setReportTargetPost(null);
         }}
       />
+      <Button
+        variant="icon"
+        style={styles.fab}
+        textStyle={styles.fabText}
+        onPress={() => router.push(`/create-post?topicId=${topicId}`)}
+      >
+        <Fontisto name="plus-a" size={24} color="#fff" />
+      </Button>
     </>
   );
 }
@@ -184,5 +204,21 @@ const styles = StyleSheet.create({
     top: remToPx(theme.spacing[6]) - 1, // lg - 1px
     right: remToPx(theme.spacing[4]),
     zIndex: 1,
+  },
+  fab: {
+    backgroundColor: theme.colors.primary[500],
+    position: 'absolute',
+    right: remToPx(theme.spacing[8]),
+    bottom: remToPx(theme.spacing[8]),
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 56,
+    height: 56,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: remToPx(theme.typography.fontSize['3xl']),
+    lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },
 });
