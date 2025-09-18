@@ -97,7 +97,8 @@ export default function EditProfileScreen() {
       Alert.alert('成功', 'プロフィールを更新しました。');
 
       // 前の画面に戻る
-      router.push('/?profileUpdated=true');
+      router.back();
+      // router.push('/?profileUpdated=true');
     } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
       Alert.alert(
@@ -167,6 +168,9 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <Text style={styles.closeButtonText}>×</Text>
+        </TouchableOpacity>
         <MixedFontText style={styles.title}>プロフィール編集</MixedFontText>
 
         <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
@@ -324,6 +328,23 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     color: theme.colors.text.inverse,
     fontSize: theme.remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+    closeButton: {
+    position: 'absolute',
+    top: theme.remToPx(theme.spacing[4]),
+    right: theme.remToPx(theme.spacing[4]),
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.background.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.semibold,
   },
 });
