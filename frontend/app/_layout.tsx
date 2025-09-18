@@ -2,9 +2,9 @@ import { AuthProvider } from '@/hooks/AuthProvider';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import { Pressable, Text, StyleSheet, View } from 'react-native';
 import { TimerProvider, useTimer } from '../contexts/TimerContext';
 
 const formatTime = (seconds: number) => {
@@ -87,6 +87,15 @@ export default function RootLayout() {
               options={{
                 presentation: 'modal',
                 title: 'プロフィール編集',
+              }}
+            />
+            <Stack.Screen
+              name="list-post"
+              options={{
+                presentation: 'containedTransparentModal',
+                title: '投稿一覧',
+                headerShown: false,
+                animation: 'fade',
               }}
             />
           </Stack>
