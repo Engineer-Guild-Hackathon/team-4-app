@@ -80,13 +80,21 @@ export default function PostView({
 
   const renderPost = ({ item }: { item: PostOut }) => (
     <View style={styles.post}>
-      <View style={{ position: 'absolute', top: 15, right: 0, flexDirection: 'row', zIndex: 2 }}>
+      <View style={styles.postHeader}>
+        <View style={styles.authorInfo}>
+          <Image
+            source={{ 
+              uri: item.author?.avatar || `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}` 
+            }}
+            style={styles.authorAvatar}
+          />
+          <Text style={styles.authorUsername}>{item.author?.username}</Text>
+        </View>
         {Number(selfUserId) === Number(item.author?.id) ? (
           <Button
             variant="secondary"
             size="sm"
             onPress={() => onDelete(item.id)}
-            style={styles.actionButton}
           >
             削除
           </Button>
@@ -95,12 +103,12 @@ export default function PostView({
             variant="secondary"
             size="sm"
             onPress={() => handleOpenMenu(item)}
-            style={styles.actionButton}
           >
             ⋮
           </Button>
         )}
       </View>
+
       {item.media && item.media.length > 0 && (
         <ScrollView
           horizontal
@@ -241,5 +249,29 @@ const styles = StyleSheet.create({
     borderRadius: remToPx(theme.borderRadius.md),
     marginRight: remToPx(theme.spacing[2]), 
     backgroundColor: theme.colors.background.secondary,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: remToPx(theme.spacing[4]),
+    paddingVertical: remToPx(theme.spacing[3]),
+  },
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: remToPx(theme.spacing[3]),
+    backgroundColor: theme.colors.background.secondary,
+  },
+  authorUsername: {
+    fontSize: remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    fontFamily: 'Klee One',
   },
 });
