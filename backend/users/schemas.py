@@ -2,20 +2,20 @@ from django.contrib.auth import get_user_model
 from typing import List, Optional
 
 from ninja import ModelSchema, Schema
+from pydantic import computed_field
 from topics.schemas import TopicOut
 
 User = get_user_model()
 
 class UserOut(ModelSchema):
-    avatar: Optional[str] = None
-    bio: Optional[str] = None
-
     class Config:
         model = User
         model_fields = ["id", "username", "is_active", "is_staff"]
 
+    # resolveメソッドは変更なし
     @staticmethod
     def resolve_avatar(obj):
+        # DjangoのUserモデルはProfileを逆参照できないため、hasattrで安全にチェック
         if hasattr(obj, 'profile') and obj.profile.avatar:
             return obj.profile.avatar.url
         return None

@@ -1,16 +1,15 @@
 import { theme } from '@/styles/theme';
 import { HierarchyPointNode } from 'd3-hierarchy';
+import { Image } from 'expo-image'; // ★ expo-image を使用
 import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Animated, {
   interpolateColor,
-  useAnimatedProps,
+  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Circle, ClipPath, Defs, G, Image, Text as SvgText } from 'react-native-svg';
 import { TreeNode as D3TreeNode } from './treeUtils';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface Props {
   node: HierarchyPointNode<D3TreeNode>;
@@ -32,60 +31,79 @@ export const TreeNodeView: React.FC<Props> = ({ node, onPress, isFocused }) => {
     focusAnimation.value = withTiming(isFocused ? 1 : 0, { duration: 300 });
   }, [isFocused, focusAnimation]);
 
-  const animatedCircleProps = useAnimatedProps(() => {
-    const stroke = interpolateColor(
-      focusAnimation.value,
-      [0, 1],
-      [theme.colors.secondary.active, theme.colors.text.link] // purple → pinkRed
-    );
-    const strokeWidth = 2 + focusAnimation.value * 1.5;
+  const animatedBorderStyle = useAnimatedStyle(() => {
     return {
-      stroke,
-      strokeWidth,
+      borderColor: interpolateColor(
+        focusAnimation.value,
+        [0, 1],
+        [theme.colors.secondary.active, theme.colors.text.link]
+      ),
+      borderWidth: 2 + focusAnimation.value * 1.5,
     };
   });
 
   const [mainLabel, subLabel] = splitLabelByParentheses(node.data.username);
-  const clipPathId = `clip-${node.data.id}`;
+
+  const initialCharacter = node.data.username
+    ? encodeURIComponent(node.data.username.charAt(0))
+    : 'P';
+  const imageSize = NODE_RADIUS * 2;
+  const placeholderUrl = `https://placehold.co/${imageSize}x${imageSize}/e0e0e0/555555?text=${initialCharacter}`;
 
   return (
-    <G x={node.x} y={node.y} onPress={onPress}>
-      <Defs>
-        <ClipPath id={clipPathId}>
-          <Circle r={NODE_RADIUS} />
-        </ClipPath>
-      </Defs>
+    <TouchableOpacity onPress={onPress} style={styles.container}>
+      <Animated.View style={[styles.avatarContainer, animatedBorderStyle]}>
+        <Image
+          source={{ uri: node.data.avatar || placeholderUrl }}
+          style={styles.avatar}
+          contentFit="cover"
+          transition={300}
+        />
+      </Animated.View>
 
-      <Image
-        href={node.data.avatar} // URLをhrefに指定
-        width={NODE_RADIUS * 2}
-        height={NODE_RADIUS * 2}
-        x={-NODE_RADIUS} // 画像の左上が基準点のため、中心に来るよう調整
-        y={-NODE_RADIUS}
-        preserveAspectRatio="xMidYMid slice" // アスペクト比を保ちつつ円を埋める
-        clipPath={`url(#${clipPathId})`} // 上で定義したクリップパスを適用
-      />
-
-      <AnimatedCircle r={NODE_RADIUS} fill="transparent" animatedProps={animatedCircleProps} />
-
-      <SvgText
-        y={NODE_RADIUS + 14}
-        fill={theme.colors.text.primary}
-        fontSize={parseFloat(theme.typography.fontSize.sm) * 16}
-        textAnchor="middle"
-        fontFamily={theme.typography.fontFamily.primary}
-      >
+      <Text style={styles.mainLabel} numberOfLines={1}>
         {mainLabel}
-      </SvgText>
-      <SvgText
-        y={NODE_RADIUS + 28}
-        fill={theme.colors.text.tertiary}
-        fontSize={parseFloat(theme.typography.fontSize.xs) * 16}
-        textAnchor="middle"
-        fontFamily={theme.typography.fontFamily.primary}
-      >
+      </Text>
+      <Text style={styles.subLabel} numberOfLines={1}>
         {subLabel}
-      </SvgText>
-    </G>
+      </Text>
+    </TouchableOpacity>
   );
 };
+
+export const NODE_WIDTH = 90; // 親コンポーネントが中央揃えに使うための幅
+export const NODE_HEIGHT = 80; // 親コンポーネントが中央揃えに使うための高さ
+
+const styles = StyleSheet.create({
+  container: {
+    width: NODE_WIDTH,
+    height: NODE_HEIGHT,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: NODE_RADIUS * 2,
+    height: NODE_RADIUS * 2,
+    borderRadius: NODE_RADIUS,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0', // 枠線の背景色
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: NODE_RADIUS,
+  },
+  mainLabel: {
+    marginTop: 4,
+    color: theme.colors.text.primary,
+    fontSize: parseFloat(theme.typography.fontSize.sm) * 16,
+    fontFamily: theme.typography.fontFamily.primary,
+    textAlign: 'center',
+  },
+  subLabel: {
+    color: theme.colors.text.tertiary,
+    fontSize: parseFloat(theme.typography.fontSize.xs) * 16,
+    fontFamily: theme.typography.fontFamily.primary,
+    textAlign: 'center',
+  },
+});

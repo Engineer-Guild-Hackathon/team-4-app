@@ -17,7 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { G, Line } from 'react-native-svg';
 import { useTreeData } from '../../hooks/useTreeData';
-import { TreeNodeView } from './TreeNode';
+import { NODE_HEIGHT, NODE_WIDTH, TreeNodeView } from './TreeNode';
 import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -269,7 +269,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
       <GestureDetector gesture={composedGesture}>
         <View style={styles.gestureContainer}>
           <Animated.View style={[styles.canvas, animatedStyle]}>
-            <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
+            <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={StyleSheet.absoluteFill}>
               <G>
                 {linksToRender.map(link => (
                   <Line
@@ -282,17 +282,26 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
                     strokeWidth={1.5}
                   />
                 ))}
-                {nodesToRender.map(node => (
-                  <TreeNodeView
-                    key={node.data.id}
-                    node={node as HierarchyPointNode<D3TreeNode>}
-                    onPress={() => onNodePress(node.data.id)}
-                    // isFocusedのロジックは今回削除し、シンプルに保ちます
-                    isFocused={false}
-                  />
-                ))}
               </G>
             </Svg>
+            {/* ★ 修正点 2: Svgとは別に、通常のコンポーネントとしてノードを描画 */}
+            {nodesToRender.map(node => (
+              <View
+                key={node.data.id}
+                style={{
+                  position: 'absolute',
+                  // 中心の座標(node.x, node.y)に来るように、幅と高さの半分を引く
+                  left: (node.x ?? 0) - NODE_WIDTH / 2,
+                  top: (node.y ?? 0) - NODE_HEIGHT / 2,
+                }}
+              >
+                <TreeNodeView
+                  node={node as HierarchyPointNode<D3TreeNode>}
+                  onPress={() => onNodePress(node.data.id)}
+                  isFocused={false} // isFocusedのロジックは必要に応じて復活させてください
+                />
+              </View>
+            ))}
           </Animated.View>
         </View>
       </GestureDetector>

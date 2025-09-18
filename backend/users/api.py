@@ -29,6 +29,7 @@ def list_users(request):
 def get_current_user(request):
     """現在のユーザー情報を取得する"""
     user = get_object_or_404(User.objects.select_related('profile'), id=request.auth.id)
+    print(user.profile.avatar)
     return user
 
 @router.post("/password-reset/", response={200: PasswordResetResponseOut, 400: dict})

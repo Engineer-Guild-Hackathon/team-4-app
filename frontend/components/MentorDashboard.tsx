@@ -136,7 +136,10 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
               console.error('承認エラー:', error);
               // 定員超過の場合は特別なメッセージを表示
               if (error?.response?.data?.message?.includes('Capacity exceeded')) {
-                Alert.alert('定員満員', '弟子の定員がいっぱいです。\n既存の弟子を破門または卒業させてから承認してください。');
+                Alert.alert(
+                  '定員満員',
+                  '弟子の定員がいっぱいです。\n既存の弟子を破門または卒業させてから承認してください。'
+                );
               } else {
                 Alert.alert('エラー', '承認に失敗しました');
               }
@@ -257,7 +260,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
 
   const renderRequest = ({ item }: { item: MentorRequest }) => {
     const isCapacityFull = capacityInfo && !capacityInfo.is_within_capacity;
-    
+
     return (
       <View style={styles.requestCard}>
         <View style={styles.requestHeader}>
@@ -275,9 +278,7 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
             <Text style={styles.capacityText}>
               定員: {capacityInfo.current_count}/{capacityInfo.capacity}人
             </Text>
-            {isCapacityFull && (
-              <Text style={styles.capacityFullText}>満員です</Text>
-            )}
+            {isCapacityFull && <Text style={styles.capacityFullText}>満員です</Text>}
           </View>
         )}
 
@@ -285,7 +286,11 @@ export default function MentorDashboard({ visible, onClose, topicId }: MentorDas
           <Button
             variant="primary"
             onPress={() => handleApprove(item.id, item.from_user.username)}
-            style={isCapacityFull ? {...styles.actionButton, ...styles.disabledButton} : styles.actionButton}
+            style={
+              isCapacityFull
+                ? { ...styles.actionButton, ...styles.disabledButton }
+                : styles.actionButton
+            }
             disabled={isCapacityFull || false}
           >
             承認

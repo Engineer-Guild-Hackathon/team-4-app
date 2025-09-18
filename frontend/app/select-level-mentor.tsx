@@ -146,7 +146,9 @@ export default function SelectLevelMentorScreen() {
 
   // 師匠選択データを取得
   useEffect(() => {
+    
     fetchMentorData();
+
   }, [topicId]);
 
   useEffect(() => {

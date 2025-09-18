@@ -20,6 +20,17 @@ class UserProfile(models.Model):
         blank=True
     )
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            try:
+                old_profile = UserProfile.objects.get(pk=self.pk)
+                if old_profile.avatar and old_profile.avatar != self.avatar:
+                    old_profile.avatar.delete(save=False)
+            except UserProfile.DoesNotExist:
+                pass 
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.user.username
     

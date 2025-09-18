@@ -33,5 +33,9 @@ class PostMedia(models.Model):
     media_type = models.CharField("メディアタイプ", max_length=10, choices=MediaType.choices)
     file = models.FileField("メディアファイル", upload_to='posts_media/')
 
+    def delete(self, *args, **kwargs):
+        self.file.delete(save=False)
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return f"{self.get_media_type_display()} for Post {self.post.id}"

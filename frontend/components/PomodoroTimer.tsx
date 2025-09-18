@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import CreatePostForm from './CreatePostForm';
 import { useTimer } from '../contexts/TimerContext';
+import * as Haptics from 'expo-haptics';
 
 // 時間フォーマット関数
 const formatTime = (seconds: number) => {
@@ -16,16 +17,23 @@ const CIRCLE_RADIUS = 120;
 const CIRCLE_STROKE_WIDTH = 15;
 const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * (CIRCLE_RADIUS - CIRCLE_STROKE_WIDTH / 2);
 
-// interface PomodoroTimerProps {
-//   topicId?: string;
-// }
-
 // 時間設定用のUIコンポーネント
-const DurationSetter = ({ label, durationMinutes, onUpdate }: { label: string, durationMinutes: number, onUpdate: (newDuration: number) => void }) => (
+const DurationSetter = ({
+  label,
+  durationMinutes,
+  onUpdate,
+}: {
+  label: string;
+  durationMinutes: number;
+  onUpdate: (newDuration: number) => void;
+}) => (
   <View style={styles.setterContainer}>
     <Text style={styles.setterLabel}>{label}</Text>
     <View style={styles.setterControls}>
-      <Pressable onPress={() => onUpdate(Math.max(1, durationMinutes - 1))} style={styles.setterButton}>
+      <Pressable
+        onPress={() => onUpdate(Math.max(1, durationMinutes - 1))}
+        style={styles.setterButton}
+      >
         <Text style={styles.setterButtonText}>-</Text>
       </Pressable>
       <Text style={styles.setterValue}>{durationMinutes} 分</Text>
@@ -38,13 +46,32 @@ const DurationSetter = ({ label, durationMinutes, onUpdate }: { label: string, d
 
 export default function PomodoroTimer() {
   // グローバルなstateと関数を取得
-  const { 
-    phase, secondsLeft, activeTopicId,
-    studyDuration, setStudyDuration,
-    outputDuration, setOutputDuration,
-    breakDuration, setBreakDuration,
-    startStudy, closeTimer, endOutputAndBreak 
+  const {
+    phase,
+    secondsLeft,
+    activeTopicId,
+    studyDuration,
+    setStudyDuration,
+    outputDuration,
+    setOutputDuration,
+    breakDuration,
+    setBreakDuration,
+    startStudy,
+    closeTimer,
+    endOutputAndBreak,
   } = useTimer();
+
+  const phaseRef = useRef(phase);
+  useEffect(() => {
+    // 最初の表示時ではなく、フェーズが実際に切り替わった時だけ実行
+    if (
+      phaseRef.current !== phase &&
+      (phase === 'studying' || phase === 'output' || phase === 'break')
+    ) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
+    phaseRef.current = phase;
+  }, [phase]);
 
   // モーダルを表示するのは idle, studying, output のいずれかのフェーズ
   const isVisible = phase === 'idle' || phase === 'studying' || phase === 'output';
@@ -62,12 +89,10 @@ export default function PomodoroTimer() {
         return '準備中';
     }
   };
-  
-  const totalDuration = 
-    phase === 'studying' ? studyDuration :
-    phase === 'output' ? outputDuration :
-    studyDuration;
-  
+
+  const totalDuration =
+    phase === 'studying' ? studyDuration : phase === 'output' ? outputDuration : studyDuration;
+
   const progress = secondsLeft / totalDuration;
   const strokeDashoffset = CIRCLE_CIRCUMFERENCE * (1 - progress);
 
@@ -78,20 +103,20 @@ export default function PomodoroTimer() {
           <>
             <View style={styles.configContainer}>
               <Text style={styles.configTitle}>集中時間の設定</Text>
-              <DurationSetter 
-                label="学習" 
-                durationMinutes={studyDuration / 60} 
-                onUpdate={(mins) => setStudyDuration(mins * 60)} 
+              <DurationSetter
+                label="学習"
+                durationMinutes={studyDuration / 60}
+                onUpdate={mins => setStudyDuration(mins * 60)}
               />
-              <DurationSetter 
-                label="アウトプット" 
-                durationMinutes={outputDuration / 60} 
-                onUpdate={(mins) => setOutputDuration(mins * 60)} 
+              <DurationSetter
+                label="アウトプット"
+                durationMinutes={outputDuration / 60}
+                onUpdate={mins => setOutputDuration(mins * 60)}
               />
-              <DurationSetter 
-                label="休憩" 
-                durationMinutes={breakDuration / 60} 
-                onUpdate={(mins) => setBreakDuration(mins * 60)} 
+              <DurationSetter
+                label="休憩"
+                durationMinutes={breakDuration / 60}
+                onUpdate={mins => setBreakDuration(mins * 60)}
               />
             </View>
             <Pressable style={styles.button} onPress={startStudy}>
@@ -139,14 +164,14 @@ export default function PomodoroTimer() {
             </Pressable>
           </>
         )}
-        
+
         {phase === 'output' && (
           <View style={styles.outputContainer}>
             <View style={styles.outputHeader}>
               <Text style={styles.outputPhaseText}>アウトプット</Text>
               <Text style={styles.outputTimerText}>{formatTime(secondsLeft)}</Text>
             </View>
-            { activeTopicId? (
+            {activeTopicId ? (
               <CreatePostForm topicId={activeTopicId} />
             ) : (
               <Text style={styles.errorText}>投稿先のトピックが選択されていません。</Text>
@@ -302,5 +327,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: 'red',
-  }
+  },
 });
