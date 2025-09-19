@@ -32,3 +32,10 @@ export const sendMessageToThread = async (
   });
   return res;
 };
+
+export const checkThreadPermission = async (
+  mentorId: number, 
+  topicId: string
+): Promise<{ can_create: boolean }> => {
+  return authedApiClient(`/api/threads/check-permission/?mentor_id=${mentorId}&topic_id=${topicId}`);
+};
