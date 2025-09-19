@@ -13,10 +13,12 @@ import {
   TouchableWithoutFeedback,
   Platform,
   Keyboard,
+  Image,
 } from 'react-native';
 import { theme } from '@/styles/theme';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { formSubmitHaptic, successHaptic, errorHaptic } from '@/utils/haptics';
+import { WafuCloud } from '../components/WahuCloud';
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
 
@@ -52,6 +54,8 @@ export default function UserCreateScreen() {
     }
   };
 
+  const goldTexture = require('../assets/images/cloud-texture.png');
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -59,6 +63,21 @@ export default function UserCreateScreen() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
+          <WafuCloud
+            seed={13}
+            textureSource={goldTexture}
+            duration={24000}
+            travelDistance={25}
+            style={{ width: 250, height: 120, top: 80, left: -50, opacity: 0.4, zIndex: -1 }}
+          />
+          <WafuCloud
+            seed={456}
+            textureSource={goldTexture}
+            duration={42000}
+            travelDistance={-20}
+            style={{ width: 200, height: 120, top: 110, right: -80, opacity: 0.4 }}
+          />          
+          <Image source={require('../assets/images/logo.png')} style={styles.logo} />
           <MixedFontText style={styles.title}>ユーザー作成</MixedFontText>
           <TextInput
             style={styles.input}
@@ -157,5 +176,10 @@ const styles = StyleSheet.create({
   },
   keyboardAvoidingContainer: {
     flex: 1,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: remToPx(theme.spacing[4]),
   },
 });
