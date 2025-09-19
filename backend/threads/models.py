@@ -6,6 +6,8 @@ from topics.models import Topic
 
 
 class Thread(models.Model):
+    title = models.CharField("タイトル", max_length=200, default="無題のスレッド")
+
     topic = models.ForeignKey(
         Topic,
         on_delete=models.CASCADE,
@@ -40,7 +42,8 @@ class Thread(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Thread {self.id} in Topic {self.topic.title}"
+        # return f"Thread {self.id} in Topic {self.topic.title}"
+        return self.title
 
 
 class ThreadMessage(models.Model):

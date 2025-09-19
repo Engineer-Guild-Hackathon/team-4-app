@@ -33,11 +33,12 @@ def create_thread(request, payload: ThreadCreateIn):
 	if not mentorship:
 		return 403, {"message": "選択されたトピックでこの師匠とスレッドを作成する権限がありません"}
 	thread = Thread.objects.create(
+        title=payload.title,
 		topic=topic,
 		starter=request.user,
 		mentor=mentor,
 	)
-	return thread
+	return 200, thread
 
 @router.delete("/{thread_id}", response={200: dict, 404: dict}, auth=JWTAuth())
 @transaction.atomic

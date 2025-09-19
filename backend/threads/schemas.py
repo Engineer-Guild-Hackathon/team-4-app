@@ -20,6 +20,7 @@ class ThreadOut(Schema):
 	related_post_id: int | None = None
 	created_at: datetime
 	messages: list['ThreadMessageOut'] = []
+	title: str
 
 
 class ThreadMessageOut(Schema):
@@ -36,4 +37,4 @@ class ThreadMessageCreateIn(Schema):
 class ThreadCreateIn(Schema):
 	topic_id: uuid.UUID
 	mentor_id: int
-	message: ThreadMessageCreateIn
+	title: str
