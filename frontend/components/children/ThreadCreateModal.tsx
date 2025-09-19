@@ -29,7 +29,7 @@ export default function ThreadCreateModal({
   mentorId,
   onCreated,
 }: ThreadCreateModalProps) {
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -42,11 +42,11 @@ export default function ThreadCreateModal({
   };
 
   const handleCreate = async () => {
-    if (!content.trim()) {
+    if (!title.trim()) {
       Alert.alert('エラー', 'メッセージ内容を入力してください');
       return;
     }
-    if (content.length > 200) {
+    if (title.length > 200) {
       Alert.alert('エラー', 'メッセージ内容は200文字以内で入力してください');
       return;
     }
@@ -55,9 +55,9 @@ export default function ThreadCreateModal({
       await createThread({
         topic_id: topicId,
         mentor_id: mentorId,
-        message: { content },
+        title: title,
       });
-      setContent('');
+      setTitle('');
       onCreated?.();
       onClose();
       Alert.alert('成功', 'スレッドを作成しました');
@@ -80,10 +80,10 @@ export default function ThreadCreateModal({
             <MixedFontText style={styles.title}>新規スレッド作成</MixedFontText>
             <TextInput
               style={styles.input}
-              placeholder="最初のメッセージ内容"
-              value={content}
-              onChangeText={setContent}
-              multiline
+              placeholder="スレッドのタイトル"
+              value={title}
+              onChangeText={setTitle}
+              multiline={false}
               maxLength={200}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
