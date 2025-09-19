@@ -4,6 +4,16 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "android": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://chemical-claribel-eg-hackathon-team4-728ae39c.koyeb.app"
+      }
+    },
+    "ios": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://chemical-claribel-eg-hackathon-team4-728ae39c.koyeb.app"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal"
