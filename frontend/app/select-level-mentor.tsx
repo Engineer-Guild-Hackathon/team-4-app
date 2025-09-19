@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
     borderWidth: 2,
     borderColor: theme.colors.primary[300],
-    borderRadius: theme.remToPx(theme.borderRadius.full),
+    borderRadius: 12,
     padding: theme.remToPx(theme.spacing[5]), // 20px
     marginTop: theme.remToPx(theme.spacing[5]), // 20px
     width: 260,
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   media: {
     width: '100%',
     height: 150,
-    borderRadius: theme.remToPx(theme.borderRadius.full),
+    borderRadius: 8,
     marginBottom: theme.remToPx(theme.spacing[3]), // 12px
   },
   bottomButtonContainer: {
