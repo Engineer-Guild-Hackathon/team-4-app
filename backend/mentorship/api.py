@@ -527,7 +527,7 @@ def get_received_mentor_requests(request: HttpRequest):
 @router.get(
     "/available-mentors/{topic_id}",
     summary="師匠選択可能なユーザーリストを取得",
-    response={200: list[UserEasyOut], 400: dict, 404: dict},
+    response={200: list[MenteeSubtreeOut], 400: dict, 404: dict},
     auth=JWTAuth(),
 )
 def get_available_mentors(request: HttpRequest, topic_id: str):
@@ -564,7 +564,12 @@ def get_available_mentors(request: HttpRequest, topic_id: str):
             )
         
         return [
-            UserEasyOut(id=user.id, username=user.username)
+            {
+            "id": user.id,
+            "username": user.username,
+            "avatar": user.profile.avatar.url if user.profile.avatar else None,
+            "level": UserTopic.objects.get(user=user, topic_id=topic_id).level
+            }
             for user in available_users
         ]
         

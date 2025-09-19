@@ -1,6 +1,8 @@
 import uuid
 from ninja import Schema
 
+from posts.schemas import PostOut
+
 class TopicOut(Schema):
     """トピック情報スキーマ"""
 
@@ -57,8 +59,8 @@ class MenteeSubtreeOut(Schema):
 
     id: int
     username: str
-    email: str
-    level: int
+    avatar: str | None = None
+    level: int | None = None
 
 
 class UserNodeOut(Schema):
