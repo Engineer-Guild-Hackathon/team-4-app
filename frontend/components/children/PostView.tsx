@@ -18,7 +18,7 @@ import {
 import { Button } from '../Shared/Button';
 import ReportModal from './ReportModal';
 import CreatePostModal from './PostCreateModal';
-import { getPosts } from '@/services/api/post';
+import { deletePost, getPosts } from '@/services/api/post';
 
 interface PostViewProps { 
   loading: boolean;
@@ -26,7 +26,6 @@ interface PostViewProps {
   selfUserId?: number;
   topicId: string;
   userId: number; 
-  onDelete: (postId: number) => void;
   onPostCreated: () => void; 
 }
 
@@ -45,7 +44,6 @@ export default function PostView({
   loading,
   error,
   selfUserId,
-  onDelete,
   topicId,
   userId,
   onPostCreated,
@@ -54,6 +52,29 @@ export default function PostView({
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [posts, setPosts] = React.useState<PostOut[]>([]);
+
+    const handleDeletePost = async (postId: number) => {
+    Alert.alert('気づきの削除', 'この気づきを本当に削除しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost(postId);
+            Alert.alert("削除に成功しました")
+            setPosts(await getPosts(topicId!, userId!));
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              Alert.alert('エラー', e.message || '削除に失敗しました');
+            } else {
+              Alert.alert('エラー', '削除に失敗しました');
+            }
+          }
+        },
+      },
+    ]);
+  };
 
   const handlePostCreated = useCallback(() => {
     setShowCreateModal(false); 
@@ -89,7 +110,7 @@ export default function PostView({
           <Text style={styles.authorUsername}>{item.author?.username}</Text>
         </View>
         {Number(selfUserId) === Number(item.author?.id) ? (
-          <Button variant="secondary" size="sm" onPress={() => onDelete(item.id)}>
+          <Button variant="secondary" size="sm" onPress={() => handleDeletePost(item.id)}>
             削除
           </Button>
         ) : (

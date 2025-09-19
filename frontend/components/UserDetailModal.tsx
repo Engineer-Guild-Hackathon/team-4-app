@@ -80,28 +80,6 @@ export default function UserDetailModal({
     }
   }, [visible, topicId, userId]);
 
-  const handleDeletePost = async (postId: number) => {
-    Alert.alert('気づきの削除', 'この気づきを本当に削除しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deletePost(postId);
-            await getPosts(topicId!, userId!);
-          } catch (e: unknown) {
-            if (e instanceof Error) {
-              Alert.alert('エラー', e.message || '削除に失敗しました');
-            } else {
-              Alert.alert('エラー', '削除に失敗しました');
-            }
-          }
-        },
-      },
-    ]);
-  };
-
   const handlePageSelected = (e: PagerViewOnPageSelectedEvent) => {
     setSelectedTab(e.nativeEvent.position);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -244,7 +222,6 @@ export default function UserDetailModal({
               selfUserId={selfUserId}
               topicId={topicId!}
               userId={userId!}
-              onDelete={handleDeletePost}
               onPostCreated={() => setCreatePostModalVisible(true)}
             />
             {/* 掲示板ページ */}
