@@ -1,10 +1,8 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
+import { theme } from '@/styles/theme';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '@/styles/theme';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { selectionHaptic } from '@/utils/haptics';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Animated, PanResponder, StyleSheet, View } from 'react-native';
 
 interface VerticalLevelSelectorProps {
   min: number;
@@ -70,13 +68,9 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
         if (newLevel !== lastNotifiedLevel.current) {
           onChange(newLevel);
           // より細かい触覚フィードバック
-          if (newLevel % 10 === 0) {
+          if (newLevel % 3 === 0) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          } else if (newLevel % 5 === 0) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          } else {
-            selectionHaptic();
-          }
+          } 
           lastNotifiedLevel.current = newLevel;
         }
         panY.setValue(clampedY);
@@ -95,7 +89,6 @@ export const VerticalLevelSelector: React.FC<VerticalLevelSelectorProps> = ({
           colors={[theme.colors.primary[300], theme.colors.primary[500]]}
           style={styles.knobGradient}
         >
-          <MixedFontText style={styles.levelText}>{value}</MixedFontText>
         </LinearGradient>
       </Animated.View>
     </View>
@@ -143,6 +136,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    borderColor: theme.colors.border,
+    borderWidth: 3,
   },
   knobGradient: {
     flex: 1,

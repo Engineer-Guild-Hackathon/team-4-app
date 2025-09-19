@@ -1,8 +1,7 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/AuthProvider';
 import {
-  checkMentorSelectionRequired,
   createMentorRequest,
   getAvailableMentors,
   getMentorRequestStatus,
@@ -10,18 +9,17 @@ import {
   noMentorSelection,
 } from '@/services/api/mentorship';
 import { getPosts } from '@/services/api/post';
-import { getTopicLevelInfo, joinTopic, leaveTopic } from '@/services/api/topic';
+import { leaveTopic } from '@/services/api/topic';
 import { getMe } from '@/services/api/user';
-import { PostMediaOut, PostOut } from '@/types/post';
+import { PostOut } from '@/types/post';
 import {
-  buttonHaptic,
   errorHaptic,
   formSubmitHaptic,
   selectionHaptic,
-  successHaptic,
+  successHaptic
 } from '@/utils/haptics';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -33,12 +31,11 @@ import {
   View,
 } from 'react-native';
 
-const LEVEL_MIN = 1;
-const LEVEL_MAX = 100;
-
 interface Mentor {
   id: number;
   username: string;
+  level: number;
+  avatar?: string;
 }
 
 export default function SelectLevelMentorScreen() {
@@ -46,201 +43,98 @@ export default function SelectLevelMentorScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const topicId = params.topicId as string;
-  const { accessToken, user } = useAuth();
+  const { user } = useAuth();
 
-  // ページタイトル変更
-  useEffect(() => {
-    navigation.setOptions?.({
-      title: 'レベル・師匠選択',
-      headerBackTitle: 'ホーム', // 「index」を「ホーム」に変更
-    });
-  }, [navigation]);
-
-  // プログレスバーの値
-  const [level, setLevel] = useState(5);
-
-  // ユーザーの現在レベルとステータス
-  const [userLevel, setUserLevel] = useState<number | null>(null);
-  const [userStatus, setUserStatus] = useState<string | null>(null);
-
-  // 師匠選択リクエストの状態
-  const [requestStatus, setRequestStatus] = useState<{
-    status: string;
-    to_username?: string;
-  } | null>(null);
-
-  // レベルセレクターの制限を計算
-  const getLevelConstraints = () => {
-    if (!userStatus || userLevel === null) return { min: LEVEL_MIN, max: LEVEL_MAX };
-
-    switch (userStatus) {
-      case 'GRADUATED':
-        // 卒業済みの場合は自分のlevel + 1以上のみ選択可能
-        return { min: userLevel + 1, max: LEVEL_MAX };
-      case 'EXPELLED':
-        // 破門済みの場合は自分のlevel以下のみ選択可能
-        return { min: LEVEL_MIN, max: userLevel };
-      default:
-        return { min: LEVEL_MIN, max: LEVEL_MAX };
-    }
-  };
-
-  const levelConstraints = getLevelConstraints();
-
+  const [level, setLevel] = useState(1);
+  const [userLevelInfo, setUserLevelInfo] = useState<{ level: number; status: string } | null>(null);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
-  const [mentorData, setMentorData] = useState<{
-    required: boolean;
-    mentors: Mentor[];
-    userStatus?: string;
-  } | null>(null);
-
-  // post取得
   const [posts, setPosts] = useState<PostOut[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [requestStatus, setRequestStatus] = useState<{ status: string; to_username?: string; } | null>(null);
 
-  // ユーザーレベルを取得
+
   useEffect(() => {
-    const fetchUserLevel = async () => {
+    navigation.setOptions?.({ title: 'レベル・師匠選択', headerBackTitle: 'ホーム' });
+  }, [navigation]);
+
+  // 初期データの読み込み
+  useEffect(() => {
+    const loadInitialData = async () => {
       try {
-        const userLevelResponse = (await getUserLevel(topicId)) as {
-          level: number;
-          status: string;
-        };
-        setUserLevel(userLevelResponse.level);
-        setUserStatus(userLevelResponse.status);
-        setLevel(userLevelResponse.level); // 現在のレベルをセット
+        setLoading(true);
+        const [levelRes, mentorRes, statusRes] = await Promise.all([
+          getUserLevel(topicId).catch(() => null) as Promise<{ level: number; status: string } | null>,
+          getAvailableMentors(topicId).catch(() => []),
+          user?.id ? getMentorRequestStatus(user.id, topicId).catch(() => null) : Promise.resolve(null),
+        ]);
+
+        const initialLevel = levelRes?.level ?? 1;
+        setUserLevelInfo({ level: initialLevel, status: levelRes?.status ?? 'active' });
+        setLevel(initialLevel);
+        setMentors(mentorRes as Mentor[]);
+        setRequestStatus(statusRes as any);
       } catch (error) {
-        console.error('ユーザーレベル取得エラー:', error);
-        // エラーの場合はトピックのレベル情報を取得してデフォルト値を設定
-        try {
-          const levelInfo = (await getTopicLevelInfo(topicId)) as {
-            max_level: number;
-            min_level: number;
-            user_count: number;
-          };
-          const defaultLevel = levelInfo.user_count > 0 ? levelInfo.min_level - 1 : 1;
-          setUserLevel(defaultLevel);
-          setUserStatus('active');
-          setLevel(defaultLevel);
-        } catch (levelError) {
-          // レベル情報も取得できない場合は1をデフォルトに
-          setUserLevel(1);
-          setUserStatus('active');
-          setLevel(1);
-        }
-      }
-    };
-
-    fetchUserLevel();
-  }, [topicId]);
-
-  // 師匠選択データを取得する関数
-  const fetchMentorData = async () => {
-    try {
-      const selectionResponse = (await checkMentorSelectionRequired(topicId)) as {
-        required: boolean;
-        user_status?: string;
-      };
-      if (selectionResponse.required) {
-        const mentors = (await getAvailableMentors(topicId)) as Mentor[];
-        setMentorData({
-          required: true,
-          mentors,
-          userStatus: selectionResponse.user_status,
-        });
-      } else {
-        setMentorData({ required: false, mentors: [] });
-      }
-    } catch (error) {
-      console.error('師匠選択データ取得エラー:', error);
-      // エラーの場合は師匠選択不要として扱う
-      setMentorData({ required: false, mentors: [] });
-    }
-  };
-
-  // 師匠選択データを取得
-  useEffect(() => {
-    fetchMentorData();
-  }, [topicId]);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      try {
-        // topicIdで絞り、postsリストで取得（userIdは指定しない）
-        const posts = await getPosts(topicId);
-        setPosts(posts);
-      } catch {
-        setPosts([]);
+        console.error('初期データの取得に失敗:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
-  }, [topicId]);
+    loadInitialData();
+  }, [topicId, user?.id]);
 
-  // 師匠選択リクエストの状態を取得
+  const levelConstraints = useMemo(() => {
+    if (!userLevelInfo) return { min: 1, max: 100 };
+    switch (userLevelInfo.status) {
+      case 'GRADUATED': return { min: userLevelInfo.level + 1, max: 100 };
+      case 'EXPELLED': return { min: 1, max: userLevelInfo.level };
+      default:
+        if (mentors.length === 0) return { min: 1, max: 100 };
+        const minLevel = Math.min(...mentors.map(m => m.level));
+        const maxLevel = Math.max(...mentors.map(m => m.level));
+        return { min: minLevel, max: maxLevel };
+    }
+  }, [userLevelInfo, mentors]);
+
   useEffect(() => {
-    const fetchRequestStatus = async () => {
-      if (!user?.id) return;
+    if (mentors.length === 0) return;
+    const closestMentor = mentors.reduce((prev, curr) => 
+      (Math.abs(curr.level - level) < Math.abs(prev.level - level) ? curr : prev)
+    );
+    if (closestMentor && closestMentor.id !== selectedMentor?.id) {
+      selectionHaptic();
+      setSelectedMentor(closestMentor);
+    }
+  }, [level, mentors, selectedMentor?.id]);
 
+  useEffect(() => {
+    if (!selectedMentor) { setPosts([]); return; }
+    const fetchPosts = async () => {
+      setLoadingPosts(true);
       try {
-        const status = (await getMentorRequestStatus(user.id, topicId)) as {
-          status: string;
-          to_username?: string;
-        };
-        setRequestStatus(status);
-      } catch {
-        setRequestStatus(null);
-      }
+        setPosts(await getPosts(topicId, selectedMentor.id));
+      } catch { setPosts([]); } 
+      finally { setLoadingPosts(false); }
     };
+    fetchPosts();
+  }, [selectedMentor, topicId]);
 
-    fetchRequestStatus();
-  }, [user?.id, topicId]);
-
-  // 師匠選択処理
   const handleMentorSelection = async () => {
     if (!selectedMentor) {
       errorHaptic();
       Alert.alert('エラー', '師匠を選択してください');
       return;
     }
-
     formSubmitHaptic();
     try {
-      // 師匠選択リクエストを作成
-      const response = (await createMentorRequest(selectedMentor.id, topicId)) as {
-        message?: string;
-        id?: number;
-        from_user?: any;
-        to_user?: any;
-        topic?: any;
-        status?: string;
-      };
-
-      // レスポンスの内容に応じてメッセージを変更
+      const response = (await createMentorRequest(selectedMentor.id, topicId)) as { status?: string; };
       if (response.status === 'approved') {
-        // 定員内の場合：無条件で師弟関係成立
         successHaptic();
-        Alert.alert('参加完了', '師匠選択が完了しました。トピックに参加しました。', [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/'),
-          },
-        ]);
+        Alert.alert('参加完了', '師匠選択が完了しました。トピックに参加しました。', [{ text: 'OK', onPress: () => router.replace('/') }]);
       } else {
-        // 定員超過の場合：承認待ち
         successHaptic();
-        Alert.alert(
-          'リクエスト送信完了',
-          '師匠選択リクエストを送信しました。師匠の承認をお待ちください。',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/'),
-            },
-          ]
-        );
+        Alert.alert('リクエスト送信完了', '師匠選択リクエストを送信しました。師匠の承認をお待ちください。', [{ text: 'OK', onPress: () => router.replace('/') }]);
       }
     } catch (error) {
       errorHaptic();
@@ -249,7 +143,6 @@ export default function SelectLevelMentorScreen() {
     }
   };
 
-  // 師匠選択をしない処理
   const handleNoMentorSelection = async () => {
     selectionHaptic();
     Alert.alert('確認', '師匠を選択せずに参加しますか？\n最高レベル+1に設定されます。', [
@@ -259,22 +152,9 @@ export default function SelectLevelMentorScreen() {
         onPress: async () => {
           formSubmitHaptic();
           try {
-            const response = (await noMentorSelection(topicId)) as {
-              message?: string;
-              new_level?: number;
-            };
-
+            const response = (await noMentorSelection(topicId)) as { new_level?: number; };
             successHaptic();
-            Alert.alert(
-              '参加完了',
-              `師匠選択をスキップしました。レベル${response.new_level}で参加しました。`,
-              [
-                {
-                  text: 'OK',
-                  onPress: () => router.replace('/'),
-                },
-              ]
-            );
+            Alert.alert('参加完了', `師匠選択をスキップしました。レベル${response.new_level}で参加しました。`, [{ text: 'OK', onPress: () => router.replace('/') }]);
           } catch (error) {
             errorHaptic();
             console.error('師匠選択スキップエラー:', error);
@@ -285,7 +165,6 @@ export default function SelectLevelMentorScreen() {
     ]);
   };
 
-  // 戻るボタン処理（参加を取り消す）
   const handleBack = async () => {
     Alert.alert('確認', '参加を取り消して戻りますか？', [
       { text: 'キャンセル', style: 'cancel' },
@@ -294,7 +173,6 @@ export default function SelectLevelMentorScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            // ユーザーIDを取得してトピックから退出
             const userResponse = await getMe();
             await leaveTopic(topicId, userResponse.id);
             router.replace('/');
@@ -306,55 +184,27 @@ export default function SelectLevelMentorScreen() {
       },
     ]);
   };
-
-  // 参加ボタン処理
+  
   const handleJoin = async () => {
-    // 師匠選択が必要な場合
-    if (mentorData?.required) {
-      if (!selectedMentor) {
+    if (!selectedMentor) {
         Alert.alert('エラー', '師匠を選択してください');
         return;
-      }
-      // 師匠選択を実行
-      await handleMentorSelection();
-      return;
     }
-
-    // 師匠選択が不要な場合（直接参加）
-    try {
-      await joinTopic(topicId, level, selectedMentor?.id);
-      Alert.alert('参加完了', 'トピックに参加しました', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/'),
-        },
-      ]);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        Alert.alert('エラー', e.message);
-      } else {
-        Alert.alert('エラー', '参加に失敗しました');
-      }
-    }
+    await handleMentorSelection();
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" style={styles.centered} />;
+  }
 
   return (
     <View style={styles.container}>
-      {/* 左上に戻るボタン - 承認済みでない場合のみ表示 */}
-      {requestStatus?.status !== 'approved' && (
-        <View style={styles.backButtonContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => {
-              buttonHaptic();
-              handleBack();
-            }}
-          >
-            <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
-          </TouchableOpacity>
-        </View>
-      )}
-      {/* 右側レベル選択UI */}
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
+        </TouchableOpacity>
+      </View>
+      
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector
           min={levelConstraints.min}
@@ -363,116 +213,64 @@ export default function SelectLevelMentorScreen() {
           onChange={setLevel}
         />
       </View>
-      {/* 中央にpost表示とタイトル */}
+      
       <View style={styles.centerContent}>
-        {/* <MixedFontText style={styles.levelDisplay}>選択中のレベル: {level}</MixedFontText> */}
-        {loading ? (
-          <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-        ) : (
-          <>
-            {/* 師匠選択が必要な場合 */}
-            {mentorData?.required && (
-              <View style={styles.mentorSelectionContainer}>
-                <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
-                <Text style={styles.mentorSelectionSubtitle}>
-                  {userStatus === 'GRADUATED' &&
-                    userLevel !== null &&
-                    `卒業済みのため、師匠を選択してください`}
-                  {userStatus === 'EXPELLED' &&
-                    userLevel !== null &&
-                    `破門済みのため、師匠を選択してください`}
-                  {userStatus === 'ACTIVE' && '師匠を選択してください'}
-                </Text>
+          <View style={styles.mentorSelectionContainer}>
+            <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
+            <Text style={styles.mentorSelectionSubtitle}>
+              スライダーで目標レベルを設定すると、最適な師匠が自動で選択されます。
+            </Text>
 
-                <FlatList
-                  data={mentorData.mentors}
-                  keyExtractor={item => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.mentorItem,
-                        selectedMentor?.id === item.id && styles.selectedMentorItem,
-                      ]}
-                      onPress={() => {
-                        selectionHaptic();
-                        setSelectedMentor(item);
-                      }}
-                    >
-                      <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
-                    </TouchableOpacity>
-                  )}
-                  style={styles.mentorList}
-                />
-
-                {/* 選択しないボタン */}
-                <TouchableOpacity
-                  style={styles.noSelectionButton}
-                  onPress={handleNoMentorSelection}
-                >
-                  <MixedFontText style={styles.noSelectionButtonText}>
-                    師匠を選択しない
-                  </MixedFontText>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {posts.length > 0 ? (
-              <View style={styles.postBox}>
-                <View>
-                  {posts[0].media?.map((media: PostMediaOut, idx: number) => {
-                    const mediaUrl = media.file.startsWith('http')
-                      ? media.file
-                      : `${process.env.EXPO_PUBLIC_API_URL}${media.file}`;
-                    if (media.media_type === 'image') {
-                      return <Image key={idx} source={{ uri: mediaUrl }} style={styles.media} />;
-                    }
-                    // 動画対応は今後
-                    return null;
-                  })}
+            <FlatList
+              data={mentors.sort((a, b) => b.level - a.level)}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={[
+                    styles.mentorItem,
+                    selectedMentor?.id === item.id && styles.selectedMentorItem,
+                  ]}>
+                  <Image source={{ uri: item.avatar }} style={styles.mentorAvatar} />
+                  <MixedFontText style={styles.mentorName}>{item.username}</MixedFontText>
+                  <MixedFontText style={styles.mentorLevel}>Lv. {item.level}</MixedFontText>
                 </View>
-                <MixedFontText style={styles.postContent}>
-                  {posts[0].content || '内容なし'}
-                </MixedFontText>
-              </View>
-            ) : (
-              <MixedFontText style={{ marginTop: 20 }}>気づきがありません。</MixedFontText>
-            )}
-          </>
-        )}
-      </View>
-      {/* 下中央にOKボタン - 適切な条件でのみ表示 */}
-      {(mentorData?.required === false ||
-        (mentorData?.required === true && selectedMentor) ||
-        requestStatus?.status === 'approved') && (
-        <View style={styles.bottomButtonContainer}>
-          <View
-            style={{
-              backgroundColor: '#000',
-              borderRadius: 32,
-              shadowColor: '#000',
-              shadowOpacity: 0.3,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 8,
-              elevation: 4,
-              paddingVertical: 14,
-              paddingHorizontal: 48,
-              minWidth: 180,
-            }}
-          >
-            <MixedFontText
-              style={{
-                color: '#fff',
-                fontSize: 18,
-                fontWeight: 'bold',
-                textAlign: 'center',
-              }}
-              onPress={handleJoin}
-            >
-              参加
-            </MixedFontText>
+              )}
+              style={styles.mentorList}
+            />
           </View>
-        </View>
-      )}
+          
+          {selectedMentor && (
+            loadingPosts ? (
+              <ActivityIndicator style={{ marginTop: 20 }} />
+            ) : (
+              <View style={styles.postBox}>
+                <Text style={styles.postBoxTitle}>{selectedMentor.username}の最新の気づき</Text>
+                {posts.length > 0 ? (
+                  <>
+                    {posts[0].media?.[0]?.file && (
+                      <Image source={{ uri: posts[0].media[0].file }} style={styles.media} />
+                    )}
+                    <MixedFontText style={styles.postContent} numberOfLines={3}>
+                      {posts[0].content || '内容なし'}
+                    </MixedFontText>
+                  </>
+                ) : (
+                  <Text style={styles.noPostText}>まだ気づきがありません。</Text>
+                )}
+              </View>
+            )
+          )}
+      </View>
+
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
+          <MixedFontText style={styles.joinButtonText}>
+            {selectedMentor ? `${selectedMentor.username}に弟子入りする` : '参加する'}
+          </MixedFontText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.noSelectionButton} onPress={handleNoMentorSelection}>
+          <MixedFontText style={styles.noSelectionButtonText}>師匠を選択せずに参加</MixedFontText>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -482,6 +280,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: '#fff',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   backButtonContainer: {
     position: 'absolute',
@@ -513,22 +316,10 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 24,
-    paddingRight: 80, // 右側に十分な余白を追加
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#1f2937',
-  },
-  levelDisplay: {
-    fontSize: 18,
-    color: '#3b82f6',
-    fontWeight: 'bold',
-    marginBottom: 16,
+    paddingRight: 80,
+    paddingTop: 120
   },
   mentorSelectionContainer: {
     width: 300,
@@ -557,15 +348,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     backgroundColor: '#f9fafb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   selectedMentorItem: {
     backgroundColor: '#dbeafe',
-    borderColor: '#3b82f6',
+    borderColor: '#60a5fa',
+    borderWidth: 2,
+    transform: [{ scale: 1.02 }],
+    shadowColor: '#3b82f6',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  mentorAvatar: {
+    width: 32, height: 32, borderRadius: 16, marginRight: 12,
   },
   mentorName: {
-    fontSize: 16,
-    color: '#374151',
-    textAlign: 'center',
+    fontSize: 16, fontWeight: '600', color: '#374151', flex: 1,
+  },
+  mentorLevel: {
+    fontSize: 14, color: '#6b7280',
   },
   postBox: {
     backgroundColor: '#f3f4f6',
@@ -581,61 +384,46 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  postBoxTitle: {
+    fontSize: 14, fontWeight: '600', color: '#6b7280', marginBottom: 12, textAlign: 'center',
+  },
   postContent: {
     fontSize: 16,
     color: '#374151',
     marginBottom: 10,
   },
+  noPostText: {
+    textAlign: 'center', color: '#9ca3af',
+  },
   media: {
     width: '100%',
-    height: 200,
-    marginTop: 5,
-    marginBottom: 5,
-    backgroundColor: '#f0f0f0',
+    height: 150,
     borderRadius: 8,
+    marginBottom: 12,
   },
   bottomButtonContainer: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 32,
+    left: 0, right: 0, bottom: 0,
+    padding: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderTopWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  joinButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 32,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     alignItems: 'center',
-    justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
+  },
+  joinButtonText: {
+    color: '#fff', fontSize: 18, fontWeight: 'bold',
   },
   noSelectionButton: {
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 16,
-    alignItems: 'center',
+    paddingVertical: 12, marginTop: 12,
   },
   noSelectionButtonText: {
-    fontSize: 16,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  requestStatusContainer: {
-    backgroundColor: '#fef3c7',
-    borderWidth: 1,
-    borderColor: '#f59e0b',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 20,
-    width: 300,
-  },
-  requestStatusTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#92400e',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  requestStatusMessage: {
-    fontSize: 14,
-    color: '#92400e',
-    textAlign: 'center',
+    fontSize: 15, color: '#6b7280', fontWeight: '500', textAlign: 'center',
   },
 });
