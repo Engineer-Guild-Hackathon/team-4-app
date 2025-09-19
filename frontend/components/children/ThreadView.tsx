@@ -8,6 +8,7 @@ import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
 import { Button } from '../Shared/Button';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { Fontisto } from '@expo/vector-icons';
 
 type ThreadViewProps = {
   topicId: string;
@@ -89,7 +90,7 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
         textStyle={styles.fabText}
         onPress={() => setShowCreateModal(true)}
       >
-        ＋
+        <Fontisto name="plus-a" size={24} color="#fff" />
       </Button>
 
       <ThreadCreateModal
@@ -215,13 +216,18 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
   },
   fab: {
+    backgroundColor: theme.colors.primary[500],
     position: 'absolute',
     right: remToPx(theme.spacing[8]),
     bottom: remToPx(theme.spacing[8]),
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: 56,
     height: 56,
   },
   fabText: {
+    color: '#fff',
     fontSize: remToPx(theme.typography.fontSize['3xl']),
     lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },
