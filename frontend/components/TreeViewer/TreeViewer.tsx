@@ -26,14 +26,15 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const CANVAS_MULTIPLIER = Platform.OS === 'ios' ? 5 : 3;
 const CANVAS_WIDTH = screenWidth * CANVAS_MULTIPLIER;
 const CANVAS_HEIGHT = screenHeight * CANVAS_MULTIPLIER;
-// Y方向のノード間隔
+
+// ノード間隔
 const VERTICAL_SPACING = 240;
 const HORIZONTAL_SPACING = 180;
 
-const VISIBLE_RADIUS = 800; // 画面中心からこの距離以内だけ描画
+const VISIBLE_RADIUS = 1500; 
 
 type NodeCoords = {
-  id: number; // findAndAnimateToNextNodeでIDを使うために残しておきます
+  id: number; 
   x: number;
   y: number;
 };
@@ -306,13 +307,11 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
                 ))}
               </G>
             </Svg>
-            {/* ★ 修正点 2: Svgとは別に、通常のコンポーネントとしてノードを描画 */}
             {getVisibleNodes(nodesToRender).map(node => (
               <View
                 key={node.data.id}
                 style={{
                   position: 'absolute',
-                  // 中心の座標(node.x, node.y)に来るように、幅と高さの半分を引く
                   left: (node.x ?? 0) - NODE_WIDTH / 2,
                   top: (node.y ?? 0) - NODE_HEIGHT / 2,
                 }}
@@ -320,7 +319,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
                 <TreeNodeView
                   node={node as HierarchyPointNode<D3TreeNode>}
                   onPress={() => onNodePress(node.data.id)}
-                  isFocused={false} // isFocusedのロジックは必要に応じて復活させてください
+                  isFocused={false} 
                 />
               </View>
             ))}
