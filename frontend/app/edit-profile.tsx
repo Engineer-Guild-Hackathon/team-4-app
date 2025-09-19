@@ -97,7 +97,7 @@ export default function EditProfileScreen() {
       Alert.alert('成功', 'プロフィールを更新しました。');
 
       // 前の画面に戻る
-      router.push('/?profileUpdated=true');
+      router.back();
     } catch (error: any) {
       console.error('プロフィール更新エラー:', JSON.stringify(error, null, 2));
       Alert.alert(
@@ -167,7 +167,7 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.push('/?profileUpdated=true')}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
           <Text style={styles.closeButtonText}>×</Text>
         </TouchableOpacity>
         <MixedFontText style={styles.title}>プロフィール編集</MixedFontText>
@@ -328,6 +328,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: theme.remToPx(theme.typography.fontSize.base),
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: 'Klee One',
   },
     closeButton: {
     position: 'absolute',
