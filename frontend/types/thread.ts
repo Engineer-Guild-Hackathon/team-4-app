@@ -8,6 +8,7 @@ export type ThreadOut = {
   mentor: UserOut;
   created_at: string;
   messages: ThreadMessageOut[];
+  title: string;
 };
 
 export type ThreadMessageOut = {

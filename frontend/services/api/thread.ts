@@ -12,7 +12,7 @@ export const getThreads = async (topicId?: string, mentorId?: number): Promise<T
 interface CreateThreadBody {
   topic_id: string;
   mentor_id: number;
-  message: { content: string };
+  title: string; 
 }
 
 export const createThread = async (body: CreateThreadBody): Promise<ThreadOut> => {

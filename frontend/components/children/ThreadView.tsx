@@ -26,6 +26,9 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
 
   const reloadThreads = useCallback(async () => {
     try {
+      const fetchedThreads = await getThreads(topicId, userId);
+      console.log("APIから取得したスレッドデータ:", JSON.stringify(fetchedThreads, null, 2));
+
       setThreads(await getThreads(topicId, userId));
     } catch {
       setError('スレッドの取得に失敗しました');
@@ -43,19 +46,12 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
         setCanCreateThread(false);
         return;
       }
-      try {
-        // --- ▼▼▼ 1. デバッグ用のログを追加 ▼▼▼ ---
-        console.log("権限チェックAPIを呼び出します:", { mentorId: userId, topicId });
-        
+      try {        
         const result = await checkThreadPermission(userId, topicId);
-
-        // --- ▼▼▼ 2. APIからの応答をログに出力 ▼▼▼ ---
-        console.log("APIからの応答:", result);
         
         setCanCreateThread(result.can_create);
       } catch (error) {
-        // --- ▼▼▼ 3. エラーが発生した場合、その内容をログに出力 ▼▼▼ ---
-        console.error("権限チェックAPIでエラーが発生:", error);
+
         setCanCreateThread(false);
       }
     };
@@ -102,9 +98,7 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
               }}
               activeOpacity={0.8}
             >
-              <MixedFontText
-                style={styles.threadTitle}
-              >{`starter: ${thread.starter?.username} / mentor: ${thread.mentor?.username}`}</MixedFontText>
+              <MixedFontText style={styles.threadTitle}>{thread.title}</MixedFontText>
               <MixedFontText style={styles.threadDate}>
                 {new Date(thread.created_at).toLocaleString()}
               </MixedFontText>
