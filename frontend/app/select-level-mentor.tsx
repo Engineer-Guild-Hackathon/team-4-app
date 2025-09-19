@@ -1,4 +1,5 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { Button } from '@/components/Shared/Button';
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/AuthProvider';
 import {
@@ -213,12 +214,6 @@ export default function SelectLevelMentorScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.backButtonContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
-        </TouchableOpacity>
-      </View>
-      
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector
           min={levelConstraints.min}
@@ -233,6 +228,12 @@ export default function SelectLevelMentorScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.backButtonContainer}>
+          <Button variant="secondary" size="sm" onPress={handleBack}>
+            戻る
+          </Button>
+        </View>
+        
         <View style={styles.centerContent}>
           <View style={styles.mentorSelectionContainer}>
             <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
@@ -328,24 +329,6 @@ const styles = StyleSheet.create({
     left: theme.remToPx(theme.spacing[5]), // 20px equivalent
     zIndex: 10,
   },
-  backButton: {
-    backgroundColor: theme.colors.background.secondary,
-    borderWidth: 2,
-    borderColor: theme.colors.primary[300],
-    borderRadius: theme.remToPx(theme.borderRadius.full),
-    paddingVertical: theme.remToPx(theme.spacing[2]), // 8px
-    paddingHorizontal: theme.remToPx(theme.spacing[3]), // 12px
-    shadowColor: theme.colors.shadow.soft,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  backButtonText: {
-    fontSize: theme.remToPx(theme.typography.fontSize.base),
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
   rightBarContainer: {
     position: 'absolute',
     right: 0,
@@ -389,7 +372,7 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     flexGrow: 0, // FlatListの高さを固定
     borderWidth: 7,
-    borderColor: theme.colors.primary[300],
+    borderColor: theme.colors.secondary[900], // 金色に変更
     borderRadius: 0, // 真四角
     backgroundColor: theme.colors.background.secondary,
     padding: theme.remToPx(theme.spacing[2]), // 8px
@@ -401,9 +384,8 @@ const styles = StyleSheet.create({
   },
   mentorItem: {
     padding: theme.remToPx(theme.spacing[3]), // 12px
-    borderWidth: 2,
-    borderColor: theme.colors.primary[300],
-    borderRadius: theme.remToPx(theme.borderRadius.full),
+    borderWidth: 0, // 枠を削除
+    borderRadius: 0, // 真四角に変更
     marginBottom: theme.remToPx(theme.spacing[2]), // 8px
     backgroundColor: theme.colors.background.secondary,
     flexDirection: 'row',
