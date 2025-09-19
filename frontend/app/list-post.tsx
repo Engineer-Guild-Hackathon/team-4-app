@@ -1,6 +1,7 @@
 import ReportModal from '@/components/children/ReportModal';
 import { useAuth } from '@/hooks/AuthProvider';
 import { getPosts } from '@/services/api/post';
+import { blockUser } from '@/services/api/user';
 import { theme } from '@/styles/theme';
 import { PostOut } from '@/types/post';
 import Fontisto from '@expo/vector-icons/Fontisto';
@@ -95,7 +96,19 @@ const PostCard = ({
 
   const handleOpenMenu = (targetPost: PostOut) => {
     Alert.alert('気づきメニュー', '', [
-      { text: 'ユーザーブロック（未実装）', onPress: () => {} },
+      {
+        text: 'ユーザーブロック',
+        onPress: () => {
+          Alert.alert('ブロック', '本当にこのユーザーをブロックしますか？', [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'ブロック',
+              style: 'destructive',
+              onPress: () => blockUser(targetPost.author.id),
+            },
+          ]);
+        },
+      },
       {
         text: 'ポスト報告',
         onPress: () => {
@@ -201,11 +214,7 @@ export default function ListPostScreen() {
     const loadPosts = async () => {
       try {
         setLoading(true);
-        const fetchedPosts = await getPosts(
-          params.topicId as string,
-          undefined,
-          1,
-        );
+        const fetchedPosts = await getPosts(params.topicId as string, undefined, 1);
         setPosts(fetchedPosts);
       } catch (e: unknown) {
         if (e instanceof Error) {
@@ -221,6 +230,12 @@ export default function ListPostScreen() {
       loadPosts();
     }
   }, [params.topicId]);
+
+  useEffect(() => {
+    if (!loading && posts.length === 0) {
+      router.back();
+    }
+  }, [posts, loading, router]); 
 
   const handleSwipe = () => {
     setPosts(prevPosts => prevPosts.slice(1));
