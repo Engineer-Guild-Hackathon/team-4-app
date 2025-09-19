@@ -89,17 +89,9 @@ export default function RootLayout() {
             />
             <Stack.Screen name="select-level-mentor" options={{ headerShown: false }} />
             <Stack.Screen
-              name="create-post"
-              options={{
-                presentation: 'modal',
-                title: '新しい気づき',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
               name="edit-profile"
               options={{
-                presentation: 'modal',
+                presentation: 'containedTransparentModal',
                 title: 'プロフィール編集',
                 headerShown: false,
               }}
