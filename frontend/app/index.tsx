@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/AuthProvider';
 import { deleteMentorRequest, getMentorRequestStatus } from '@/services/api/mentorship';
 import { remToPx, theme } from '@/styles/theme';
 import { importantActionHaptic } from '@/utils/haptics';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';

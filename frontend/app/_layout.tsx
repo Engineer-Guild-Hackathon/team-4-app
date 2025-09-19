@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+
 import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { AuthProvider } from '@/hooks/AuthProvider';
 import { modalHaptic } from '@/utils/haptics';
