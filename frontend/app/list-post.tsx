@@ -201,11 +201,7 @@ export default function ListPostScreen() {
     const loadPosts = async () => {
       try {
         setLoading(true);
-        const fetchedPosts = await getPosts(
-          params.topicId as string,
-          undefined,
-          1,
-        );
+        const fetchedPosts = await getPosts(params.topicId as string, undefined, 1);
         setPosts(fetchedPosts);
       } catch (e: unknown) {
         if (e instanceof Error) {

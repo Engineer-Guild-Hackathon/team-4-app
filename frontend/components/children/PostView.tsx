@@ -20,13 +20,13 @@ import ReportModal from './ReportModal';
 import CreatePostModal from './PostCreateModal';
 import { deletePost, getPosts } from '@/services/api/post';
 
-interface PostViewProps { 
+interface PostViewProps {
   loading: boolean;
   error: string | null;
   selfUserId?: number;
   topicId: string;
-  userId: number; 
-  onPostCreated: () => void; 
+  userId: number;
+  onPostCreated: () => void;
 }
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
@@ -53,7 +53,7 @@ export default function PostView({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [posts, setPosts] = React.useState<PostOut[]>([]);
 
-    const handleDeletePost = async (postId: number) => {
+  const handleDeletePost = async (postId: number) => {
     Alert.alert('気づきの削除', 'この気づきを本当に削除しますか？', [
       { text: 'キャンセル', style: 'cancel' },
       {
@@ -62,7 +62,7 @@ export default function PostView({
         onPress: async () => {
           try {
             await deletePost(postId);
-            Alert.alert("削除に成功しました")
+            Alert.alert('削除に成功しました');
             setPosts(await getPosts(topicId!, userId!));
           } catch (e: unknown) {
             if (e instanceof Error) {
@@ -77,8 +77,8 @@ export default function PostView({
   };
 
   const handlePostCreated = useCallback(() => {
-    setShowCreateModal(false); 
-    onPostCreated(); 
+    setShowCreateModal(false);
+    onPostCreated();
     getPosts(topicId, userId).then(setPosts);
   }, [onPostCreated]);
 
@@ -104,7 +104,11 @@ export default function PostView({
       <View style={styles.postHeader}>
         <View style={styles.authorInfo}>
           <Image
-            source={{ uri: item.author?.avatar || `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}` }}
+            source={{
+              uri:
+                item.author?.avatar ||
+                `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}`,
+            }}
             style={styles.authorAvatar}
           />
           <Text style={styles.authorUsername}>{item.author?.username}</Text>
@@ -121,12 +125,24 @@ export default function PostView({
       </View>
 
       {item.media && item.media.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScrollView}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.mediaScrollView}
+        >
           {item.media.map((media: PostMediaOut, index: number) => {
             const mediaUrl = media.file;
-            const mediaStyle = item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
+            const mediaStyle =
+              item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
             if (media.media_type === 'image') {
-              return <Image key={index} source={{ uri: mediaUrl }} style={mediaStyle} contentFit="cover" />;
+              return (
+                <Image
+                  key={index}
+                  source={{ uri: mediaUrl }}
+                  style={mediaStyle}
+                  contentFit="cover"
+                />
+              );
             } else if (media.media_type === 'video') {
               return <VideoItem key={index} uri={mediaUrl} style={mediaStyle} />;
             }

@@ -53,7 +53,6 @@ export default function UserDetailModal({
   const pagerRef = React.useRef<PagerView>(null);
   const [isCreatePostModalVisible, setCreatePostModalVisible] = useState(false);
 
-
   useEffect(() => {
     if (visible && userId) {
       setLoading(true);

@@ -27,7 +27,6 @@ export default function EditProfileScreen() {
   const [avatarUri, setAvatarUri] = useState<string | null>(user?.avatar || null);
   const [newAvatarAsset, setNewAvatarAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
 
   useEffect(() => {
     if (user) {
@@ -36,7 +35,7 @@ export default function EditProfileScreen() {
         setAvatarUri(userData.avatar || null);
       });
     }
-  }, [user]); 
+  }, [user]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -330,7 +329,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     fontFamily: 'Klee One',
   },
-    closeButton: {
+  closeButton: {
     position: 'absolute',
     top: theme.remToPx(theme.spacing[4]),
     right: theme.remToPx(theme.spacing[4]),
