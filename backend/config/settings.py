@@ -217,10 +217,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 # ]
 
 # Expo Goからのアクセスをより柔軟に許可したい場合は、正規表現を使う
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^http://localhost:\d+$",
-    r"^http://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$", # ローカルIPアドレスからのアクセス
-]
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     r"^http://localhost:\d+$",
+#     r"^http://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$", # ローカルIPアドレスからのアクセス
+# ]
 
 # 認証情報（CookieやAuthorizationヘッダー）の送受信を許可する
 CORS_ALLOW_CREDENTIALS = True
