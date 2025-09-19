@@ -1,4 +1,4 @@
-import { getThreads, sendMessageToThread } from '@/services/api/thread';
+import { checkThreadPermission, getThreads, sendMessageToThread } from '@/services/api/thread';
 import { ThreadOut } from '@/types/thread';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useState } from 'react';
@@ -8,6 +8,8 @@ import ThreadCreateModal from './ThreadCreateModal';
 import ThreadDetailView from './ThreadDetailView';
 import { Button } from '../Shared/Button';
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { Fontisto } from '@expo/vector-icons';
+import { useAuth } from '@/hooks/AuthProvider';
 
 type ThreadViewProps = {
   topicId: string;
@@ -19,6 +21,8 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
   const [selectedThread, setSelectedThread] = useState<ThreadOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [canCreateThread, setCanCreateThread] = useState(false);
+  const { user: selfUser } = useAuth();
 
   const reloadThreads = useCallback(async () => {
     try {
@@ -31,6 +35,34 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
   useEffect(() => {
     reloadThreads();
   }, [reloadThreads]);
+
+  useEffect(() => {
+    const verifyPermission = async () => {
+      // 自分のスレッド一覧を見ている場合は、作成ボタンは表示しない
+      if (selfUser && selfUser.id === userId) {
+        setCanCreateThread(false);
+        return;
+      }
+      try {
+        // --- ▼▼▼ 1. デバッグ用のログを追加 ▼▼▼ ---
+        console.log("権限チェックAPIを呼び出します:", { mentorId: userId, topicId });
+        
+        const result = await checkThreadPermission(userId, topicId);
+
+        // --- ▼▼▼ 2. APIからの応答をログに出力 ▼▼▼ ---
+        console.log("APIからの応答:", result);
+        
+        setCanCreateThread(result.can_create);
+      } catch (error) {
+        // --- ▼▼▼ 3. エラーが発生した場合、その内容をログに出力 ▼▼▼ ---
+        console.error("権限チェックAPIでエラーが発生:", error);
+        setCanCreateThread(false);
+      }
+    };
+    if (topicId && userId && selfUser) {
+      verifyPermission();
+    }
+  }, [topicId, userId, selfUser]);
 
   // 詳細ページを表示する場合
   if (selectedThread) {
@@ -83,14 +115,16 @@ export default function ThreadView({ topicId, userId }: ThreadViewProps) {
           ))}
         </ScrollView>
       )}
+      {canCreateThread && (
       <Button
         variant="icon"
         style={styles.fab}
         textStyle={styles.fabText}
         onPress={() => setShowCreateModal(true)}
       >
-        ＋
+        <Fontisto name="plus-a" size={24} color="#fff" />
       </Button>
+      )}
 
       <ThreadCreateModal
         visible={showCreateModal}
@@ -215,13 +249,18 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
   },
   fab: {
+    backgroundColor: theme.colors.primary[500],
     position: 'absolute',
     right: remToPx(theme.spacing[8]),
     bottom: remToPx(theme.spacing[8]),
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: 56,
     height: 56,
   },
   fabText: {
+    color: '#fff',
     fontSize: remToPx(theme.typography.fontSize['3xl']),
     lineHeight: remToPx(theme.typography.fontSize['3xl']),
   },

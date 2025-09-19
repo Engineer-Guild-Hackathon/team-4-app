@@ -8,6 +8,7 @@ from .schemas import ThreadOut, ThreadCreateIn, ThreadMessageOut, ThreadMessageC
 from topics.models import Topic
 from mentorship.models import MentorRelation
 from django.db.models import Q
+import uuid
 
 
 User = get_user_model()
@@ -78,3 +79,16 @@ def delete_message(request, thread_id: int, message_id: int):
 		return 403, {"message": "このメッセージを削除する権限がありません"}
 	message.delete()
 	return {"message": "メッセージを削除しました"}
+
+@router.get("/check-permission/", response=dict, auth=JWTAuth())
+def check_thread_permission(request, mentor_id: int, topic_id: uuid.UUID):
+    topic = get_object_or_404(Topic, id=topic_id)
+    mentor = get_object_or_404(User, id=mentor_id)
+
+    can_create = MentorRelation.objects.filter(
+        mentor=mentor,
+        mentee=request.auth, 
+        topic=topic
+    ).exists()
+    
+    return {"can_create": can_create}
