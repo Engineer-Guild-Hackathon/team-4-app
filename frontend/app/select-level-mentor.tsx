@@ -1,4 +1,5 @@
 import { MixedFontText } from '@/components/Shared/MixedFontText';
+import { Button } from '@/components/Shared/Button';
 import { VerticalLevelSelector } from '@/components/VerticalLevelSelector';
 import { useAuth } from '@/hooks/AuthProvider';
 import {
@@ -18,13 +19,15 @@ import {
   selectionHaptic,
   successHaptic
 } from '@/utils/haptics';
+import { theme } from '@/styles/theme';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -53,6 +56,7 @@ export default function SelectLevelMentorScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [requestStatus, setRequestStatus] = useState<{ status: string; to_username?: string; } | null>(null);
+  const flatListRef = useRef<FlatList<Mentor>>(null);
 
 
   useEffect(() => {
@@ -105,6 +109,17 @@ export default function SelectLevelMentorScreen() {
     if (closestMentor && closestMentor.id !== selectedMentor?.id) {
       selectionHaptic();
       setSelectedMentor(closestMentor);
+      
+      // 選択された師匠をFlatListの中央に表示
+      const sortedMentors = mentors.sort((a, b) => b.level - a.level);
+      const selectedIndex = sortedMentors.findIndex(mentor => mentor.id === closestMentor.id);
+      if (selectedIndex !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: selectedIndex,
+          animated: true,
+          viewPosition: 0.5, // 中央に表示
+        });
+      }
     }
   }, [level, mentors, selectedMentor?.id]);
 
@@ -199,12 +214,6 @@ export default function SelectLevelMentorScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.backButtonContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <MixedFontText style={styles.backButtonText}>← 戻る</MixedFontText>
-        </TouchableOpacity>
-      </View>
-      
       <View style={styles.rightBarContainer}>
         <VerticalLevelSelector
           min={levelConstraints.min}
@@ -214,7 +223,18 @@ export default function SelectLevelMentorScreen() {
         />
       </View>
       
-      <View style={styles.centerContent}>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.backButtonContainer}>
+          <Button variant="secondary" size="sm" onPress={handleBack}>
+            戻る
+          </Button>
+        </View>
+        
+        <View style={styles.centerContent}>
           <View style={styles.mentorSelectionContainer}>
             <Text style={styles.mentorSelectionTitle}>師匠を選択してください</Text>
             <Text style={styles.mentorSelectionSubtitle}>
@@ -222,6 +242,7 @@ export default function SelectLevelMentorScreen() {
             </Text>
 
             <FlatList
+              ref={flatListRef}
               data={mentors.sort((a, b) => b.level - a.level)}
               keyExtractor={item => item.id.toString()}
               renderItem={({ item }) => (
@@ -235,6 +256,21 @@ export default function SelectLevelMentorScreen() {
                 </View>
               )}
               style={styles.mentorList}
+              scrollEnabled={false}
+              nestedScrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              onScrollToIndexFailed={(info) => {
+                // スクロール失敗時のフォールバック
+                setTimeout(() => {
+                  if (flatListRef.current && info.index < mentors.length) {
+                    flatListRef.current.scrollToIndex({
+                      index: info.index,
+                      animated: true,
+                      viewPosition: 0.5,
+                    });
+                  }
+                }, 100);
+              }}
             />
           </View>
           
@@ -259,7 +295,8 @@ export default function SelectLevelMentorScreen() {
               </View>
             )
           )}
-      </View>
+        </View>
+      </ScrollView>
 
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
@@ -279,7 +316,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background.primary,
   },
   centered: {
     flex: 1,
@@ -288,22 +325,9 @@ const styles = StyleSheet.create({
   },
   backButtonContainer: {
     position: 'absolute',
-    top: 50,
-    left: 20,
+    top: theme.remToPx(theme.spacing[12]), // 50px equivalent
+    left: theme.remToPx(theme.spacing[5]), // 20px equivalent
     zIndex: 10,
-  },
-  backButton: {
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#374151',
-    fontWeight: '500',
   },
   rightBarContainer: {
     position: 'absolute',
@@ -313,117 +337,162 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     width: 80,
+    zIndex: 10,
+  },
+  scrollContainer: {
+    flex: 1,
+    paddingRight: 80,
+  },
+  scrollContent: {
+    paddingBottom: 200, // ボタンエリア分の余白を確保
   },
   centerContent: {
-    flex: 1,
     alignItems: 'center',
-    paddingLeft: 24,
-    paddingRight: 80,
-    paddingTop: 120
+    paddingLeft: theme.remToPx(theme.spacing[6]), // 24px
+    paddingTop: 120, // 120px
   },
   mentorSelectionContainer: {
     width: 300,
-    marginBottom: 20,
+    marginBottom: theme.remToPx(theme.spacing[5]), // 20px
   },
   mentorSelectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    marginBottom: 8,
-    color: '#1f2937',
+    marginBottom: theme.remToPx(theme.spacing[2]), // 8px
+    color: theme.colors.text.primary,
   },
   mentorSelectionSubtitle: {
-    fontSize: 14,
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#6b7280',
+    marginBottom: theme.remToPx(theme.spacing[4]), // 16px
+    color: theme.colors.text.secondary,
   },
   mentorList: {
     maxHeight: 200,
+    flexGrow: 0, // FlatListの高さを固定
+    borderWidth: 7,
+    borderColor: theme.colors.secondary[900], // 金色に変更
+    borderRadius: 0, // 真四角
+    backgroundColor: theme.colors.background.secondary,
+    padding: theme.remToPx(theme.spacing[2]), // 8px
+    shadowColor: theme.colors.shadow.soft,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   mentorItem: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#f9fafb',
+    padding: theme.remToPx(theme.spacing[3]), // 12px
+    borderWidth: 0, // 枠を削除
+    borderRadius: 0, // 真四角に変更
+    marginBottom: theme.remToPx(theme.spacing[2]), // 8px
+    backgroundColor: theme.colors.background.secondary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: theme.colors.shadow.soft,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   selectedMentorItem: {
-    backgroundColor: '#dbeafe',
-    borderColor: '#60a5fa',
+    backgroundColor: theme.colors.primary[500],
+    borderColor: theme.colors.primary[500],
     borderWidth: 2,
     transform: [{ scale: 1.02 }],
-    shadowColor: '#3b82f6',
+    shadowColor: theme.colors.primary[500],
     shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowRadius: 10,
   },
   mentorAvatar: {
-    width: 32, height: 32, borderRadius: 16, marginRight: 12,
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    marginRight: theme.remToPx(theme.spacing[3]), // 12px
   },
   mentorName: {
-    fontSize: 16, fontWeight: '600', color: '#374151', flex: 1,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    flex: 1,
   },
   mentorLevel: {
-    fontSize: 14, color: '#6b7280',
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.secondary,
   },
   postBox: {
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    backgroundColor: theme.colors.background.secondary,
+    borderWidth: 2,
+    borderColor: theme.colors.primary[300],
     borderRadius: 12,
-    padding: 20,
-    marginTop: 20,
+    padding: theme.remToPx(theme.spacing[5]), // 20px
+    marginTop: theme.remToPx(theme.spacing[5]), // 20px
     width: 260,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: theme.colors.shadow.soft,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   postBoxTitle: {
-    fontSize: 14, fontWeight: '600', color: '#6b7280', marginBottom: 12, textAlign: 'center',
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.remToPx(theme.spacing[3]), // 12px
+    textAlign: 'center',
   },
   postContent: {
-    fontSize: 16,
-    color: '#374151',
-    marginBottom: 10,
+    fontSize: theme.remToPx(theme.typography.fontSize.base),
+    color: theme.colors.text.primary,
+    marginBottom: theme.remToPx(theme.spacing[2]), // 8px
   },
   noPostText: {
-    textAlign: 'center', color: '#9ca3af',
+    textAlign: 'center',
+    color: theme.colors.text.tertiary,
   },
   media: {
     width: '100%',
     height: 150,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: theme.remToPx(theme.spacing[3]), // 12px
   },
   bottomButtonContainer: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 0,
-    padding: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderTopWidth: 1,
-    borderColor: '#e5e7eb',
+    left: 0, 
+    right: 0, 
+    bottom: 0,
+    padding: theme.remToPx(theme.spacing[6]), // 24px
+    backgroundColor: theme.colors.frosted.light,
+    borderTopWidth: 2,
+    borderColor: theme.colors.primary[300],
   },
   joinButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 32,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+    backgroundColor: theme.colors.primary[500],
+    borderRadius: theme.remToPx(theme.borderRadius.full),
+    paddingVertical: theme.remToPx(theme.spacing[3]), // 12px
+    paddingHorizontal: theme.remToPx(theme.spacing[8]), // 32px
     alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
+    shadowColor: theme.colors.shadow.soft,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   joinButtonText: {
-    color: '#fff', fontSize: 18, fontWeight: 'bold',
+    color: theme.colors.text.inverse,
+    fontSize: theme.remToPx(theme.typography.fontSize.lg),
+    fontWeight: theme.typography.fontWeight.bold,
   },
   noSelectionButton: {
-    paddingVertical: 12, marginTop: 12,
+    paddingVertical: theme.remToPx(theme.spacing[3]), // 12px
+    marginTop: theme.remToPx(theme.spacing[3]), // 12px
   },
   noSelectionButtonText: {
-    fontSize: 15, color: '#6b7280', fontWeight: '500', textAlign: 'center',
+    fontSize: theme.remToPx(theme.typography.fontSize.sm),
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: 'center',
   },
 });
