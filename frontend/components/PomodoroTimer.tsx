@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   setterButtonText: {
     // flex: 1,
-    // fontSize: 40, 
+    // fontSize: 40,
     // color: theme.colors.text.secondary,
   },
   setterValueContainer: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   startButton: {
     marginTop: 60,
-    backgroundColor: theme.colors.background.primary, 
+    backgroundColor: theme.colors.background.primary,
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 25,
@@ -405,31 +405,31 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   startButtonText: {
-    color: theme.colors.text.primary, 
+    color: theme.colors.text.primary,
     fontSize: parseFloat(theme.typography.fontSize.lg) * 16,
     fontWeight: theme.typography.fontWeight.bold,
   },
   closeButton: {
     position: 'absolute',
-    top: 60, 
-    right: 40, 
+    top: 60,
+    right: 40,
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.background.primary, 
+    backgroundColor: theme.colors.background.primary,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   closeButtonText: {
     fontSize: parseFloat(theme.typography.fontSize['2xl']) * 16,
-    color: theme.colors.text.secondary, 
+    color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.regular,
     lineHeight: parseFloat(theme.typography.fontSize['2xl']) * 16 * 1.2,
     textAlign: 'center',
   },
-    notificationSetterContainer: {
+  notificationSetterContainer: {
     flexDirection: 'row',
     justifyContent: 'center', // 中央揃えに変更
     alignItems: 'center',

@@ -257,8 +257,8 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   const getVisibleLinks = (links: typeof linksToRender, visibleNodes: typeof nodesToRender) => {
     if (Platform.OS !== 'android') return links;
     const visibleIds = new Set(visibleNodes.map(n => n.data.id));
-    return links.filter(link =>
-      visibleIds.has(link.source.data.id) && visibleIds.has(link.target.data.id)
+    return links.filter(
+      link => visibleIds.has(link.source.data.id) && visibleIds.has(link.target.data.id)
     );
   };
 
@@ -294,20 +294,20 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
         <View style={styles.gestureContainer}>
           <Animated.View style={[styles.canvas, animatedStyle]}>
             <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={StyleSheet.absoluteFill}>
-            <G>
-              {getVisibleLinks(linksToRender, getVisibleNodes(nodesToRender)).map(link => (
-                <Line
-                  key={`${link.source.data.id}-${link.target.data.id}`}
-                  x1={link.source.x ?? 0}
-                  y1={link.source.y ?? 0}
-                  x2={link.target.x ?? 0}
-                  y2={link.target.y ?? 0}
-                  stroke="#6b7280"
-                  strokeWidth={1.5}
-                />
-              ))}
-            </G>
-          </Svg>
+              <G>
+                {getVisibleLinks(linksToRender, getVisibleNodes(nodesToRender)).map(link => (
+                  <Line
+                    key={`${link.source.data.id}-${link.target.data.id}`}
+                    x1={link.source.x ?? 0}
+                    y1={link.source.y ?? 0}
+                    x2={link.target.x ?? 0}
+                    y2={link.target.y ?? 0}
+                    stroke="#6b7280"
+                    strokeWidth={1.5}
+                  />
+                ))}
+              </G>
+            </Svg>
             {/* ★ 修正点 2: Svgとは別に、通常のコンポーネントとしてノードを描画 */}
             {getVisibleNodes(nodesToRender).map(node => (
               <View

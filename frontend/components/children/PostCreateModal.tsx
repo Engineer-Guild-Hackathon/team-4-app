@@ -118,7 +118,7 @@ export default function CreatePostModal({
       setContent('');
       setMediaAssets([]);
       onPostCreated(); // 親に成功を通知
-      onClose();       // モーダルを閉じる
+      onClose(); // モーダルを閉じる
     } catch (error: unknown) {
       errorHaptic();
       const errorMessage = (error as { message?: string })?.message || '投稿に失敗しました';
@@ -174,7 +174,11 @@ export default function CreatePostModal({
                     );
                   } else if (asset.type === 'video') {
                     return (
-                      <VideoPreviewItem key={asset.assetId} uri={asset.uri} style={styles.previewImage} />
+                      <VideoPreviewItem
+                        key={asset.assetId}
+                        uri={asset.uri}
+                        style={styles.previewImage}
+                      />
                     );
                   }
                   return null;
@@ -251,4 +255,3 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
   },
 });
-
