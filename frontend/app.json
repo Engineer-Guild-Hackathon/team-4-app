@@ -20,10 +20,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.tempura29.takumi",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "package": "com.tempura29.takumi"
     },
     "web": {
       "bundler": "metro",

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,12 +23,14 @@ import { buildTree, TreeNode as D3TreeNode } from './treeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const CANVAS_MULTIPLIER = 5;
+const CANVAS_MULTIPLIER = 2;
 const CANVAS_WIDTH = screenWidth * CANVAS_MULTIPLIER;
 const CANVAS_HEIGHT = screenHeight * CANVAS_MULTIPLIER;
 // Y方向のノード間隔
 const VERTICAL_SPACING = 240;
 const HORIZONTAL_SPACING = 180;
+
+const VISIBLE_RADIUS = 600; // 画面中心からこの距離以内だけ描画
 
 type NodeCoords = {
   id: number; // findAndAnimateToNextNodeでIDを使うために残しておきます
@@ -45,6 +48,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   const { data, loading, max_level } = useTreeData(topicId);
 
   const layout = useMemo(() => {
+    console.log('layoutCalc start');
     if (!data || data.length === 0) return null;
     const hierarchyData = buildTree(data);
     const root = hierarchy(hierarchyData);
@@ -82,6 +86,7 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
     });
 
     const links = root.links().filter(link => link.source.data.id !== -1);
+    console.log('layoutCalc end');
     return { root, nodes, links };
   }, [data, max_level]);
 
@@ -100,6 +105,18 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
   const translateY = useSharedValue(0);
   const savedScale = useSharedValue(1);
   const nodeCoords = useSharedValue<NodeCoords[]>([]);
+
+  const getVisibleNodes = (nodes: typeof nodesToRender) => {
+    if (Platform.OS !== 'android') return nodes;
+    // Androidのみ仮想化
+    const centerX = CANVAS_WIDTH / 2 - translateX.value / scale.value;
+    const centerY = CANVAS_HEIGHT / 2 - translateY.value / scale.value;
+    return nodes.filter(node => {
+      const dx = (node.x ?? 0) - centerX;
+      const dy = (node.y ?? 0) - centerY;
+      return dx * dx + dy * dy < VISIBLE_RADIUS * VISIBLE_RADIUS;
+    });
+  };
 
   useEffect(() => {
     if (nodesToRender && nodesToRender.length > 0) {
@@ -236,7 +253,14 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
       }
     }
   }, [layout, userId, fitToNetwork, nodesToRender, scale, translateX, translateY]); // layoutとuserIdが準備できたら実行
-  // ★★★★★ 修正ここまで ★★★★★
+
+  const getVisibleLinks = (links: typeof linksToRender, visibleNodes: typeof nodesToRender) => {
+    if (Platform.OS !== 'android') return links;
+    const visibleIds = new Set(visibleNodes.map(n => n.data.id));
+    return links.filter(link =>
+      visibleIds.has(link.source.data.id) && visibleIds.has(link.target.data.id)
+    );
+  };
 
   if (loading) {
     return (
@@ -270,22 +294,22 @@ export const TreeViewer: React.FC<TreeViewerProps> = ({ topicId, userId, onNodeP
         <View style={styles.gestureContainer}>
           <Animated.View style={[styles.canvas, animatedStyle]}>
             <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={StyleSheet.absoluteFill}>
-              <G>
-                {linksToRender.map(link => (
-                  <Line
-                    key={`${link.source.data.id}-${link.target.data.id}`}
-                    x1={link.source.x ?? 0}
-                    y1={link.source.y ?? 0}
-                    x2={link.target.x ?? 0}
-                    y2={link.target.y ?? 0}
-                    stroke="#6b7280"
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </G>
-            </Svg>
+            <G>
+              {getVisibleLinks(linksToRender, getVisibleNodes(nodesToRender)).map(link => (
+                <Line
+                  key={`${link.source.data.id}-${link.target.data.id}`}
+                  x1={link.source.x ?? 0}
+                  y1={link.source.y ?? 0}
+                  x2={link.target.x ?? 0}
+                  y2={link.target.y ?? 0}
+                  stroke="#6b7280"
+                  strokeWidth={1.5}
+                />
+              ))}
+            </G>
+          </Svg>
             {/* ★ 修正点 2: Svgとは別に、通常のコンポーネントとしてノードを描画 */}
-            {nodesToRender.map(node => (
+            {getVisibleNodes(nodesToRender).map(node => (
               <View
                 key={node.data.id}
                 style={{

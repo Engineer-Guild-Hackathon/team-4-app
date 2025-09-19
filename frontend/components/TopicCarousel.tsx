@@ -1,10 +1,10 @@
+import { MixedFontText } from '@/components/Shared/MixedFontText';
 import { theme } from '@/styles/theme';
 import { TopicOut } from '@/types/topic';
+import { selectionHaptic } from '@/utils/haptics';
 import { useRouter } from 'expo-router';
-import { MixedFontText } from '@/components/Shared/MixedFontText';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Animated, Dimensions, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { selectionHaptic } from '@/utils/haptics';
 
 interface TopicCarouselProps {
   topics: TopicOut[];
@@ -78,7 +78,7 @@ export const TopicCarousel: React.FC<TopicCarouselProps> = ({
         <TouchableOpacity
           onPress={() => {
             selectionHaptic();
-            if (currentIndex === pageIndex) {
+            if (currentIndex === pageIndex && item.id !== 'manage') {
               router.push(`/list-post?topicId=${item.id}`);
             } else {
               onSelectIndex(pageIndex);

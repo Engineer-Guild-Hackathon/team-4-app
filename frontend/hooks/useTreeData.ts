@@ -17,7 +17,9 @@ export const useTreeData = (topicId: string | null) => {
       }
       try {
         setLoading(true);
+        console.log('トピックID:', topicId);
         const response = await getTopicTree(topicId);
+        console.log('ツリーデータ取得成功:', response);
         setData(response.tree || []);
         setMaxLevel(response.max_level ?? null);
         setMinLevel(response.min_level ?? null);
