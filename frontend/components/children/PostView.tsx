@@ -1,13 +1,10 @@
-import { MixedFontText } from '@/components/Shared/MixedFontText';
-import { getPosts } from '@/services/api/post';
 import { theme } from '@/styles/theme';
 import { PostMediaOut, PostOut } from '@/types/post';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,14 +17,17 @@ import {
 } from 'react-native';
 import { Button } from '../Shared/Button';
 import ReportModal from './ReportModal';
+import CreatePostModal from './PostCreateModal';
+import { getPosts } from '@/services/api/post';
 
-interface PostViewProps {
-  userId: number;
+interface PostViewProps { 
   loading: boolean;
   error: string | null;
   selfUserId?: number;
   topicId: string;
+  userId: number; 
   onDelete: (postId: number) => void;
+  onPostCreated: () => void; 
 }
 
 const remToPx = (rem: string) => parseFloat(rem) * 16;
@@ -37,36 +37,33 @@ const VideoItem = ({ uri, style }: { uri: string; style: ImageStyle }) => {
     player.loop = true;
     player.play();
   });
-
   useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-  return (
-    <VideoView
-      player={player}
-      style={style}
-      // allowsFullscreen
-      // allowsPictureInPicture
-    />
-  );
+  return <VideoView player={player} style={style} />;
 };
 
 export default function PostView({
-  userId,
   loading,
   error,
   selfUserId,
   onDelete,
   topicId,
+  userId,
+  onPostCreated,
 }: PostViewProps) {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [reportTargetPost, setReportTargetPost] = React.useState<PostOut | null>(null);
+  const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [posts, setPosts] = React.useState<PostOut[]>([]);
 
-  const router = useRouter();
-
-  React.useEffect(() => {
+  const handlePostCreated = useCallback(() => {
+    setShowCreateModal(false); 
+    onPostCreated(); 
     getPosts(topicId, userId).then(setPosts);
-  }, [loading, error, topicId, userId]);
+  }, [onPostCreated]);
+
+  useEffect(() => {
+    getPosts(topicId, userId).then(setPosts);
+  }, [topicId, userId]);
 
   const handleOpenMenu = (post: PostOut) => {
     Alert.alert('気づきメニュー', '', [
@@ -86,12 +83,7 @@ export default function PostView({
       <View style={styles.postHeader}>
         <View style={styles.authorInfo}>
           <Image
-            source={{
-              uri:
-                item.author?.avatar ||
-                `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}`,
-              cacheKey: item.author?.avatar ? item.author.avatar.split('?')[0] : undefined,
-            }}
+            source={{ uri: item.author?.avatar || `https://placehold.co/80x80/e0e0e0/555555?text=${item.author?.username.charAt(0)}` }}
             style={styles.authorAvatar}
           />
           <Text style={styles.authorUsername}>{item.author?.username}</Text>
@@ -108,26 +100,12 @@ export default function PostView({
       </View>
 
       {item.media && item.media.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.mediaScrollView}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScrollView}>
           {item.media.map((media: PostMediaOut, index: number) => {
             const mediaUrl = media.file;
-            const cacheKey = mediaUrl.split('?')[0];
-            const mediaStyle =
-              item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
-
+            const mediaStyle = item.media.length > 1 ? styles.mediaItemMulti : styles.mediaItemSingle;
             if (media.media_type === 'image') {
-              return (
-                <Image
-                  key={index}
-                  source={{ uri: mediaUrl, cacheKey }}
-                  style={mediaStyle}
-                  contentFit="cover"
-                />
-              );
+              return <Image key={index} source={{ uri: mediaUrl }} style={mediaStyle} contentFit="cover" />;
             } else if (media.media_type === 'video') {
               return <VideoItem key={index} uri={mediaUrl} style={mediaStyle} />;
             }
@@ -143,7 +121,7 @@ export default function PostView({
     return <ActivityIndicator size="large" style={styles.centered} />;
   }
   if (error) {
-    return <MixedFontText style={styles.centered}>{`エラー: ${error}`}</MixedFontText>;
+    return <Text style={styles.centered}>{`エラー: ${error}`}</Text>;
   }
 
   return (
@@ -159,7 +137,6 @@ export default function PostView({
           </View>
         }
       />
-      {/* 報告モーダル（必要ならpropsでonSubmitを渡す） */}
       <ReportModal
         visible={showReportModal}
         onClose={() => {
@@ -179,11 +156,17 @@ export default function PostView({
           variant="icon"
           style={styles.fab}
           textStyle={styles.fabText}
-          onPress={() => router.push(`/create-post?topicId=${topicId}`)}
+          onPress={() => setShowCreateModal(true)} // router.pushをやめる
         >
           <Fontisto name="plus-a" size={24} color="#fff" />
         </Button>
       )}
+      <CreatePostModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        topicId={topicId}
+        onPostCreated={handlePostCreated}
+      />
     </View>
   );
 }

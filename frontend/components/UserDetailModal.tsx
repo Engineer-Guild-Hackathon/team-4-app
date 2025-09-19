@@ -51,6 +51,8 @@ export default function UserDetailModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
   const pagerRef = React.useRef<PagerView>(null);
+  const [isCreatePostModalVisible, setCreatePostModalVisible] = useState(false);
+
 
   useEffect(() => {
     if (visible && userId) {
@@ -237,12 +239,13 @@ export default function UserDetailModal({
           >
             {/* 気づき一覧ページ */}
             <PostView
-              userId={userId!}
               loading={loading}
               error={error}
               selfUserId={selfUserId}
               topicId={topicId!}
+              userId={userId!}
               onDelete={handleDeletePost}
+              onPostCreated={() => setCreatePostModalVisible(true)}
             />
             {/* 掲示板ページ */}
             <ThreadView userId={userId!} topicId={topicId!} />
