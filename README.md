@@ -12,10 +12,16 @@
 ---
 
 ## デモ/プレゼン資料
-- デモURL: ネイティブアプリのためなし
-- プレゼンURL：https://www.canva.com/design/DAGyeXmhYFI/bC4jgNEk4sv7SIKyjCIbhw/view?utm_content=DAGyeXmhYFI&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=habd0cede2e
+- デモURL: 
+  - android: https://play.google.com/apps/internaltest/4701273649300930378（メールアドレスの登録が必要。https://docs.google.com/forms/d/1nL9GaA8houV-UQ9kGxNaeEIGUluNcdcwGz-EFQLM0cc/editより登録をお願いします。
+- プレゼンURL：https://www.canva.com/design/DAGzTkaDnx4/4lzrxPDCpTMXWWQilUAo_Q/view?utm_content=DAGzTkaDnx4&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h0ad10a974d
 
 ---
+
+<img width="1024" height="500" alt="Image" src="https://github.com/user-attachments/assets/93bcafbd-c56d-4c5d-8f09-25bc074b1b49" />
+
+<img width="2064" height="2752" alt="Image" src="https://github.com/user-attachments/assets/4a013f6b-a3ad-491a-8969-062107d2024f" />
+
 ## フロントエンド環境構築
 
 ### 必要なもの
