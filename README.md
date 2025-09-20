@@ -13,7 +13,7 @@
 
 ## デモ/プレゼン資料
 - デモURL: 
-  - Android: https://play.google.com/apps/internaltest/4701273649300930378（メールアドレスの登録が必要。 [GoogleForm](https://docs.google.com/forms/d/e/1FAIpQLSeirQ-bB2txr7prz9riotsML00wQFot5F_KnVLNlK-KXq_01Q/viewform?usp=dialog) より登録をお願いします）
+  - Android: https://play.google.com/apps/internaltest/4701273649300930378 （メールアドレスの登録が必要。 [GoogleForm](https://docs.google.com/forms/d/e/1FAIpQLSeirQ-bB2txr7prz9riotsML00wQFot5F_KnVLNlK-KXq_01Q/viewform?usp=dialog) より登録をお願いします）
   - iOS: 審査中
 - プレゼンURL：https://www.canva.com/design/DAGzTkaDnx4/4lzrxPDCpTMXWWQilUAo_Q/view?utm_content=DAGzTkaDnx4&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h0ad10a974d
 
