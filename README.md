@@ -13,14 +13,33 @@
 
 ## デモ/プレゼン資料
 - デモURL: 
-  - android: https://play.google.com/apps/internaltest/4701273649300930378（メールアドレスの登録が必要。https://docs.google.com/forms/d/1nL9GaA8houV-UQ9kGxNaeEIGUluNcdcwGz-EFQLM0cc/editより登録をお願いします。
+  - android: https://play.google.com/apps/internaltest/4701273649300930378（メールアドレスの登録が必要。https://docs.google.com/forms/d/e/1FAIpQLSeirQ-bB2txr7prz9riotsML00wQFot5F_KnVLNlK-KXq_01Q/viewform?usp=dialog より登録をお願いします）
 - プレゼンURL：https://www.canva.com/design/DAGzTkaDnx4/4lzrxPDCpTMXWWQilUAo_Q/view?utm_content=DAGzTkaDnx4&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h0ad10a974d
 
 ---
 
 <img width="1024" height="500" alt="Image" src="https://github.com/user-attachments/assets/93bcafbd-c56d-4c5d-8f09-25bc074b1b49" />
 
-<img width="2064" height="2752" alt="Image" src="https://github.com/user-attachments/assets/4a013f6b-a3ad-491a-8969-062107d2024f" />
+
+「匠 (Takumi)」は、学びの道のりをゲームのように可視化し、仲間や「ちょっと先の先輩」との繋がりを通じて成長できる、新しいソーシャルラーニング・プラットフォームです。
+
+◆ 学びの全体像を「スキルツリー」で可視化
+プログラミング、デザイン、語学など、専門分野の学習ロードマップを美しいスキルツリーとして可視化。今自分がどこにいて、次に何を学ぶべきかが一目でわかります。もう、情報の海で迷うことはありません。
+
+◆ 「師弟関係」で、最適な学びを
+ツリーの中で「ちょっと先の先輩」に弟子入りし、気軽に質問や相談ができます。専門家には聞きづらい初歩的な疑問も、身近な先輩が優しくサポート。あなたも成長すれば、後輩を導く「師匠」になることができます。
+
+◆ モチベーションが続く仕組み
+仲間や先輩の小さな成果がタイムラインに流れ、日々の学習意欲を刺激します。「あの人ができたなら、自分にもできるかも！」という感覚が、あなたの挑戦を後押しします。
+
+【主な機能】
+- トピックごとのインタラクティブなスキルツリー
+- 師弟関係コミュニケーションスレッド機能
+- 気づき・成果をシェアできる投稿機能
+
+一人では続かない学習も、仲間や師匠とならもっと楽しく、もっと遠くまで進めるはず。「匠」で、あなたの可能性を最大限に引き出しませんか？
+
+
 
 ## フロントエンド環境構築
 
